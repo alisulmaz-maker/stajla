@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>İşveren İlan - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="left">
+        <a href="/index.html" style="display: flex; align-items: center; text-decoration: none;">
+            <img src="/img/logo.png" alt="STAJLA" class="logo-img">
+            <span class="logo-text">STAJLA</span>
+        </a>
+    </div>
+    <nav class="nav-links">
+        <a href="index.html">Anasayfa</a>
+        <a href="isveren-ilan.html">İşveren İlan</a>
+        <a href="ogrenci-ilan.html">Öğrenci İlan</a>
+        <a href="iletisim.html">İletişim</a>
+        <div id="user-nav">
+            <a href="giris.html">Giriş / Kayıt</a>
+        </div>
+    </nav>
+</header>
+
+<main class="form-page">
+    <h2>Stajyer Arıyorum — İşveren İlanı Ekle</h2>
+
+    <form id="job-form" class="card">
+        <label>Firma Adı<input type="text" id="j-company" required></label>
+        <label>Sektör<input type="text" id="j-sector"></label>
+        <label>Şehir
+            <select id="j-city">
+                <option>Adana</option>
+                <option>Adıyaman</option>
+                <option>Afyonkarahisar</option>
+                <option>Ağrı</option>
+                <option>Aksaray</option>
+                <option>Amasya</option>
+                <option>Ankara</option>
+                <option>Antalya</option>
+                <option>Ardahan</option>
+                <option>Artvin</option>
+                <option>Aydın</option>
+                <option>Balıkesir</option>
+                <option>Bartın</option>
+                <option>Batman</option>
+                <option>Bayburt</option>
+                <option>Bilecik</option>
+                <option>Bingöl</option>
+                <option>Bitlis</option>
+                <option>Bolu</option>
+                <option>Burdur</option>
+                <option>Bursa</option>
+                <option>Çanakkale</option>
+                <option>Çankırı</option>
+                <option>Çorum</option>
+                <option>Denizli</option>
+                <option>Diyarbakır</option>
+                <option>Düzce</option>
+                <option>Edirne</option>
+                <option>Elazığ</option>
+                <option>Erzincan</option>
+                <option>Erzurum</option>
+                <option>Eskişehir</option>
+                <option>Gaziantep</option>
+                <option>Giresun</option>
+                <option>Gümüşhane</option>
+                <option>Hakkari</option>
+                <option>Hatay</option>
+                <option>Iğdır</option>
+                <option>Isparta</option>
+                <option>İstanbul</option>
+                <option>İzmir</option>
+                <option>Kahramanmaraş</option>
+                <option>Karabük</option>
+                <option>Karaman</option>
+                <option>Kars</option>
+                <option>Kastamonu</option>
+                <option>Kayseri</option>
+                <option>Kilis</option>
+                <option>Kırıkkale</option>
+                <option>Kırklareli</option>
+                <option>Kırşehir</option>
+                <option>Kocaeli</option>
+                <option>Konya</option>
+                <option>Kütahya</option>
+                <option>Malatya</option>
+                <option>Manisa</option>
+                <option>Mardin</option>
+                <option>Mersin</option>
+                <option>Muğla</option>
+                <option>Muş</option>
+                <option>Nevşehir</option>
+                <option>Niğde</option>
+                <option>Ordu</option>
+                <option>Osmaniye</option>
+                <option>Rize</option>
+                <option>Sakarya</option>
+                <option>Samsun</option>
+                <option>Şanlıurfa</option>
+                <option>Siirt</option>
+                <option>Sinop</option>
+                <option>Sivas</option>
+                <option>Şırnak</option>
+                <option>Tekirdağ</option>
+                <option>Tokat</option>
+                <option>Trabzon</option>
+                <option>Tunceli</option>
+                <option>Uşak</option>
+                <option>Van</option>
+                <option>Yalova</option>
+                <option>Yozgat</option>
+                <option>Zonguldak</option>
+            </select>
+        </label>
+        <label>Aranan Alan
+            <select id="j-area">
+                <option>Makine Mühendisliği</option>
+                <option>Elektrik-Elektronik Mühendisliği</option>
+                <option>Bilgisayar Mühendisliği</option>
+                <option>Yazılım Mühendisliği</option>
+                <option>İnşaat Mühendisliği</option>
+                <option>Endüstri Mühendisliği</option>
+                <option>Kimya Mühendisliği</option>
+                <option>Mimarlık</option>
+                <option>Şehir ve Bölge Planlama</option>
+                <option>Harita Mühendisliği</option>
+                <option>Gıda Mühendisliği</option>
+
+                <option>Tıp</option>
+                <option>Diş Hekimliği</option>
+                <option>Eczacılık</option>
+                <option>Hemşirelik</option>
+                <option>Veterinerlik</option>
+                <option>Fizyoterapi ve Rehabilitasyon</option>
+                <option>Beslenme ve Diyetetik</option>
+                <option>Çocuk Gelişimi</option>
+                <option>Ebelik</option>
+
+                <option>İşletme</option>
+                <option>İktisat</option>
+                <option>Uluslararası Ticaret ve Lojistik</option>
+                <option>Yönetim Bilişim Sistemleri (YBS)</option>
+                <option>Bankacılık ve Sigortacılık</option>
+                <option>Maliye</option>
+
+                <option>Psikoloji</option>
+                <option>Hukuk</option>
+                <option>Sosyal Hizmet</option>
+                <option>İletişim (Halkla İlişkiler, Reklamcılık, Gazetecilik vb.)</option>
+                <option>Radyo, Televizyon ve Sinema</option>
+                <option>Görsel İletişim Tasarımı</option>
+                <option>Grafik Tasarımı</option>
+                <option>Turizm İşletmeciliği</option>
+
+                <option>Tüm Önlisans Teknik Programları (Bilgisayar Programcılığı, Elektrik, vb.)</option>
+                <option>Tüm Önlisans Sağlık Programları (Ameliyathane Hizmetleri, Tıbbi Görüntüleme, vb.)</option>
+            </select>
+        </label>
+        <label>Nitelikler (kısa)<textarea id="j-req"></textarea></label>
+        <label>İletişim (E-posta)<input type="text" id="j-contact" required></label>
+        <button type="submit">İlanı Paylaş</button>
+    </form>
+
+    <h3>Mevcut İlanlar</h3>
+    <div id="jobs-list" class="card-grid">
+        <!-- JS ile gelecek -->
+    </div>
+</main>
+
+<footer>
+    <p>© 2025 STAJLA</p>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

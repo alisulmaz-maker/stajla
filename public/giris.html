@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Giriş Yap - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="left">
+        <a href="index.html" style="display: flex; align-items: center; text-decoration: none;">
+            <img src="/img/logo.png" alt="STAJLA" class="logo-img">
+            <span class="logo-text">STAJLA</span>
+        </a>
+    </div>
+    <nav class="nav-links">
+        <a href="index.html">Anasayfa</a>
+        <a href="isveren-ilan.html">İşveren İlan</a>
+        <a href="ogrenci-ilan.html">Öğrenci İlan</a>
+        <a href="iletisim.html">İletişim</a>
+        <div id="user-nav">
+            <a href="giris.html">Giriş / Kayıt</a>
+        </div>
+    </nav>
+</header>
+
+<main class="form-page">
+    <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <h2>Giriş Yap</h2>
+        <form id="login-form">
+            <label>E-posta Adresi
+                <input type="email" id="login-email" required>
+            </label>
+            <label>Şifre
+                <input type="password" id="login-pass" required>
+            </label>
+            <button type="submit">Giriş Yap</button>
+        </form>
+        <div style="text-align: center; margin-top: 16px; font-size: 14px;">
+            <a href="/forgot-password.html" style="display: block; margin-bottom: 8px;">Şifremi Unuttum</a>
+            <a href="kayit.html">Hesabın yok mu? Kayıt Ol</a>
+        </div>
+    </div>
+</main>
+
+<footer style="position: fixed; bottom: 0; width: 100%;">
+    <p>© 2025 STAJLA</p>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
