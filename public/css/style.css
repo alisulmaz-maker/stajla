@@ -307,7 +307,7 @@ footer {
 }
 
 /* =============================================== */
-/* MOBİL UYUMLULUK (NİHAİ VE TAM VERSİYON) */
+/* MOBİL UYUMLULUK (NİHAİ VE TAM ÇÖZÜM) */
 /* =============================================== */
 
 /* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
@@ -347,7 +347,7 @@ footer {
     /* Açılır mobil menüyü şekillendir */
     #mobile-nav {
         position: fixed;
-        top: 61px; /* Navbar'ın yüksekliğine göre ayarlanabilir */
+        top: 61px;
         left: -100%;
         width: 80%;
         max-width: 300px;
@@ -373,23 +373,15 @@ footer {
 
     .search-box {
         flex-direction: column;
-        align-items: stretch;
+        /* align-items: stretch; KURALINI KALDIRDIK! */
     }
 
-    /* YENİ EKLENEN BUTON DÜZELTMESİ */
+    /* ARAMA KUTUSU ELEMANLARINI %100 GENİŞLİK YAP */
+    .search-box select,
     .search-box button {
-        align-self: center; /* Butonun kendini ortalamasını sağlar */
-        width: 150px;      /* Butona sabit bir genişlik vererek esnemesini engeller */
-    }
-
-    /* Arama kutusundaki select elementinin taşmasını kesin olarak engelle */
-    .search-box select {
-        width: 100%;
+        width: 100%; /* Tüm elemanları tam genişlik yap */
         max-width: 100%;
         min-width: 0;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
     }
 
     /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
