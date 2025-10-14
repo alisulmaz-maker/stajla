@@ -73,16 +73,20 @@ connectToDb().then(() => {
 
     app.post('/api/login', async (req, res) => {
         try {
-            const { email, pass } = req.body;
+            const { email, pass, remember } = req.body; // "remember" verisini de alıyoruz
             const user = await db.collection("kullanicilar").findOne({ email: email });
+
             if (!user) {
                 return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' });
             }
+
             const isPasswordCorrect = await bcrypt.compare(pass, user.password);
+
             if (!isPasswordCorrect) {
                 return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' });
             }
 
+            // Kullanıcı bilgilerini session'a kaydediyoruz
             req.session.user = {
                 id: user._id,
                 name: user.name,
@@ -90,8 +94,18 @@ connectToDb().then(() => {
                 role: user.role
             };
 
+            // YENİ EKLENEN BÖLÜM
+            if (remember) {
+                // Eğer "Beni Hatırla" seçiliyse, cookie'nin ömrünü 30 gün yap
+                req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 gün (milisaniye cinsinden)
+            } else {
+                // Seçili değilse, tarayıcı kapanınca silinsin (varsayılan davranış)
+                req.session.cookie.expires = false;
+            }
+
             console.log('Kullanıcı giriş yaptı:', user.email);
             res.json({ success: true, message: 'Giriş başarılı!' });
+
         } catch (err) {
             console.error('Giriş sırasında hata:', err);
             res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });

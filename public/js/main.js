@@ -105,7 +105,32 @@ if (registerForm) {
 }
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
-    loginForm.addEventListener('submit', async function(e) { e.preventDefault(); const loginData = { email: document.getElementById('login-email').value, pass: document.getElementById('login-pass').value }; try { const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) }); const result = await response.json(); if (result.success) { window.location.href = '/index.html'; } else { alert(result.message); } } catch (err) { alert('Sunucuya bağlanırken bir hata oluştu.'); } });
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const loginData = {
+            email: document.getElementById('login-email').value,
+            pass: document.getElementById('login-pass').value,
+            // YENİ EKLENEN SATIR: "Beni Hatırla" kutusunun durumunu ekliyoruz
+            remember: document.getElementById('login-remember').checked
+        };
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginData)
+            });
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = '/index.html';
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+            alert('Sunucuya bağlanırken bir hata oluştu.');
+        }
+    });
 }
 
 /* --- İlan Düzenleme Sayfası İşlemleri --- */

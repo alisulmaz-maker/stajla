@@ -73,21 +73,103 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 .cv-link:hover { background-color: #138496; }
 
 /* =============================================== */
-/* --- MOBİL UYUMLULUK (NİHAİ VERSİYON) --- */
+/* MOBİL UYUMLULUK (NİHAİ VERSİYON) */
 /* =============================================== */
-#hamburger-menu, #mobile-nav { display: none; }
+
+/* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
+#hamburger-menu, #mobile-nav {
+    display: none;
+}
 
 @media (max-width: 768px) {
-    .desktop-link, .nav-links > a { display: none; }
-    #hamburger-menu { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 8px; margin-right: 10px; }
-    .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
-    #mobile-nav { position: fixed; top: 61px; left: -100%; width: 80%; max-width: 300px; height: 100%; background-color: #333; z-index: 1000; transition: left 0.3s ease-in-out; }
-    #mobile-nav.active { left: 0; display: block; }
-    #mobile-nav a { color: white; display: block; padding: 20px; text-decoration: none; border-bottom: 1px solid #444; }
-    #mobile-nav a:hover { background-color: #FFD43B; color: #222; }
+
+    /* YATAY TAŞMAYI KESİNLİKLE ENGELLE */
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Bilgisayar linklerini mobilde gizle */
+    .desktop-link {
+        display: none;
+    }
+
+    /* Hamburger ikonunu göster ve şekillendir */
+    #hamburger-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+        margin-right: 10px;
+    }
+    .bar {
+        width: 22px;
+        height: 3px;
+        background-color: white;
+        border-radius: 2px;
+    }
+
+    /* Açılır mobil menüyü şekillendir */
+    #mobile-nav {
+        position: fixed;
+        top: 61px;
+        left: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100%;
+        background-color: #333;
+        z-index: 1000;
+        transition: left 0.3s ease-in-out;
+    }
+    #mobile-nav.active {
+        left: 0;
+        display: block;
+    }
+    #mobile-nav a {
+        color: white;
+        display: block;
+        padding: 20px;
+        text-decoration: none;
+        border-bottom: 1px solid #444;
+    }
+
+    /* Navbar'ı ve diğer elemanları düzenle */
     .navbar { padding: 10px 16px; }
-    .search-box { flex-direction: column; align-items: stretch; }
-    .search-box select { max-width: 100%; min-width: 0; }
-    .hero h1 { font-size: 1.8rem; word-wrap: break-word; overflow-wrap: break-word; }
+
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Arama kutusundaki select elementinin taşmasını kesin olarak engelle */
+    .search-box select {
+        width: 100%; /* Genişliği %100 yap */
+        max-width: 100%;
+        min-width: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+
+        /* Tarayıcının varsayılan görünümünü kaldır */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+
+        /* Kendi okumuzu SVG olarak ekle */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+        padding-right: 2.5rem;
+    }
+
+    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
+    .hero h1 {
+        font-size: 1.8rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
     .card-grid { grid-template-columns: 1fr; }
 }
