@@ -236,21 +236,28 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
         align-items: stretch;
     }
 
-    /* Arama kutularındaki uzun metinleri kısalt */
     /* Arama kutularındaki uzun metinleri kısalt ve taşmayı engelle */
     .search-box select {
-        max-width: 100%; /* Genişliğinin asla %100'ü geçemeyeceğini söyle */
-        min-width: 0;    /* Flexbox'ın kutuyu küçültebilmesini garantile */
+        /* Tarayıcının varsayılan görünümünü kaldır */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+
+        /* Kendi okumuzu SVG olarak ekle */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+
+        /* Okun metnin üzerine gelmesini engellemek için sağdan boşluk bırak */
+        padding-right: 2.5rem;
+
+        /* Eski taşma engelleme kodları */
+        max-width: 100%;
+        min-width: 0;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
-    }
-
-    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
-    .hero h1 {
-        font-size: 1.8rem;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
     }
 
     .card-grid { grid-template-columns: 1fr; }
