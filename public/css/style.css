@@ -63,6 +63,18 @@ a {
     font-size: 22px;
 }
 
+/* NAVBAR LOGO HİZALAMASI İÇİN NİHAİ KOD */
+.navbar .logo-link {
+    display: flex;
+    align-items: center; /* BU SATIR, İÇİNDEKİ HER ŞEYİ (LOGO VE YAZI) DİKEY OLARAK MÜKEMMEL BİR ŞEKİLDE ORTALAR */
+    text-decoration: none !important; /* Altındaki çizgiyi kesin olarak kaldırır */
+}
+
+/* Logo resminin etrafındaki olası boşlukları sıfırla */
+.navbar .logo-link .logo-img {
+    display: block;
+}
+
 .nav-links {
     display: flex;
     align-items: center;
