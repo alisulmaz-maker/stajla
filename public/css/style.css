@@ -173,3 +173,28 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 
     .card-grid { grid-template-columns: 1fr; }
 }
+/* =============================================== */
+/* "BENİ HATIRLA" BÖLÜMÜNÜN STİLLERİ       */
+/* =============================================== */
+.remember-me {
+    display: flex;       /* Kutucuk ve yazıyı yan yana getirir */
+    align-items: center; /* Dikey olarak mükemmel bir şekilde ortalar */
+    margin-top: 16px;
+    margin-bottom: 24px; /* Altındaki butonla arayı biraz daha açar */
+}
+
+/* Onay kutusunun kendisi için stiller */
+.remember-me input[type="checkbox"] {
+    width: 18px;         /* Kutunun boyutunu biraz büyütür */
+    height: 18px;
+    margin: 0 10px 0 0;  /* Sağındaki yazıyla arasına boşluk koyar */
+    flex-shrink: 0;      /* Ekran daralsa bile kutunun küçülmesini engeller */
+}
+
+/* "Beni Hatırla" yazısı için stiller */
+.remember-me label {
+    font-weight: normal; /* Yazıyı kalın yapmaz */
+    font-size: 15px;     /* Yazı boyutunu ayarlar */
+    color: #495057;      /* Rengi biraz daha yumuşatır */
+    margin-bottom: 0;    /* Diğer label'lardan gelen alt boşluğu sıfırlar */
+}
