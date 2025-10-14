@@ -160,3 +160,39 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 .cv-link:hover {
     background-color: #138496;
 }
+/* =============================================== */
+/* MOBİL UYUMLULUK (RESPONSIVE)          */
+/* =============================================== */
+@media (max-width: 768px) {
+
+    /* Navbar'ı mobil için daha sade hale getir */
+    .navbar {
+        padding: 12px 16px; /* Kenar boşluklarını azalt */
+    }
+
+    /* Menü linklerini mobil ekranda gizle (şimdilik en basit çözüm) */
+    .nav-links a {
+        display: none;
+    }
+
+    /* Sadece profil menüsünün görünmesini sağla */
+    .nav-links .profile-dropdown {
+        display: inline-block; /* Profil menüsünü görünür yap */
+    }
+
+    /* Arama kutusunu alt alta sırala */
+    .search-box {
+        flex-direction: column; /* Elemanları yan yana değil, alt alta diz */
+        align-items: stretch; /* Elemanları tam genişliğe yay */
+    }
+
+    /* Ana başlığı mobil için biraz küçült */
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Kartların genişliğini ayarla */
+    .card-grid {
+        grid-template-columns: 1fr; /* Kartlar alt alta tek sıra olsun */
+    }
+}
