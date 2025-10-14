@@ -65,7 +65,16 @@ main {
 .results h2, .form-page h2, .form-page h3 { text-align: center; margin-bottom: 24px; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; text-align: left; }
 .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-.card h4 { margin: 0 0 8px; font-size: 1.2rem; }
+.card h4 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+
+    /* --- UZUN BAŞLIKLARI KISALTMAK İÇİN YENİ KODLAR --- */
+    -webkit-line-clamp: 2; /* Metni en fazla 2 satırla sınırla */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden; /* Kutunun dışına taşan her şeyi gizle */
+}
 .card p { margin: 4px 0; color: #495057; line-height: 1.5; }
 
 /* --- FORM SAYFALARI --- */
