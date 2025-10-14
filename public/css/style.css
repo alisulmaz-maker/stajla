@@ -230,12 +230,23 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 
     /* Navbar'ı ve diğer elemanları düzenle */
     .navbar { padding: 10px 16px; }
-    .search-box { flex-direction: column; align-items: stretch; }
+
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Arama kutularındaki uzun metinleri kısalt */
+    .search-box select {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
 
     /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
     .hero h1 {
         font-size: 1.8rem;
-        word-wrap: break-word; /* Gerekirse kelimeleri kırarak alt satıra indir */
+        word-wrap: break-word;
         overflow-wrap: break-word;
     }
 
