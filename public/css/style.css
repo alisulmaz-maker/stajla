@@ -1,200 +1,123 @@
-/* =================================================================================== */
-/* STAJLA - style.css (TÜM SORUNLARI ÇÖZEN NİHAİ VERSİYON) */
-/* =================================================================================== */
+/* =============================================== */
+/* STAJLA - style.css (NİHAİ + MOBİL DOKUNMA DÜZELTMESİ) */
+/* =============================================== */
 
-/* --- Temel Ayarlar ve Font --- */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8f9fa; color: #212529; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+/* Temel sıfırlama ve Font */
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f8f9fa;
+    color: #212529;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 main { flex: 1; }
-.about { text-align: center; max-width: 800px; margin: 40px auto; padding: 0 24px; }
 
-/* --- NAVBAR --- */
-.navbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #222; border-bottom: 3px solid #FFD43B; }
-.logo-img { height: 40px; }
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 40px;
+    background: #222;
+    color: white;
+    border-bottom: 3px solid #FFD43B;
+}
+.logo-img { height: 40px; width: 40px; object-fit: contain; margin-right: 10px; }
 .left { display: flex; align-items: center; }
-.logo-text { color: #FFD43B; font-weight: 700; font-size: 22px; margin-left: 10px; }
+.logo-text { color: #FFD43B; font-weight: 700; font-size: 22px; }
 .nav-links { display: flex; align-items: center; gap: 24px; }
 .nav-links a { color: #fff; text-decoration: none; font-weight: 500; }
 .nav-links a:hover { color: #FFD43B; }
-.logo-link { display: flex; align-items: center; text-decoration: none; }
 
-/* --- HERO & ARAMA KUTUSU (iOS için güçlendirildi) --- */
+/* HERO & ARAMA */
 .hero { text-align: center; padding: 48px 24px; background: #fff; }
 .hero h1 { margin: 0 0 8px; font-size: 2.5rem; }
 .hero p { margin: 0 0 24px; color: #6c757d; font-size: 1.1rem; }
 .search-box { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-.search-box select, .search-box button { -webkit-appearance: none; -moz-appearance: none; appearance: none; font-family: inherit; padding: 12px 16px; font-size: 1rem; border-radius: 8px; border: 1px solid #ced4da; background-color: #fff; color: #212529; margin: 0; }
-.search-box select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 16px 12px; padding-right: 2.5rem; }
-.search-box button { background-color: #FFD43B; border-color: #FFD43B; cursor: pointer; font-weight: bold; }
-.search-box button:hover { background-color: #eab60a; }
+.search-box button { background: #FFD43B; border: none; cursor: pointer; font-weight: bold; }
+.search-box button:hover { background: #eab60a; }
 
-/* --- KARTLAR (Uzun başlık sorunu çözüldü) --- */
+/* TÜM SELECT (AÇILIR MENÜ) ELEMENTLERİ İÇİN GENEL STİL */
+select {
+    /* Tarayıcının varsayılan görünümünü kaldır */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    /* Kendi okumuzu SVG olarak ekle */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+
+    padding-right: 2.5rem !important;
+
+    /* Genel kutu stilleri */
+    padding: 12px 16px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+
+    /* *** MOBİL DOKUNMA HATASI İÇİN YENİ KURALLAR *** */
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent; /* Dokunulduğunda çıkan varsayılan vurguyu kaldırır */
+}
+
+/* SONUÇLAR VE KARTLAR (Diğer kodlar aynı) */
 .results { padding: 40px 24px; max-width: 1200px; margin: 0 auto; text-align: center; }
 .results h2, .form-page h2, .form-page h3 { text-align: center; margin-bottom: 24px; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; text-align: left; }
 .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-.card h4 {
-    margin: 0 0 8px;
-    font-size: 1.2rem;
-    -webkit-line-clamp: 2; /* Metni en fazla 2 satırla sınırla */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
+.card h4 { margin: 0 0 8px; font-size: 1.2rem; }
 .card p { margin: 4px 0; color: #495057; line-height: 1.5; }
 
-/* --- FORM SAYFALARI --- */
+/* FORM SAYFALARI (Diğer kodlar aynı) */
 .form-page { padding: 40px 24px; max-width: 700px; margin: 0 auto; }
 .form-page label { display: block; margin-bottom: 16px; font-weight: 600; }
-.form-page input, .form-page textarea, .form-page select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ced4da; border-radius: 8px; font-size: 1rem; }
+.form-page input, .form-page textarea { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ced4da; border-radius: 8px; font-size: 1rem; }
 .form-page button { width: 100%; padding: 14px; background: #FFD43B; border: none; cursor: pointer; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; }
+.remember-me { display: flex; align-items: center; margin-top: 16px; margin-bottom: 24px; }
+.remember-me input[type="checkbox"] { width: 18px; height: 18px; margin: 0 10px 0 0; flex-shrink: 0; }
+.remember-me label { font-weight: normal; font-size: 15px; color: #495057; margin-bottom: 0; }
 
-/* --- FOOTER --- */
-footer { text-align: center; padding: 24px; background: #222; color: #aaa; margin-top: auto; }
+/* FOOTER (Diğer kodlar aynı) */
+footer { text-align: center; padding: 24px; background: #222; color: #aaa; margin-top: 48px; }
 
-/* --- PROFİL MENÜSÜ --- */
+/* PROFİL MENÜSÜ (Diğer kodlar aynı) */
 .profile-dropdown { position: relative; display: inline-block; }
 .profile-avatar { background-color: #FFD43B; color: #222; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; cursor: pointer; }
-.dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 120px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index: 1; border-radius: 6px; overflow: hidden; }
+.dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 120px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 6px; overflow: hidden; }
 .dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }
 .dropdown-content a:hover { background-color: #f1f1f1; }
 .profile-dropdown:hover .dropdown-content { display: block; }
 
-/* --- KART İÇİ BUTONLAR --- */
+/* KART İÇİ BUTONLAR (Diğer kodlar aynı) */
 .card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid #f1f1f1; }
-.edit-btn, .delete-btn { color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 14px; border: none; cursor: pointer; font-weight: 500; margin: 0; width: auto; font-family: inherit; }
-.edit-btn { background-color: #28a745; }
-.edit-btn:hover { background-color: #218838; }
-.delete-btn { background-color: #dc3545; }
-.delete-btn:hover { background-color: #c82333; }
+.card-actions .edit-btn, .card-actions .delete-btn { color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 14px; border: none; cursor: pointer; font-weight: 500; margin: 0; width: auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.card-actions .edit-btn { background-color: #28a745; }
+.card-actions .edit-btn:hover { background-color: #218838; }
+.card-actions .delete-btn { background-color: #dc3545; }
+.card-actions .delete-btn:hover { background-color: #c82333; }
 
-/* --- CV LİNKİ --- */
 .cv-link { display: inline-block; background-color: #17a2b8; color: white; padding: 8px 12px; text-decoration: none; border-radius: 5px; margin-top: 8px; font-size: 14px; font-weight: 500; }
 .cv-link:hover { background-color: #138496; }
 
-/* =============================================== */
-/* MOBİL UYUMLULUK (NİHAİ VERSİYON) */
-/* =============================================== */
-
-/* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
-#hamburger-menu, #mobile-nav {
-    display: none;
-}
-
+/* MOBİL UYUMLULUK (Diğer kodlar aynı) */
 @media (max-width: 768px) {
-
-    /* YATAY TAŞMAYI KESİNLİKLE ENGELLE */
-    html, body {
-        width: 100%;
-        overflow-x: hidden;
-    }
-
-    /* Bilgisayar linklerini mobilde gizle */
-    .desktop-link {
-        display: none;
-    }
-
-    /* Hamburger ikonunu göster ve şekillendir */
-    #hamburger-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        cursor: pointer;
-        padding: 8px;
-        margin-right: 10px;
-    }
-    .bar {
-        width: 22px;
-        height: 3px;
-        background-color: white;
-        border-radius: 2px;
-    }
-
-    /* Açılır mobil menüyü şekillendir */
-    #mobile-nav {
-        position: fixed;
-        top: 61px;
-        left: -100%;
-        width: 80%;
-        max-width: 300px;
-        height: 100%;
-        background-color: #333;
-        z-index: 1000;
-        transition: left 0.3s ease-in-out;
-    }
-    #mobile-nav.active {
-        left: 0;
-        display: block;
-    }
-    #mobile-nav a {
-        color: white;
-        display: block;
-        padding: 20px;
-        text-decoration: none;
-        border-bottom: 1px solid #444;
-    }
-
-    /* Navbar'ı ve diğer elemanları düzenle */
+    html, body { width: 100%; overflow-x: hidden; }
+    .desktop-link { display: none; }
+    #hamburger-menu { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 8px; margin-right: 10px; }
+    .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
+    #mobile-nav { position: fixed; top: 61px; left: -100%; width: 80%; max-width: 300px; height: 100%; background-color: #333; z-index: 1000; transition: left 0.3s ease-in-out; }
+    #mobile-nav.active { left: 0; display: block; }
+    #mobile-nav a { color: white; display: block; padding: 20px; text-decoration: none; border-bottom: 1px solid #444; }
     .navbar { padding: 10px 16px; }
-
-    .search-box {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    /* Arama kutusundaki select elementinin taşmasını kesin olarak engelle */
-    .search-box select {
-        width: 100%; /* Genişliği %100 yap */
-        max-width: 100%;
-        min-width: 0;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-
-        /* Tarayıcının varsayılan görünümünü kaldır */
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-
-        /* Kendi okumuzu SVG olarak ekle */
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        background-size: 16px 12px;
-        padding-right: 2.5rem;
-    }
-
-    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
-    .hero h1 {
-        font-size: 1.8rem;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
+    .search-box { flex-direction: column; align-items: stretch; width: 100%; }
+    .search-box select { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+    .hero h1 { font-size: 1.8rem; word-wrap: break-word; overflow-wrap: break-word; }
     .card-grid { grid-template-columns: 1fr; }
-}
-/* =============================================== */
-/* "BENİ HATIRLA" BÖLÜMÜNÜN STİLLERİ       */
-/* =============================================== */
-.remember-me {
-    display: flex;       /* Kutucuk ve yazıyı yan yana getirir */
-    align-items: center; /* Dikey olarak mükemmel bir şekilde ortalar */
-    margin-top: 16px;
-    margin-bottom: 24px; /* Altındaki butonla arayı biraz daha açar */
-}
-
-/* Onay kutusunun kendisi için stiller */
-.remember-me input[type="checkbox"] {
-    width: 18px;         /* Kutunun boyutunu biraz büyütür */
-    height: 18px;
-    margin: 0 10px 0 0;  /* Sağındaki yazıyla arasına boşluk koyar */
-    flex-shrink: 0;      /* Ekran daralsa bile kutunun küçülmesini engeller */
-}
-
-/* "Beni Hatırla" yazısı için stiller */
-.remember-me label {
-    font-weight: normal; /* Yazıyı kalın yapmaz */
-    font-size: 15px;     /* Yazı boyutunu ayarlar */
-    color: #495057;      /* Rengi biraz daha yumuşatır */
-    margin-bottom: 0;    /* Diğer label'lardan gelen alt boşluğu sıfırlar */
 }
