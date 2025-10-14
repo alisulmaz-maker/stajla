@@ -307,18 +307,28 @@ footer {
 }
 
 /* =============================================== */
-/* MOBİL UYUMLULUK (NİHAİ VERSİYON) */
+/* MOBİL UYUMLULUK (NİHAİ VE TAM VERSİYON) */
 /* =============================================== */
 
+/* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
 #hamburger-menu, #mobile-nav {
     display: none;
 }
 
 @media (max-width: 768px) {
+
+    /* YATAY TAŞMAYI KESİNLİKLE ENGELLE */
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Bilgisayar linklerini mobilde gizle */
     .desktop-link {
         display: none;
     }
 
+    /* Hamburger ikonunu göster ve şekillendir */
     #hamburger-menu {
         display: flex;
         flex-direction: column;
@@ -327,7 +337,6 @@ footer {
         padding: 8px;
         margin-right: 10px;
     }
-
     .bar {
         width: 22px;
         height: 3px;
@@ -335,9 +344,10 @@ footer {
         border-radius: 2px;
     }
 
+    /* Açılır mobil menüyü şekillendir */
     #mobile-nav {
         position: fixed;
-        top: 61px;
+        top: 61px; /* Navbar'ın yüksekliğine göre ayarlanabilir */
         left: -100%;
         width: 80%;
         max-width: 300px;
@@ -346,35 +356,48 @@ footer {
         z-index: 1000;
         transition: left 0.3s ease-in-out;
     }
-
     #mobile-nav.active {
         left: 0;
         display: block;
     }
-
     #mobile-nav a {
         color: white;
         display: block;
         padding: 20px;
+        text-decoration: none;
         border-bottom: 1px solid #444;
     }
 
-    .navbar {
-        padding: 10px 16px;
-    }
+    /* Navbar'ı ve diğer elemanları düzenle */
+    .navbar { padding: 10px 16px; }
 
     .search-box {
         flex-direction: column;
         align-items: stretch;
     }
 
+    /* YENİ EKLENEN BUTON DÜZELTMESİ */
+    .search-box button {
+        align-self: center; /* Butonun kendini ortalamasını sağlar */
+        width: 150px;      /* Butona sabit bir genişlik vererek esnemesini engeller */
+    }
+
+    /* Arama kutusundaki select elementinin taşmasını kesin olarak engelle */
+    .search-box select {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
     .hero h1 {
         font-size: 1.8rem;
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
 
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
+    .card-grid { grid-template-columns: 1fr; }
 }
