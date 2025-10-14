@@ -1,25 +1,12 @@
 /* =================================================================================== */
-/* STAJLA - style.css (Nihai Versiyon)                */
+/* STAJLA - style.css (TÜM SORUNLARI ÇÖZEN NİHAİ VERSİYON) */
 /* =================================================================================== */
 
 /* --- Temel Ayarlar ve Font --- */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #f8f9fa;
-    color: #212529;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden; /* YATAY TAŞMAYI KESİNLİKLE ENGELLER */
-}
-main {
-    flex: 1;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8f9fa; color: #212529; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+main { flex: 1; }
+.about { text-align: center; max-width: 800px; margin: 40px auto; padding: 0 24px; }
 
 /* --- NAVBAR --- */
 .navbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #222; border-bottom: 3px solid #FFD43B; }
@@ -36,31 +23,12 @@ main {
 .hero h1 { margin: 0 0 8px; font-size: 2.5rem; }
 .hero p { margin: 0 0 24px; color: #6c757d; font-size: 1.1rem; }
 .search-box { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-
-.search-box select, .search-box button {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    font-family: inherit;
-    padding: 12px 16px;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    background-color: #fff;
-    color: #212529;
-    margin: 0;
-}
-.search-box select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px 12px;
-    padding-right: 2.5rem;
-}
+.search-box select, .search-box button { -webkit-appearance: none; -moz-appearance: none; appearance: none; font-family: inherit; padding: 12px 16px; font-size: 1rem; border-radius: 8px; border: 1px solid #ced4da; background-color: #fff; color: #212529; margin: 0; }
+.search-box select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 16px 12px; padding-right: 2.5rem; }
 .search-box button { background-color: #FFD43B; border-color: #FFD43B; cursor: pointer; font-weight: bold; }
 .search-box button:hover { background-color: #eab60a; }
 
-/* --- KARTLAR --- */
+/* --- KARTLAR (Uzun başlık sorunu çözüldü) --- */
 .results { padding: 40px 24px; max-width: 1200px; margin: 0 auto; text-align: center; }
 .results h2, .form-page h2, .form-page h3 { text-align: center; margin-bottom: 24px; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; text-align: left; }
@@ -68,12 +36,10 @@ main {
 .card h4 {
     margin: 0 0 8px;
     font-size: 1.2rem;
-
-    /* --- UZUN BAŞLIKLARI KISALTMAK İÇİN YENİ KODLAR --- */
     -webkit-line-clamp: 2; /* Metni en fazla 2 satırla sınırla */
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    overflow: hidden; /* Kutunun dışına taşan her şeyi gizle */
+    overflow: hidden;
 }
 .card p { margin: 4px 0; color: #495057; line-height: 1.5; }
 
@@ -112,8 +78,7 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 #hamburger-menu, #mobile-nav { display: none; }
 
 @media (max-width: 768px) {
-    .desktop-link { display: none; }
-    .nav-links > a { display: none; }
+    .desktop-link, .nav-links > a { display: none; }
     #hamburger-menu { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 8px; margin-right: 10px; }
     .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
     #mobile-nav { position: fixed; top: 61px; left: -100%; width: 80%; max-width: 300px; height: 100%; background-color: #333; z-index: 1000; transition: left 0.3s ease-in-out; }
