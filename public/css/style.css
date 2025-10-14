@@ -163,7 +163,7 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 }
 
 /* =============================================== */
-/* MOBİL UYUMLULUK (HAMBURGER MENÜLÜ VERSİYON) */
+/* MOBİL UYUMLULUK (SON GÜNCEL VERSİYON) */
 /* =============================================== */
 
 /* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
@@ -172,6 +172,12 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
 }
 
 @media (max-width: 768px) {
+
+    /* YATAY TAŞMAYI KESİNLİKLE ENGELLE */
+    body {
+        overflow-x: hidden;
+    }
+
     /* Bilgisayar linklerini mobilde gizle */
     .desktop-link {
         display: none;
@@ -181,7 +187,7 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
     #hamburger-menu {
         display: flex;
         flex-direction: column;
-        gap: 4px; /* Çizgiler arası boşluk */
+        gap: 4px;
         cursor: pointer;
         padding: 8px;
         margin-right: 10px;
@@ -191,23 +197,24 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
         height: 3px;
         background-color: white;
         border-radius: 2px;
+        transition: all 0.3s ease-in-out;
     }
 
     /* Açılır mobil menüyü şekillendir */
     #mobile-nav {
-        position: fixed; /* Ekranla birlikte kaysın */
-        top: 61px; /* Navbar'ın hemen altında */
-        left: -100%; /* Başlangıçta ekranın solunda gizli */
+        position: fixed;
+        top: 61px;
+        left: -100%;
         width: 80%;
+        max-width: 300px;
         height: 100%;
         background-color: #333;
         z-index: 1000;
-        transition: left 0.3s ease-in-out; /* Güzel bir açılış animasyonu */
+        transition: left 0.3s ease-in-out;
     }
-    /* Menü aktif olduğunda soldan ekrana gelsin */
     #mobile-nav.active {
         left: 0;
-        display: block; /* Görünür yap */
+        display: block;
     }
     #mobile-nav a {
         color: white;
@@ -221,9 +228,16 @@ footer { text-align: center; padding: 24px; background: #222; color: #aaa; margi
         color: #222;
     }
 
-    /* Eski mobil kodları (güncellenmiş) */
+    /* Navbar'ı ve diğer elemanları düzenle */
     .navbar { padding: 10px 16px; }
     .search-box { flex-direction: column; align-items: stretch; }
-    .hero h1 { font-size: 1.8rem; }
+
+    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
+    .hero h1 {
+        font-size: 1.8rem;
+        word-wrap: break-word; /* Gerekirse kelimeleri kırarak alt satıra indir */
+        overflow-wrap: break-word;
+    }
+
     .card-grid { grid-template-columns: 1fr; }
 }
