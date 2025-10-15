@@ -114,9 +114,31 @@ if (registerForm) {
 }
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
-    loginForm.addEventListener('submit', async function(e) { e.preventDefault(); const loginData = { email: document.getElementById('login-email').value, pass: document.getElementById('login-pass').value, remember: document.getElementById('login-remember').checked }; try { const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) }); const result = await response.json(); if (result.success) { window.location.href = '/index.html'; } else { alert(result.message); } } catch (err) { alert('Sunucuya bağlanırken bir hata oluştu.'); } });
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const loginData = {
+            email: document.getElementById('login-email').value,
+            pass: document.getElementById('login-pass').value,
+            remember: document.getElementById('login-remember').checked
+        };
+        try {
+            // HATA BURADAYDI, ŞİMDİ DÜZELTİLDİ
+            const response = await fetch('/api/login', { // "/api" eklendi
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginData)
+            });
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = '/index.html';
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+            alert('Sunucuya bağlanırken bir hata oluştu.');
+        }
+    });
 }
-
 /* --- Şifre Sıfırlama İşlemleri --- */
 const forgotPasswordForm = document.getElementById('forgot-password-form');
 if (forgotPasswordForm) {
