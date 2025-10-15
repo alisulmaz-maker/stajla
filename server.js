@@ -15,7 +15,7 @@ const filter = new Filter();
 
 // Filtreye kendi Türkçe kelimelerimizi ekleyelim
 // (Bu listeyi istediğin gibi genişletebilirsin)
-const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'oruspu', 'oruspuçocuğu'* ...diğer kelimeler... */];
+cconst turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan', 'oruspu', 'oruspuçocuğu', 'amk', 'amınakoyayım', 'mal'];
 filter.addWords(...turkceArgolar);
 
 const connectionString = process.env.DATABASE_URL;
