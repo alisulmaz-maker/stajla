@@ -416,3 +416,24 @@ footer {
 .report-link:hover {
     color: #dc3545; /* Kırmızı */
 }
+/* --- Başvuru İşlemleri --- */
+const resultsContainer = document.getElementById('results-container');
+if (resultsContainer) {
+resultsContainer.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('apply-btn')) {
+    const listingId = e.target.dataset.id;
+
+try {
+    const response = await fetch('/api/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ listingId: listingId })
+});
+const result = await response.json();
+alert(result.message);
+} catch (err) {
+alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+}
+}
+});
+}

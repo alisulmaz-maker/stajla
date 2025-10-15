@@ -229,7 +229,20 @@ if (searchBtn) {
                 results.forEach(j => {
                     const el = document.createElement('div');
                     el.className = 'card';
-                    el.innerHTML = `<h4>${escapeHtml(j.company)}</h4><p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p><p>${escapeHtml(j.sector)}</p><p>${escapeHtml(j.req)}</p><p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>`;
+                    const applyButtonHTML = (currentUser && currentUser.role === 'student')
+                        ? `<div class="card-actions"><button class="apply-btn" data-id="${j._id}">Başvur</button></div>`
+                        : '';
+
+                    el.innerHTML = `
+        <div class="card-content">
+            <h4>${escapeHtml(j.company)}</h4>
+            <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
+            <p>${escapeHtml(j.sector)}</p>
+            <p>${escapeHtml(j.req)}</p>
+            <p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>
+        </div>
+        ${applyButtonHTML}
+    `;
                     container.appendChild(el);
                     <a href="#" className="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
                 });
@@ -347,4 +360,24 @@ function updateUIAfterLogin() {
         // Eğer kullanıcı işveren ise, "Öğrenci İlanı Ekle" linkini gizle
         studentLink.style.display = 'none';
     }
+}/* --- Başvuru İşlemleri --- */
+const resultsContainer = document.getElementById('results-container');
+if (resultsContainer) {
+    resultsContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('apply-btn')) {
+            const listingId = e.target.dataset.id;
+
+            try {
+                const response = await fetch('/api/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ listingId: listingId })
+                });
+                const result = await response.json();
+                alert(result.message);
+            } catch (err) {
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+        }
+    });
 }

@@ -174,6 +174,50 @@ connectToDb().then(() => {
         }
     });
 
+    // YENİ API ENDPOINT: Bir işveren ilanına başvurmak için
+    app.post('/api/apply', async (req, res) => {
+        // 1. Kullanıcı giriş yapmış mı ve rolü 'student' mı diye kontrol et
+        if (!req.session.user || req.session.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' });
+        }
+
+        try {
+            const { listingId } = req.body; // Butona tıklandığında gelen ilan ID'si
+            const studentId = new ObjectId(req.session.user.id);
+
+            // 2. Bu öğrenci bu ilana daha önce başvurmuş mu diye kontrol et (spam'i önlemek için)
+            const existingApplication = await db.collection("applications").findOne({
+                listingId: new ObjectId(listingId),
+                applicantId: studentId
+            });
+            if (existingApplication) {
+                return res.status(400).json({ success: false, message: 'Bu ilana zaten başvurdunuz.' });
+            }
+
+            // 3. İlanın sahibinin ID'sini bul
+            const listing = await db.collection("isverenler").findOne({ _id: new ObjectId(listingId) });
+            if (!listing) {
+                return res.status(404).json({ success: false, message: 'İlan bulunamadı.' });
+            }
+
+            // 4. Yeni başvuru belgesini oluştur ve "applications" koleksiyonuna kaydet
+            const newApplication = {
+                applicantId: studentId,
+                listingId: new ObjectId(listingId),
+                ownerId: listing.createdBy, // İlan sahibinin ID'si
+                status: 'pending', // Başvuru durumu: 'beklemede'
+                createdAt: new Date() // Başvuru tarihi
+            };
+            await db.collection("applications").insertOne(newApplication);
+
+            res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
+
+        } catch (err) {
+            console.error('Başvuru sırasında hata:', err);
+            res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
+        }
+    });
+
     // YENİ API ENDPOINT: Bir ilanı şikayet etmek için
     app.post('/api/report-listing', async (req, res) => {
         if (!req.session.user) {
