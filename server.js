@@ -14,8 +14,7 @@ const Filter = require('bad-words');
 const filter = new Filter();
 
 // Filtreye kendi Türkçe kelimelerimizi ekleyelim
-// (Bu listeyi istediğin gibi genişletebilirsin)
-cconst turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan', 'oruspu', 'oruspuçocuğu', 'amk', 'amınakoyayım', 'mal'];
+const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan']; // Başındaki 'const' kelimesi eklendi.
 filter.addWords(...turkceArgolar);
 
 const connectionString = process.env.DATABASE_URL;
