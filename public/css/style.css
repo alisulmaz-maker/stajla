@@ -441,16 +441,18 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
 /* GİRİŞ SAYFASI - "BENİ HATIRLA" DÜZELTMESİ */
 /* =============================================== */
 .remember-me {
-    display: flex; /* İçindeki elemanları (kutucuk ve yazı) yan yana diz */
-    align-items: center; /* Dikey olarak ortala (en önemli kural bu) */
-    gap: 8px; /* Aralarına 8px boşluk koy */
-    margin-bottom: 16px; /* Altındaki "Giriş Yap" butonuyla arasına boşluk koy */
-    font-weight: 500; /* Yazıyı çok kalın olmaktan çıkarıp normale yaklaştır */
+    display: flex;       /* İçindeki elemanları (kutucuk ve yazı) yan yana diz */
+    align-items: center; /* Dikey olarak tam ortada hizala */
+    gap: 8px;            /* Aralarına 8px boşluk koy */
+    margin-bottom: 20px; /* Altındaki "Giriş Yap" butonuyla arasına boşluk koy */
+    font-weight: 500;    /* Yazıyı çok kalın olmaktan çıkarıp normale yaklaştır */
 }
 
 /* Checkbox'ın kendisi için tarayıcının eklediği varsayılan boşlukları kaldır */
 .remember-me input[type="checkbox"] {
     margin: 0;
+    width: 16px;  /* Kutucuğun boyutunu standart hale getir */
+    height: 16px;
 }
 
 /* Label için varsayılan kalın fontu ve gereksiz boşlukları sıfırla */
