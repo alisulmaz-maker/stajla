@@ -9,11 +9,22 @@ const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
 
-// ARGO FİLTRESİYLE İLGİLİ HER ŞEY SİLİNDİ
+// NİHAİ VE DOĞRU KÜTÜPHANE KURULUMU
+const BadWords = require('bad-words-next');
+const en = require('bad-words-next/data/en.json');
+const filter = new BadWords({ data: en });
+const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan', 'oruspu', 'orospuçocuğu', 'amk', 'aminakoyayim', 'mal'];
+filter.addWords(...turkceArgolar);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Render için PORT ayarı
 const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+    console.error("HATA: DATABASE_URL bulunamadı. Lütfen .env dosyanızı kontrol edin.");
+    process.exit(1);
+}
+
 const client = new MongoClient(connectionString);
 let db;
 
@@ -42,14 +53,17 @@ connectToDb().then(() => {
         secret: 'cok-gizli-bir-anahtar-kelime-lutfen-degistir',
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({ mongoUrl: connectionString })
+        store: MongoStore.create({ mongoUrl: connectionString }),
+        cookie: { secure: process.env.NODE_ENV === 'production' }
     }));
 
     // --- KULLANICI YÖNETİMİ ---
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
-            // Argo filtresi kaldırıldı
+            if (filter.isProfane(name)) {
+                return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' });
+            }
             const existingUser = await db.collection("kullanicilar").findOne({ email: email });
             if (existingUser) { return res.json({ success: false, message: 'Bu e-posta adresi zaten kullanılıyor.' }); }
             const hashedPassword = await bcrypt.hash(pass, 10);
@@ -58,15 +72,61 @@ connectToDb().then(() => {
         } catch (err) { console.error("Kayıt sırasında hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
-    // ... (Diğer tüm kullanıcı API'ları - login, forgot-password vb. - buradadır ve doğrudur) ...
-    // ... Onları tekrar yapıştırmaya gerek yok, bu tam kodda hepsi var ...
+    app.post('/api/login', async (req, res) => {
+        try {
+            const { email, pass, remember } = req.body;
+            const user = await db.collection("kullanicilar").findOne({ email: email });
+            if (!user) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
+            const isPasswordCorrect = await bcrypt.compare(pass, user.password);
+            if (!isPasswordCorrect) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
+            req.session.user = { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
+            if (remember) { req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; } else { req.session.cookie.expires = false; }
+            res.json({ success: true, message: 'Giriş başarılı!' });
+        } catch (err) { console.error('Giriş sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+    });
+
+    app.get('/api/current-user', (req, res) => {
+        if (req.session.user) { res.json(req.session.user); } else { res.json(null); }
+    });
+
+    app.get('/api/logout', (req, res) => {
+        req.session.destroy(err => { if (err) { return res.json({ success: false }); } res.clearCookie('connect.sid'); res.json({ success: true }); });
+    });
+
+    app.post('/api/forgot-password', async (req, res) => {
+        try {
+            const { email } = req.body;
+            const user = await db.collection("kullanicilar").findOne({ email: email });
+            if (!user) { return res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' }); }
+            const resetToken = crypto.randomBytes(20).toString('hex');
+            await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { resetPasswordToken: resetToken, resetPasswordExpires: Date.now() + 3600000 } });
+            const testAccount = await nodemailer.createTestAccount();
+            const transporter = nodemailer.createTransport({ host: "smtp.ethereal.email", port: 587, secure: false, auth: { user: testAccount.user, pass: testAccount.pass } });
+            const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
+            await transporter.sendMail({ from: '"Stajla Destek" <destek@stajla.com>', to: user.email, subject: "Stajla Şifre Sıfırlama İsteği", html: `<p>Merhaba ${user.name},</p><p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayınız. Bu link 1 saat geçerlidir.</p><a href="${resetURL}">${resetURL}</a>` });
+            res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
+        } catch (err) { console.error('Şifre sıfırlama sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
+    });
+
+    app.post('/api/reset-password', async (req, res) => {
+        try {
+            const { token, newPassword } = req.body;
+            const user = await db.collection("kullanicilar").findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
+            if (!user) { return res.json({ success: false, message: 'Şifre sıfırlama anahtarı geçersiz veya süresi dolmuş.' }); }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { password: hashedPassword, resetPasswordToken: undefined, resetPasswordExpires: undefined } });
+            res.json({ success: true, message: 'Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.' });
+        } catch (err) { console.error('Şifre güncellenirken hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
+    });
 
     // --- İLAN YÖNETİMİ ---
     app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            // Argo filtresi kaldırıldı
+            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
+                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
+            }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
             if (req.file) { yeniIlan.cvPath = req.file.path.replace(/\\/g, '/').replace('public', ''); }
             await db.collection("ogrenciler").insertOne(yeniIlan);
@@ -78,7 +138,9 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'employer') { return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            // Argo filtresi kaldırıldı
+            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
+                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
+            }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
             await db.collection("isverenler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
