@@ -80,14 +80,20 @@ async function fetchMyListings() {
     } catch (err) { const errorMessage = '<p>İlanlarınızı görmek için giriş yapmalısınız.</p>'; studentContainer.innerHTML = errorMessage; employerContainer.innerHTML = errorMessage; }
 }
 
+/* --- Rol Tabanlı Arayüz Güncellemeleri --- */
 function updateUIAfterLogin() {
-    if (!currentUser) return;
-    const studentLink = document.querySelector('a[href="/ogrenci-ilan.html"]');
-    const employerLink = document.querySelector('a[href="/isveren-ilan.html"]');
-    if (currentUser.role === 'student' && employerLink) {
-        employerLink.style.display = 'none';
-    } else if (currentUser.role === 'employer' && studentLink) {
-        studentLink.style.display = 'none';
+    if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
+
+    // Hem bilgisayar menüsündeki hem de mobil menüdeki linkleri seç
+    const studentLinks = document.querySelectorAll('a[href="/ogrenci-ilan.html"]');
+    const employerLinks = document.querySelectorAll('a[href="/isveren-ilan.html"]');
+
+    if (currentUser.role === 'student') {
+        // Eğer kullanıcı öğrenci ise, tüm "İşveren İlanı Ekle" linklerini gizle
+        employerLinks.forEach(link => link.style.display = 'none');
+    } else if (currentUser.role === 'employer') {
+        // Eğer kullanıcı işveren ise, tüm "Öğrenci İlanı Ekle" linklerini gizle
+        studentLinks.forEach(link => link.style.display = 'none');
     }
 }
 

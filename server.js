@@ -61,6 +61,7 @@ connectToDb().then(() => {
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
+            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
             if (filter.isProfane(name)) {
                 return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' });
             }
@@ -134,22 +135,22 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
+            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
             if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
                 return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
             }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
-            if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', '').replace(/\\/g, '/'); }
+            if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', ''); }
             await db.collection("ogrenciler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
         } catch (err) { console.error("Öğrenci ilanı eklenirken hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
     app.post('/api/isveren-ilan', async (req, res) => {
-        if (!req.session.user || req.session.user.role !== 'employer') {
-            return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
-        }
+        if (!req.session.user || req.session.user.role !== 'employer') { return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
+            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
             if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
                 return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
             }
