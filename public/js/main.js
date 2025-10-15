@@ -80,19 +80,13 @@ async function fetchMyListings() {
     } catch (err) { const errorMessage = '<p>İlanlarınızı görmek için giriş yapmalısınız.</p>'; studentContainer.innerHTML = errorMessage; employerContainer.innerHTML = errorMessage; }
 }
 
-/* --- Rol Tabanlı Arayüz Güncellemeleri --- */
 function updateUIAfterLogin() {
-    if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
-
-    // Hem bilgisayar menüsündeki hem de mobil menüdeki linkleri seç
+    if (!currentUser) return;
     const studentLinks = document.querySelectorAll('a[href="/ogrenci-ilan.html"]');
     const employerLinks = document.querySelectorAll('a[href="/isveren-ilan.html"]');
-
     if (currentUser.role === 'student') {
-        // Eğer kullanıcı öğrenci ise, tüm "İşveren İlanı Ekle" linklerini gizle
         employerLinks.forEach(link => link.style.display = 'none');
     } else if (currentUser.role === 'employer') {
-        // Eğer kullanıcı işveren ise, tüm "Öğrenci İlanı Ekle" linklerini gizle
         studentLinks.forEach(link => link.style.display = 'none');
     }
 }
@@ -122,8 +116,7 @@ if (loginForm) {
             remember: document.getElementById('login-remember').checked
         };
         try {
-            // HATA BURADAYDI, ŞİMDİ DÜZELTİLDİ
-            const response = await fetch('/api/login', { // "/api" eklendi
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(loginData)
@@ -139,6 +132,7 @@ if (loginForm) {
         }
     });
 }
+
 /* --- Şifre Sıfırlama İşlemleri --- */
 const forgotPasswordForm = document.getElementById('forgot-password-form');
 if (forgotPasswordForm) {
@@ -180,13 +174,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (currentUser && currentUser.role === 'employer') {
             await setupNotifications();
         }
-
     } catch (err) { console.error('Kullanıcı durumu kontrol edilirken hata:', err); }
     if (document.getElementById('results-container')) { renderResultsOnHome(); }
     if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
 });
 
-/* --- Arama ve Şikayet İşlemleri --- */
+/* --- Arama, Şikayet ve Başvuru İşlemleri --- */
 document.body.addEventListener('click', async function(e) {
     if (e.target.id === 'search-btn') {
         const searchType = document.getElementById('search-type').value;
@@ -239,38 +232,24 @@ if (hamburger && mobileNav) {
         mobileNav.classList.toggle('active');
     });
 }
+
 /* --- Bildirim Sistemi İşlemleri --- */
 async function setupNotifications() {
     const userNav = document.getElementById('user-nav');
     if (!userNav) return;
-
-    // Navbar'a bildirim ikonunu ekle
-    const notificationHTML = `
-        <div class="notifications">
-            <div class="notification-bell">🔔</div>
-            <div class="notification-count" style="display: none;">0</div>
-            <div class="notification-dropdown"></div>
-        </div>
-    `;
-    userNav.insertAdjacentHTML('beforebegin', notificationHTML); // Profilin hemen soluna ekle
-
+    const notificationHTML = `<div class="notifications"><div class="notification-bell">🔔</div><div class="notification-count" style="display: none;">0</div><div class="notification-dropdown"></div></div>`;
+    userNav.insertAdjacentHTML('beforebegin', notificationHTML);
     const bell = document.querySelector('.notification-bell');
     const countBadge = document.querySelector('.notification-count');
     const dropdown = document.querySelector('.notification-dropdown');
-
-    // Bildirimleri sunucudan çek
     const response = await fetch('/api/notifications');
     const notifications = await response.json();
-
-    // Bildirim sayısını ve içeriğini güncelle
     if (notifications.length > 0) {
         countBadge.textContent = notifications.length;
         countBadge.style.display = 'flex';
-
         notifications.forEach(notif => {
             const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
             const listingCompany = notif.listingInfo[0]?.company || 'İlan';
-
             const item = document.createElement('div');
             item.className = 'notification-item';
             item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong>, <em>${escapeHtml(listingCompany)}</em> ilanına başvurdu.</p>`;
@@ -279,10 +258,7 @@ async function setupNotifications() {
     } else {
         dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
     }
-
-    // Zil'e tıklandığında menüyü aç/kapat
     bell.addEventListener('click', () => {
         bell.parentElement.classList.toggle('active');
-        // (İleride okundu olarak işaretleme mantığı buraya eklenebilir)
     });
 }
