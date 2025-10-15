@@ -8,7 +8,7 @@ function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '/': '&#47;', '=': '&#61;' };
     return text.replace(/[&<>"'`=/]/g, s => map[s]);
 }
-
+let currentUser = null; // Giriş yapan kullanıcının bilgilerini burada saklayacağız
 /* --- Arayüz Güncelleme Fonksiyonları --- */
 async function renderResultsOnHome() {
     const container = document.getElementById('results-container');
@@ -174,13 +174,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/api/current-user');
         const user = await response.json();
+        currentUser = user; // <-- YENİ EKLENEN SATIR: Kullanıcı bilgisini global değişkene ata
+
         const userNav = document.getElementById('user-nav');
-        if (user && userNav) {
-            const userInitial = user.name.charAt(0).toUpperCase();
-            userNav.innerHTML = `<div class="profile-dropdown"><div class="profile-avatar">${userInitial}</div><div class="dropdown-content"><a href="/profil.html">Profilim</a><a id="logout-btn" href="#">Çıkış Yap</a></div></div>`;
-            document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
+        if (currentUser && userNav) { // 'user' yerine 'currentUser' kullandık
+            const userInitial = currentUser.name.charAt(0).toUpperCase();
+            userNav.innerHTML = `<div class="profile-dropdown">...</div>`; // ... (kodun bu kısmı aynı)
+            // ...
         }
-    } catch (err) { console.error('Kullanıcı durumu kontrol edilirken hata:', err); }
+
+        updateUIAfterLogin(); // <-- YENİ EKLENEN SATIR: Arayüzü güncelleme fonksiyonunu çağır
+
+    } catch (err) {
+        console.error('Kullanıcı durumu kontrol edilirken hata:', err);
+    }
     if (document.getElementById('results-container')) { renderResultsOnHome(); }
     if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
 });
@@ -325,3 +332,19 @@ document.body.addEventListener('click', async function(e) {
         }
     }
 });
+/* --- Rol Tabanlı Arayüz Güncellemeleri --- */
+function updateUIAfterLogin() {
+    if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
+
+    // HTML'deki linkleri seç
+    const studentLink = document.querySelector('a[href="/ogrenci-ilan.html"]');
+    const employerLink = document.querySelector('a[href="/isveren-ilan.html"]');
+
+    if (currentUser.role === 'student' && employerLink) {
+        // Eğer kullanıcı öğrenci ise, "İşveren İlanı Ekle" linkini gizle
+        employerLink.style.display = 'none';
+    } else if (currentUser.role === 'employer' && studentLink) {
+        // Eğer kullanıcı işveren ise, "Öğrenci İlanı Ekle" linkini gizle
+        studentLink.style.display = 'none';
+    }
+}

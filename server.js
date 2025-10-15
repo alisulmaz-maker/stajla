@@ -389,23 +389,35 @@ connectToDb().then(() => {
 
     // Öğrenci ilanı oluşturma - ARTIK DOSYA YÜKLEME DESTEKLİYOR
     app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
+        // 1. Giriş yapılmış mı diye kontrol et
         if (!req.session.user) {
             return res.status(401).json({ success: false, message: 'İlan eklemek için giriş yapmalısınız.' });
         }
+
+        // --- YENİ GÜVENLİK KONTROLÜ (ROL KONTROLÜ) ---
+        // 2. Kullanıcının rolü 'student' mı diye kontrol et
+        if (req.session.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Sadece öğrenciler ilan oluşturabilir.' });
+        }
+        // ---------------------------------------------
+
         try {
             const yeniIlan = req.body;
 
-            // --- YENİ GÜVENLİK KONTROLÜ ---
+            // 3. Argo kelime kontrolü
             if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
-                return res.status(400).json({ success: false, message: 'İlan başlığı veya açıklamasında uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
+                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
             }
-            // ---------------------------------
 
-            // ... (ilanı kaydetme kodları aynı kalacak) ...
+            // 4. Veriyi veritabanına kaydet
             yeniIlan.createdBy = req.session.user.id;
-            if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', ''); }
+            if (req.file) {
+                yeniIlan.cvPath = req.file.path.replace('public', '');
+            }
             await db.collection("ogrenciler").insertOne(yeniIlan);
+
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
+
         } catch (err) {
             console.error('İlan eklenirken hata:', err);
             res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
@@ -425,6 +437,9 @@ connectToDb().then(() => {
     app.post('/api/isveren-ilan', async (req, res) => {
         if (!req.session.user) { // Kullanıcı giriş yapmamışsa ilan eklemesini engelle
             return res.status(401).json({ success: false, message: 'İlan eklemek için giriş yapmalısınız.' });
+        }
+        if (req.session.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Sadece öğrenciler ilan oluşturabilir.' });
         }
         try {
             const yeniIlan = req.body;
