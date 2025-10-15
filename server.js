@@ -63,7 +63,7 @@ connectToDb().then(() => {
 
             // --- YENİ GÜVENLİK KONTROLÜ ---
             // Kullanıcı adını argo kelimeler için kontrol et
-            if (filter.isProfane(name)) {
+            if (filter.check(name)) {
                 return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi. Lütfen farklı bir ad seçin.' });
             }
             // ---------------------------------
@@ -486,7 +486,7 @@ connectToDb().then(() => {
             const yeniIlan = req.body;
 
             // 3. Argo kelime kontrolü
-            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
+            if (filter.check(yeniIlan.name) || filter.check(yeniIlan.desc) || filter.check(yeniIlan.dept)) {
                 return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
             }
 
@@ -527,7 +527,7 @@ connectToDb().then(() => {
 
             // --- YENİ GÜVENLİK KONTROLÜ ---
             // Firma adı, sektör, nitelikler gibi metin alanlarını kontrol et
-            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
+            if (filter.check(yeniIlan.company) || filter.check(yeniIlan.sector) || filter.check(yeniIlan.req)) {
                 return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
             }
             // ---------------------------------
