@@ -1,6 +1,8 @@
 // ===================================================================================
-//                                  STAJLA - main.js (BÜYÜK SIFIRLAMA VERSİYONU)
+//                                  STAJLA - main.js (NİHAİ KARARLI VERSİYON)
 // ===================================================================================
+
+let currentUser = null; // Giriş yapan kullanıcının bilgilerini burada saklayacağız
 
 /* --- Güvenlik için Yardımcı Fonksiyon --- */
 function escapeHtml(text) {
@@ -8,7 +10,7 @@ function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '/': '&#47;', '=': '&#61;' };
     return text.replace(/[&<>"'`=/]/g, s => map[s]);
 }
-let currentUser = null; // Giriş yapan kullanıcının bilgilerini burada saklayacağız
+
 /* --- Arayüz Güncelleme Fonksiyonları --- */
 async function renderResultsOnHome() {
     const container = document.getElementById('results-container');
@@ -25,16 +27,7 @@ async function renderResultsOnHome() {
         ilanlar.forEach(s => {
             const el = document.createElement('div');
             el.className = 'card';
-            el.innerHTML = `
-                <h4>${escapeHtml(s.name)}</h4>
-                <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
-                <p>${escapeHtml(s.dept || '')}</p>
-                <p>${escapeHtml(s.desc)}</p>
-                ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
-                <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-                 <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-            `;
-            // *** EKSİK OLAN SATIR BURAYA EKLENDİ ***
+            el.innerHTML = `<h4>${escapeHtml(s.name)}</h4><p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p><p>${escapeHtml(s.dept||'')}</p><p>${escapeHtml(s.desc)}</p>${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}<p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p><a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>`;
             container.appendChild(el);
         });
     } catch (err) { console.error('Sonuçlar yüklenirken hata:', err); container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>'; }
@@ -44,7 +37,6 @@ async function fetchMyListings() {
     const studentContainer = document.getElementById('my-student-listings');
     const employerContainer = document.getElementById('my-employer-listings');
     if (!studentContainer || !employerContainer) return;
-
     const handleContainerClick = async (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const id = e.target.dataset.id;
@@ -61,7 +53,6 @@ async function fetchMyListings() {
     };
     studentContainer.addEventListener('click', handleContainerClick);
     employerContainer.addEventListener('click', handleContainerClick);
-
     studentContainer.innerHTML = "Yükleniyor...";
     employerContainer.innerHTML = "Yükleniyor...";
     try {
@@ -89,6 +80,17 @@ async function fetchMyListings() {
     } catch (err) { const errorMessage = '<p>İlanlarınızı görmek için giriş yapmalısınız.</p>'; studentContainer.innerHTML = errorMessage; employerContainer.innerHTML = errorMessage; }
 }
 
+function updateUIAfterLogin() {
+    if (!currentUser) return;
+    const studentLink = document.querySelector('a[href="/ogrenci-ilan.html"]');
+    const employerLink = document.querySelector('a[href="/isveren-ilan.html"]');
+    if (currentUser.role === 'student' && employerLink) {
+        employerLink.style.display = 'none';
+    } else if (currentUser.role === 'employer' && studentLink) {
+        studentLink.style.display = 'none';
+    }
+}
+
 /* --- Form Gönderme İşlemleri --- */
 const studentForm = document.getElementById('student-form');
 if (studentForm) {
@@ -106,32 +108,17 @@ if (registerForm) {
 }
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
-    loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    loginForm.addEventListener('submit', async function(e) { e.preventDefault(); const loginData = { email: document.getElementById('login-email').value, pass: document.getElementById('login-pass').value, remember: document.getElementById('login-remember').checked }; try { const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) }); const result = await response.json(); if (result.success) { window.location.href = '/index.html'; } else { alert(result.message); } } catch (err) { alert('Sunucuya bağlanırken bir hata oluştu.'); } });
+}
 
-        const loginData = {
-            email: document.getElementById('login-email').value,
-            pass: document.getElementById('login-pass').value,
-            // YENİ EKLENEN SATIR: "Beni Hatırla" kutusunun durumunu ekliyoruz
-            remember: document.getElementById('login-remember').checked
-        };
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(loginData)
-            });
-            const result = await response.json();
-            if (result.success) {
-                window.location.href = '/index.html';
-            } else {
-                alert(result.message);
-            }
-        } catch (err) {
-            alert('Sunucuya bağlanırken bir hata oluştu.');
-        }
-    });
+/* --- Şifre Sıfırlama İşlemleri --- */
+const forgotPasswordForm = document.getElementById('forgot-password-form');
+if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async function(e) { e.preventDefault(); const email = document.getElementById('forgot-email').value; const button = this.querySelector('button'); button.textContent = 'Gönderiliyor...'; try { const response = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); const result = await response.json(); alert(result.message); button.textContent = 'Sıfırlama Linki Gönder'; } catch (err) { alert('Bir hata oluştu. Lütfen tekrar deneyin.'); button.textContent = 'Sıfırlama Linki Gönder'; } });
+}
+if (window.location.pathname.endsWith('/reset-password.html')) {
+    const resetPasswordForm = document.getElementById('reset-password-form');
+    resetPasswordForm.addEventListener('submit', async function(e) { e.preventDefault(); const pass1 = document.getElementById('reset-pass1').value; const pass2 = document.getElementById('reset-pass2').value; if (pass1 !== pass2) { alert('Girdiğiniz şifreler uyuşmuyor.'); return; } const params = new URLSearchParams(window.location.search); const token = params.get('token'); try { const response = await fetch('/api/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token, newPassword: pass1 }) }); const result = await response.json(); alert(result.message); if (result.success) { window.location.href = '/giris.html'; } } catch (err) { alert('Bir hata oluştu.'); } });
 }
 
 /* --- İlan Düzenleme Sayfası İşlemleri --- */
@@ -142,61 +129,34 @@ if (window.location.pathname.endsWith('/edit-listing.html')) {
     const studentFormEdit = document.getElementById('student-form-edit');
     const jobFormEdit = document.getElementById('job-form-edit');
     if (studentFormEdit && jobFormEdit) {
-        async function loadListingData() {
-            try {
-                const response = await fetch(`/api/listing/${listingId}?type=${listingType}`);
-                const data = await response.json();
-                if (listingType === 'student') {
-                    studentFormEdit.style.display = 'block';
-                    document.getElementById('s-name').value = data.name; document.getElementById('s-dept').value = data.dept; document.getElementById('s-desc').value = data.desc; document.getElementById('s-contact').value = data.contact;
-                } else {
-                    jobFormEdit.style.display = 'block';
-                    document.getElementById('j-company').value = data.company; document.getElementById('j-sector').value = data.sector; document.getElementById('j-req').value = data.req; document.getElementById('j-contact').value = data.contact;
-                }
-            } catch (err) { alert('İlan bilgileri yüklenemedi.'); }
-        }
+        async function loadListingData() { try { const response = await fetch(`/api/listing/${listingId}?type=${listingType}`); const data = await response.json(); if (listingType === 'student') { studentFormEdit.style.display = 'block'; document.getElementById('s-name').value = data.name; document.getElementById('s-dept').value = data.dept; document.getElementById('s-desc').value = data.desc; document.getElementById('s-contact').value = data.contact; } else { jobFormEdit.style.display = 'block'; document.getElementById('j-company').value = data.company; document.getElementById('j-sector').value = data.sector; document.getElementById('j-req').value = data.req; document.getElementById('j-contact').value = data.contact; } } catch (err) { alert('İlan bilgileri yüklenemedi.'); } }
         loadListingData();
         studentFormEdit.addEventListener('submit', async (e) => { e.preventDefault(); const updatedData = { name: document.getElementById('s-name').value, dept: document.getElementById('s-dept').value, desc: document.getElementById('s-desc').value, contact: document.getElementById('s-contact').value, }; await saveChanges(listingId, listingType, updatedData); });
         jobFormEdit.addEventListener('submit', async (e) => { e.preventDefault(); const updatedData = { company: document.getElementById('j-company').value, sector: document.getElementById('j-sector').value, req: document.getElementById('j-req').value, contact: document.getElementById('j-contact').value, }; await saveChanges(listingId, listingType, updatedData); });
-        async function saveChanges(id, type, data) {
-            try {
-                const response = await fetch('/api/update-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type, data }) });
-                const result = await response.json();
-                alert(result.message);
-                if (result.success) { window.location.href = '/profil.html'; }
-            } catch (err) { alert('Güncelleme sırasında bir hata oluştu.'); }
-        }
+        async function saveChanges(id, type, data) { try { const response = await fetch('/api/update-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type, data }) }); const result = await response.json(); alert(result.message); if (result.success) { window.location.href = '/profil.html'; } } catch (err) { alert('Güncelleme sırasında bir hata oluştu.'); } }
     }
 }
 
-/* --- Oturum Yönetimi ve Sayfa Yükleme İşlemleri --- */
+/* --- Oturum, Bildirim ve Sayfa Yükleme İşlemleri --- */
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/api/current-user');
-        const user = await response.json();
-        currentUser = user; // <-- YENİ EKLENEN SATIR: Kullanıcı bilgisini global değişkene ata
-
+        currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
-        if (currentUser && userNav) { // 'user' yerine 'currentUser' kullandık
+        if (currentUser && userNav) {
             const userInitial = currentUser.name.charAt(0).toUpperCase();
-            userNav.innerHTML = `<div class="profile-dropdown">...</div>`; // ... (kodun bu kısmı aynı)
-            // ...
+            userNav.innerHTML = `<div class="profile-dropdown"><div class="profile-avatar">${userInitial}</div><div class="dropdown-content"><a href="/profil.html">Profilim</a><a id="logout-btn" href="#">Çıkış Yap</a></div></div>`;
+            document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
         }
-
-        updateUIAfterLogin(); // <-- YENİ EKLENEN SATIR: Arayüzü güncelleme fonksiyonunu çağır
-
-    } catch (err) {
-        console.error('Kullanıcı durumu kontrol edilirken hata:', err);
-    }
+        updateUIAfterLogin();
+    } catch (err) { console.error('Kullanıcı durumu kontrol edilirken hata:', err); }
     if (document.getElementById('results-container')) { renderResultsOnHome(); }
     if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
 });
 
-/* --- Arama Kutusu İşlemleri --- */
-/* --- Arama Kutusu İşlemleri --- */
-const searchBtn = document.getElementById('search-btn');
-if (searchBtn) {
-    searchBtn.addEventListener('click', async () => {
+/* --- Arama ve Şikayet İşlemleri --- */
+document.body.addEventListener('click', async function(e) {
+    if (e.target.id === 'search-btn') {
         const searchType = document.getElementById('search-type').value;
         const searchArea = document.getElementById('search-area').value;
         const searchCity = document.getElementById('search-city').value;
@@ -209,175 +169,41 @@ if (searchBtn) {
             container.innerHTML = '';
             if (results.length === 0) { container.innerHTML = '<p>Aradığınız kriterlere uygun bir sonuç bulunamadı.</p>'; return; }
             if (searchType === 'students') {
-                results.forEach(s => {
-                    const el = document.createElement('div');
-                    el.className = 'card';
-                    // *** YAZIM HATASI DÜZELTİLDİ ***
-                    el.innerHTML = `
-                        <h4>${escapeHtml(s.name)}</h4>
-                        <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
-                        <p>${escapeHtml(s.dept || '')}</p>
-                        <p>${escapeHtml(s.desc)}</p>
-                        ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
-                        <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-                        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-                    `;
-                    // *** EKSİK OLAN SATIR BURAYA EKLENDİ ***
-                    container.appendChild(el);
-                });
-            } else {
-                results.forEach(j => {
-                    const el = document.createElement('div');
-                    el.className = 'card';
-                    const applyButtonHTML = (currentUser && currentUser.role === 'student')
-                        ? `<div class="card-actions"><button class="apply-btn" data-id="${j._id}">Başvur</button></div>`
-                        : '';
-
-                    el.innerHTML = `
-        <div class="card-content">
-            <h4>${escapeHtml(j.company)}</h4>
-            <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
-            <p>${escapeHtml(j.sector)}</p>
-            <p>${escapeHtml(j.req)}</p>
-            <p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>
-        </div>
-        ${applyButtonHTML}
-    `;
-                    container.appendChild(el);
-                    <a href="#" className="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-                });
+                results.forEach(s => { const el = document.createElement('div'); el.className = 'card'; el.innerHTML = `<h4>${escapeHtml(s.name)}</h4><p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p><p>${escapeHtml(s.dept || '')}</p><p>${escapeHtml(s.desc)}</p>${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}<p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p><a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>`; container.appendChild(el); });
+            } else { // jobs
+                results.forEach(j => { const el = document.createElement('div'); el.className = 'card'; const applyButtonHTML = (currentUser && currentUser.role === 'student') ? `<div class="card-actions"><button class="apply-btn" data-id="${j._id}">Başvur</button></div>` : ''; el.innerHTML = `<div class="card-content"><h4>${escapeHtml(j.company)}</h4><p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p><p>${escapeHtml(j.sector)}</p><p>${escapeHtml(j.req)}</p><p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p><a href="#" class="report-link" data-id="${j._id}" data-type="employer">Bu ilanı şikayet et</a></div>${applyButtonHTML}`; container.appendChild(el); });
             }
-        } catch (err) {
-            console.error('Arama sırasında hata:', err);
-            container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
-    });
-}
-/* --- Şifremi Unuttum Formu İşlemleri --- */
-const forgotPasswordForm = document.getElementById('forgot-password-form');
-if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const email = document.getElementById('forgot-email').value;
-        const button = this.querySelector('button');
-        button.textContent = 'Gönderiliyor...';
-
-        try {
-            const response = await fetch('/api/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const result = await response.json();
-            alert(result.message);
-            button.textContent = 'Sıfırlama Linki Gönder';
-        } catch (err) {
-            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-            button.textContent = 'Sıfırlama Linki Gönder';
-        }
-    });
-}
-/* --- Yeni Şifre Belirleme Formu İşlemleri --- */
-if (window.location.pathname.endsWith('/reset-password.html')) {
-    const resetPasswordForm = document.getElementById('reset-password-form');
-    resetPasswordForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const pass1 = document.getElementById('reset-pass1').value;
-        const pass2 = document.getElementById('reset-pass2').value;
-
-        if (pass1 !== pass2) {
-            alert('Girdiğiniz şifreler uyuşmuyor.');
-            return;
-        }
-
-        // URL'den sıfırlama anahtarını (token) al
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get('token');
-
-        try {
-            const response = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token, newPassword: pass1 })
-            });
-            const result = await response.json();
-            alert(result.message);
-
-            if (result.success) {
-                window.location.href = '/giris.html'; // Başarılıysa giriş sayfasına yönlendir
-            }
-        } catch (err) {
-            alert('Bir hata oluştu.');
-        }
-    });
-}
-/* --- Hamburger Menü İşlevselliği --- */
-const hamburger = document.getElementById('hamburger-menu');
-const mobileNav = document.getElementById('mobile-nav');
-
-if (hamburger && mobileNav) {
-    hamburger.addEventListener('click', () => {
-        mobileNav.classList.toggle('active');
-    });
-}
-/* --- Şikayet Etme İşlevselliği --- */
-document.body.addEventListener('click', async function(e) {
+        } catch (err) { console.error('Arama sırasında hata:', err); container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
+    }
     if (e.target.classList.contains('report-link')) {
         e.preventDefault();
         const id = e.target.dataset.id;
         const type = e.target.dataset.type;
-
         if (confirm('Bu ilanı uygunsuz içerik olarak bildirmek istediğinizden emin misiniz?')) {
             try {
-                const response = await fetch('/api/report-listing', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, type })
-                });
+                const response = await fetch('/api/report-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
                 const result = await response.json();
                 alert(result.message);
-                if (result.success) {
-                    e.target.style.display = 'none'; // Başarıyla bildirilince linki gizle
-                }
-            } catch (err) {
-                alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.');
-            }
+                if (result.success) { e.target.style.display = 'none'; }
+            } catch (err) { alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.'); }
         }
+    }
+    const resultsContainer = document.getElementById('results-container');
+    if(resultsContainer && e.target.classList.contains('apply-btn')) {
+        const listingId = e.target.dataset.id;
+        try {
+            const response = await fetch('/api/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listingId }) });
+            const result = await response.json();
+            alert(result.message);
+        } catch (err) { alert('Bir hata oluştu. Lütfen tekrar deneyin.'); }
     }
 });
-/* --- Rol Tabanlı Arayüz Güncellemeleri --- */
-function updateUIAfterLogin() {
-    if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
 
-    // HTML'deki linkleri seç
-    const studentLink = document.querySelector('a[href="/ogrenci-ilan.html"]');
-    const employerLink = document.querySelector('a[href="/isveren-ilan.html"]');
-
-    if (currentUser.role === 'student' && employerLink) {
-        // Eğer kullanıcı öğrenci ise, "İşveren İlanı Ekle" linkini gizle
-        employerLink.style.display = 'none';
-    } else if (currentUser.role === 'employer' && studentLink) {
-        // Eğer kullanıcı işveren ise, "Öğrenci İlanı Ekle" linkini gizle
-        studentLink.style.display = 'none';
-    }
-}/* --- Başvuru İşlemleri --- */
-const resultsContainer = document.getElementById('results-container');
-if (resultsContainer) {
-    resultsContainer.addEventListener('click', async (e) => {
-        if (e.target.classList.contains('apply-btn')) {
-            const listingId = e.target.dataset.id;
-
-            try {
-                const response = await fetch('/api/apply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ listingId: listingId })
-                });
-                const result = await response.json();
-                alert(result.message);
-            } catch (err) {
-                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-            }
-        }
+/* --- Hamburger Menü İşlevselliği --- */
+const hamburger = document.getElementById('hamburger-menu');
+const mobileNav = document.getElementById('mobile-nav');
+if (hamburger && mobileNav) {
+    hamburger.addEventListener('click', () => {
+        mobileNav.classList.toggle('active');
     });
 }
