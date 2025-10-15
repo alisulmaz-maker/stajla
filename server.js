@@ -14,7 +14,7 @@ const Filter = require('@2toad/profanity').Profanity;
 const filter = new Filter();
 
 const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan'];
-filter.addWords(...turkceArgolar);
+filter.addWords(turkceArgolar);
 
 const connectionString = process.env.DATABASE_URL;
 
