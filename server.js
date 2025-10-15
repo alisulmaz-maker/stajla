@@ -10,11 +10,10 @@ const path = require('path');
 const crypto = require('crypto');
 const app = express();
 const PORT = 3000;
-const Filter = require('bad-words');
+const Filter = require('@2toad/profanity').Profanity;
 const filter = new Filter();
 
-// Filtreye kendi Türkçe kelimelerimizi ekleyelim
-const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan']; // Başındaki 'const' kelimesi eklendi.
+const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan'];
 filter.addWords(...turkceArgolar);
 
 const connectionString = process.env.DATABASE_URL;
