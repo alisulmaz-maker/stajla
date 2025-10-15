@@ -3,8 +3,6 @@
 // ===================================================================================
 require('dotenv').config();
 const express = require('express');
-require('dotenv').config();
-const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -14,7 +12,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
 
-// NİHAİ VE DOĞRU ARGO FİLTRESİ KURULUMU
+// Nihai ve doğru argo filtresi kütüphanesi
 const BadWords = require('bad-words-next');
 const en = require('bad-words-next/data/en.json');
 const filter = new BadWords({ data: en });
@@ -49,7 +47,7 @@ connectToDb().then(() => {
     app.use(express.static('public'));
     app.use(express.json());
     app.use(session({
-        secret: 'cok-gizli-bir-anahtar-kelime-bunu-degistir',
+        secret: 'cok-gizli-bir-anahtar-kelime',
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({ mongoUrl: connectionString })
@@ -62,10 +60,7 @@ connectToDb().then(() => {
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
-            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
-            if (filter.isProfane(name)) {
-                return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' });
-            }
+            if (filter.isProfane(name)) { return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' }); }
             const existingUser = await db.collection("kullanicilar").findOne({ email: email });
             if (existingUser) { return res.json({ success: false, message: 'Bu e-posta adresi zaten kullanılıyor.' }); }
             const hashedPassword = await bcrypt.hash(pass, 10);
@@ -74,6 +69,7 @@ connectToDb().then(() => {
         } catch (err) { console.error("Kayıt sırasında hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
+
     app.post('/api/login', async (req, res) => {
         try {
             const { email, pass, remember } = req.body;
@@ -81,9 +77,8 @@ connectToDb().then(() => {
             if (!user) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
             const isPasswordCorrect = await bcrypt.compare(pass, user.password);
             if (!isPasswordCorrect) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
-            req.session.user = { id: user._id, name: user.name, email: user.email, role: user.role };
-            if (remember) { req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; }
-            else { req.session.cookie.expires = false; }
+            req.session.user = { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
+            if (remember) { req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; } else { req.session.cookie.expires = false; }
             res.json({ success: true, message: 'Giriş başarılı!' });
         } catch (err) { console.error('Giriş sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
@@ -136,10 +131,7 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
-            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
-                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
-            }
+            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) { return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' }); }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
             if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', ''); }
             await db.collection("ogrenciler").insertOne(yeniIlan);
