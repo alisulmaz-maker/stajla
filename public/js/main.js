@@ -32,6 +32,7 @@ async function renderResultsOnHome() {
                 <p>${escapeHtml(s.desc)}</p>
                 ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
                 <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+                 <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
             `;
             // *** EKSİK OLAN SATIR BURAYA EKLENDİ ***
             container.appendChild(el);
@@ -212,6 +213,7 @@ if (searchBtn) {
                         <p>${escapeHtml(s.desc)}</p>
                         ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
                         <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+                        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
                     `;
                     // *** EKSİK OLAN SATIR BURAYA EKLENDİ ***
                     container.appendChild(el);
@@ -222,9 +224,12 @@ if (searchBtn) {
                     el.className = 'card';
                     el.innerHTML = `<h4>${escapeHtml(j.company)}</h4><p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p><p>${escapeHtml(j.sector)}</p><p>${escapeHtml(j.req)}</p><p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>`;
                     container.appendChild(el);
+                    <a href="#" className="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
                 });
             }
-        } catch (err) { console.error('Arama sırasında hata:', err); container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
+        } catch (err) {
+            console.error('Arama sırasında hata:', err);
+            container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
     });
 }
 /* --- Şifremi Unuttum Formu İşlemleri --- */
@@ -295,3 +300,28 @@ if (hamburger && mobileNav) {
         mobileNav.classList.toggle('active');
     });
 }
+/* --- Şikayet Etme İşlevselliği --- */
+document.body.addEventListener('click', async function(e) {
+    if (e.target.classList.contains('report-link')) {
+        e.preventDefault();
+        const id = e.target.dataset.id;
+        const type = e.target.dataset.type;
+
+        if (confirm('Bu ilanı uygunsuz içerik olarak bildirmek istediğinizden emin misiniz?')) {
+            try {
+                const response = await fetch('/api/report-listing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, type })
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) {
+                    e.target.style.display = 'none'; // Başarıyla bildirilince linki gizle
+                }
+            } catch (err) {
+                alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.');
+            }
+        }
+    }
+});

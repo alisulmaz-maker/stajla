@@ -10,6 +10,13 @@ const path = require('path');
 const crypto = require('crypto');
 const app = express();
 const PORT = 3000;
+const Filter = require('bad-words');
+const filter = new Filter();
+
+// Filtreye kendi Türkçe kelimelerimizi ekleyelim
+// (Bu listeyi istediğin gibi genişletebilirsin)
+const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'oruspu', 'oruspuçocuğu'* ...diğer kelimeler... */];
+filter.addWords(...turkceArgolar);
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -54,17 +61,35 @@ connectToDb().then(() => {
 
     app.post('/api/register', async (req, res) => {
         try {
-            const { name, email, pass, role } = req.body;
+            const { name, email, pass, role } = req.body; // Formdan gelen veriler
+
+            // --- YENİ GÜVENLİK KONTROLÜ ---
+            // Kullanıcı adını argo kelimeler için kontrol et
+            if (filter.isProfane(name)) {
+                return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi. Lütfen farklı bir ad seçin.' });
+            }
+            // ---------------------------------
+
+            // Bu e-posta zaten kayıtlı mı diye kontrol et
             const existingUser = await db.collection("kullanicilar").findOne({ email: email });
             if (existingUser) {
                 return res.json({ success: false, message: 'Bu e-posta adresi zaten kullanılıyor.' });
             }
+
+            // Şifreyi hash'le
             const hashedPassword = await bcrypt.hash(pass, 10);
+
+            // Yeni kullanıcıyı veritabanına kaydet
             await db.collection("kullanicilar").insertOne({
-                name, email, password: hashedPassword, role
+                name: name,
+                email: email,
+                password: hashedPassword,
+                role: role
             });
+
             console.log('Yeni kullanıcı kaydedildi:', email);
             res.json({ success: true, message: 'Kayıt başarılı! Giriş yapabilirsiniz.' });
+
         } catch (err) {
             console.error('Kayıt sırasında hata:', err);
             res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
@@ -146,6 +171,30 @@ connectToDb().then(() => {
             res.json(req.session.user);
         } else {
             res.json(null);
+        }
+    });
+
+    // YENİ API ENDPOINT: Bir ilanı şikayet etmek için
+    app.post('/api/report-listing', async (req, res) => {
+        if (!req.session.user) {
+            return res.status(401).json({ success: false, message: 'İçerik bildirmek için giriş yapmalısınız.' });
+        }
+        try {
+            const { id, type } = req.body; // Şikayet edilen ilanın ID'si ve tipi
+            const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler';
+
+            // MongoDB'nin $inc operatörünü kullanarak reportCount alanını 1 artırıyoruz.
+            // Eğer bu alan yoksa, MongoDB onu otomatik olarak 1 değeriyle oluşturur.
+            await db.collection(collectionName).updateOne(
+                { _id: new ObjectId(id) },
+                { $inc: { reportCount: 1 } }
+            );
+
+            res.json({ success: true, message: 'İlan bildiriminiz alınmıştır. Teşekkür ederiz.' });
+
+        } catch (err) {
+            console.error('İlan şikayet edilirken hata:', err);
+            res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
         }
     });
 
@@ -344,15 +393,18 @@ connectToDb().then(() => {
             return res.status(401).json({ success: false, message: 'İlan eklemek için giriş yapmalısınız.' });
         }
         try {
-            const yeniIlan = req.body; // Metin verileri req.body'den gelir
-            yeniIlan.createdBy = req.session.user.id;
+            const yeniIlan = req.body;
 
-            if (req.file) { // Eğer bir dosya yüklendiyse
-                yeniIlan.cvPath = req.file.path.replace('public', ''); // Dosyanın yolunu veriye ekle
+            // --- YENİ GÜVENLİK KONTROLÜ ---
+            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
+                return res.status(400).json({ success: false, message: 'İlan başlığı veya açıklamasında uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
             }
+            // ---------------------------------
 
-            const sonuc = await db.collection("ogrenciler").insertOne(yeniIlan);
-            console.log('Yeni öğrenci ilanı eklendi:', sonuc);
+            // ... (ilanı kaydetme kodları aynı kalacak) ...
+            yeniIlan.createdBy = req.session.user.id;
+            if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', ''); }
+            await db.collection("ogrenciler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
         } catch (err) {
             console.error('İlan eklenirken hata:', err);
@@ -376,6 +428,14 @@ connectToDb().then(() => {
         }
         try {
             const yeniIlan = req.body;
+
+            // --- YENİ GÜVENLİK KONTROLÜ ---
+            // Firma adı, sektör, nitelikler gibi metin alanlarını kontrol et
+            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
+                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi. Lütfen düzeltin.' });
+            }
+            // ---------------------------------
+
             yeniIlan.createdBy = req.session.user.id; // İlanı oluşturan kullanıcının ID'sini ekle
 
             const sonuc = await db.collection("isverenler").insertOne(yeniIlan);

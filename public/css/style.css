@@ -405,3 +405,14 @@ footer {
 
     .card-grid { grid-template-columns: 1fr; }
 }
+.report-link {
+    font-size: 12px;
+    color: #6c757d;
+    text-decoration: underline;
+    margin-top: 10px;
+    display: block;
+    text-align: right;
+}
+.report-link:hover {
+    color: #dc3545; /* Kırmızı */
+}
