@@ -460,3 +460,44 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     margin: 0;
     font-weight: normal;
 }
+/* BİLDİRİM SİSTEMİ */
+.notifications { position: relative; }
+.notification-bell {
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+}
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+.notification-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #f9f9f9;
+    min-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+.notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+}
+.notification-item:last-child { border-bottom: none; }
+.notification-item p { margin: 2px 0; }
+.notifications.active .notification-dropdown { display: block; }

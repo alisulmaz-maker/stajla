@@ -149,6 +149,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
         }
         updateUIAfterLogin();
+        if (currentUser && currentUser.role === 'employer') {
+            await setupNotifications();
+        }
+
     } catch (err) { console.error('Kullanıcı durumu kontrol edilirken hata:', err); }
     if (document.getElementById('results-container')) { renderResultsOnHome(); }
     if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
@@ -205,5 +209,52 @@ const mobileNav = document.getElementById('mobile-nav');
 if (hamburger && mobileNav) {
     hamburger.addEventListener('click', () => {
         mobileNav.classList.toggle('active');
+    });
+}
+/* --- Bildirim Sistemi İşlemleri --- */
+async function setupNotifications() {
+    const userNav = document.getElementById('user-nav');
+    if (!userNav) return;
+
+    // Navbar'a bildirim ikonunu ekle
+    const notificationHTML = `
+        <div class="notifications">
+            <div class="notification-bell">🔔</div>
+            <div class="notification-count" style="display: none;">0</div>
+            <div class="notification-dropdown"></div>
+        </div>
+    `;
+    userNav.insertAdjacentHTML('beforebegin', notificationHTML); // Profilin hemen soluna ekle
+
+    const bell = document.querySelector('.notification-bell');
+    const countBadge = document.querySelector('.notification-count');
+    const dropdown = document.querySelector('.notification-dropdown');
+
+    // Bildirimleri sunucudan çek
+    const response = await fetch('/api/notifications');
+    const notifications = await response.json();
+
+    // Bildirim sayısını ve içeriğini güncelle
+    if (notifications.length > 0) {
+        countBadge.textContent = notifications.length;
+        countBadge.style.display = 'flex';
+
+        notifications.forEach(notif => {
+            const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
+            const listingCompany = notif.listingInfo[0]?.company || 'İlan';
+
+            const item = document.createElement('div');
+            item.className = 'notification-item';
+            item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong>, <em>${escapeHtml(listingCompany)}</em> ilanına başvurdu.</p>`;
+            dropdown.appendChild(item);
+        });
+    } else {
+        dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
+    }
+
+    // Zil'e tıklandığında menüyü aç/kapat
+    bell.addEventListener('click', () => {
+        bell.parentElement.classList.toggle('active');
+        // (İleride okundu olarak işaretleme mantığı buraya eklenebilir)
     });
 }

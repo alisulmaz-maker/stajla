@@ -135,6 +135,45 @@ connectToDb().then(() => {
         }
     });
 
+    // YENİ API ENDPOINT: İşverenin kendi ilanlarına gelen başvuruları (bildirimleri) getirir
+    app.get('/api/notifications', async (req, res) => {
+        if (!req.session.user || req.session.user.role !== 'employer') {
+            return res.status(403).json([]); // Sadece işverenler için çalışır, hata yerine boş liste döneriz
+        }
+        try {
+            const ownerId = new ObjectId(req.session.user.id);
+
+            // "applications" koleksiyonunda bu işverene ait olan başvuruları bul.
+            // Ayrıca, başvuran öğrencinin ve ilanın detaylarını da getirmek için $lookup kullanıyoruz.
+            const notifications = await db.collection("applications").aggregate([
+                { $match: { ownerId: ownerId } }, // Sadece benim ilanlarıma gelen başvuruları bul
+                { $sort: { createdAt: -1 } }, // En yeniden eskiye sırala
+                {
+                    $lookup: { // Başvuran öğrencinin bilgilerini "kullanicilar" koleksiyonundan çek
+                        from: "kullanicilar",
+                        localField: "applicantId",
+                        foreignField: "_id",
+                        as: "applicantInfo"
+                    }
+                },
+                {
+                    $lookup: { // Başvurulan ilanın bilgilerini "isverenler" koleksiyonundan çek
+                        from: "isverenler",
+                        localField: "listingId",
+                        foreignField: "_id",
+                        as: "listingInfo"
+                    }
+                }
+            ]).toArray();
+
+            res.json(notifications);
+
+        } catch (err) {
+            console.error("Bildirimler getirilirken hata:", err);
+            res.status(500).json([]);
+        }
+    });
+
     // YENİ API ENDPOINT: Bir ilanı silmek için
     app.post('/api/delete-listing', async (req, res) => {
         if (!req.session.user) {
