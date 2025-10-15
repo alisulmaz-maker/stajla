@@ -1,6 +1,3 @@
-// ===================================================================================
-//                                  STAJLA - server.js (NİHAİ KARARLI VE TAM VERSİYON)
-// ===================================================================================
 require('dotenv').config();
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -12,7 +9,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
 
-// Nihai ve doğru argo filtresi kütüphanesi
+// NİHAİ VE DOĞRU KÜTÜPHANE KURULUMU
 const BadWords = require('bad-words-next');
 const en = require('bad-words-next/data/en.json');
 const filter = new BadWords({ data: en });
@@ -20,12 +17,12 @@ const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan', 'oruspu', 'orospu
 filter.addWords(...turkceArgolar);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 const connectionString = process.env.DATABASE_URL;
 const client = new MongoClient(connectionString);
 let db;
 
-// Multer (Dosya Yükleme) Ayarları
+// Multer Ayarları
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, 'public/uploads'); },
     filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
@@ -47,20 +44,19 @@ connectToDb().then(() => {
     app.use(express.static('public'));
     app.use(express.json());
     app.use(session({
-        secret: 'cok-gizli-bir-anahtar-kelime',
+        secret: 'cok-gizli-bir-anahtar-kelime-lutfen-degistir',
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({ mongoUrl: connectionString })
     }));
 
-    // ===============================================
-    //           KULLANICI YÖNETİMİ API'LARI
-    // ===============================================
-
+    // --- KULLANICI YÖNETİMİ ---
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
-            if (filter.isProfane(name)) { return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' }); }
+            if (filter.isProfane(name)) { // DOĞRU FONKSİYON: isProfane
+                return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' });
+            }
             const existingUser = await db.collection("kullanicilar").findOne({ email: email });
             if (existingUser) { return res.json({ success: false, message: 'Bu e-posta adresi zaten kullanılıyor.' }); }
             const hashedPassword = await bcrypt.hash(pass, 10);
@@ -131,9 +127,11 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) { return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' }); }
+            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) { // DOĞRU FONKSİYON: isProfane
+                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
+            }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
-            if (req.file) { yeniIlan.cvPath = req.file.path.replace('public', ''); }
+            if (req.file) { yeniIlan.cvPath = req.file.path.replace(/\\/g, '/').replace('public', ''); }
             await db.collection("ogrenciler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
         } catch (err) { console.error("Öğrenci ilanı eklenirken hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
@@ -143,8 +141,7 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'employer') { return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            // DÜZELTME: isProfane() fonksiyonu doğru şekilde kullanıldı
-            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
+            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) { // DOĞRU FONKSİYON: isProfane
                 return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
             }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
