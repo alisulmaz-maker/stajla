@@ -199,9 +199,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (currentUser && currentUser.role === 'employer') {
             await setupNotifications();
         }
-    } catch (err) { console.error('Kullanıcı durumu kontrol edilirken hata:', err); }
-    if (document.getElementById('results-container')) { renderResultsOnHome(); }
-    if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
+        if (document.getElementById('results-container')) { renderResultsOnHome(); }
+        if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
+
+        // Profil düzenleme sayfasının fonksiyonunu burada güvenle çağırıyoruz.
+        if (window.location.pathname.endsWith('/profil-duzenle.html')) {
+            initializeProfileEditPage();
+        }
+
+    } catch (err) {
+        console.error('Kullanıcı durumu kontrol edilirken hata:', err);
+    }
 });
 
 /* --- Arama, Şikayet ve Başvuru İşlemleri --- */
@@ -361,42 +369,41 @@ if (window.location.pathname.endsWith('/profil-duzenle.html')) {
             console.error(err);
         }
     });
-}// Dosyanın en sonuna ekleyin
-if (window.location.pathname.endsWith('/profil-duzenle.html')) {
-    const editForm = document.getElementById('edit-profile-form');
-    const nameInput = document.getElementById('edit-name');
-    const picturePreview = document.getElementById('picture-preview');
+// YENİ FONKSİYON: Sadece profil düzenleme sayfasındayken ve kullanıcı bilgisi alındıktan sonra çağrılacak.
+    function initializeProfileEditPage() {
+        const editForm = document.getElementById('edit-profile-form');
+        const nameInput = document.getElementById('edit-name');
+        const picturePreview = document.getElementById('picture-preview');
 
-    // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
-    document.addEventListener('DOMContentLoaded', () => {
+        // Bu fonksiyon sadece currentUser dolu olduğunda çağrılacağı için bu kontrol artık güvende.
         if (currentUser) {
             nameInput.value = currentUser.name;
             if (currentUser.profilePicturePath) {
                 picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
             }
         } else {
-            // Eğer kullanıcı bilgisi yoksa (giriş yapmamışsa), anasayfaya yönlendir
+            // Her ihtimale karşı bir güvenlik yönlendirmesi
             window.location.href = '/giris.html';
+            return;
         }
-    });
 
-    editForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this); // Form verilerini (resim dahil) al
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
 
-        try {
-            const response = await fetch('/api/update-profile', {
-                method: 'POST',
-                body: formData // FormData'yı doğrudan body'ye gönder
-            });
-            const result = await response.json();
-            alert(result.message);
-            if (result.success) {
-                window.location.href = '/profil.html'; // Başarılı olursa profil sayfasına yönlendir
+            try {
+                const response = await fetch('/api/update-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) {
+                    window.location.href = '/profil.html';
+                }
+            } catch (err) {
+                alert('Profil güncellenirken bir hata oluştu.');
+                console.error(err);
             }
-        } catch (err) {
-            alert('Profil güncellenirken bir hata oluştu.');
-            console.error(err);
-        }
-    });
-}
+        });
+    }
