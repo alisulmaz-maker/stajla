@@ -44,15 +44,29 @@ async function connectToDb() {
 connectToDb().then(() => {
     app.use(express.static('public'));
     app.use(express.json());
+
+    // --- NİHAİ DÜZELTME: RENDER PROXY AYARI ---
+    // Bu satır, Express'e Render gibi bir proxy arkasında çalıştığını ve
+    // güvenli bağlantı bilgilerine (HTTPS) güvenmesi gerektiğini söyler.
+    // Bu, session cookie'lerinin doğru çalışması için KRİTİKTİR.
+    app.set('trust proxy', 1);
+
     app.use(session({
         secret: 'cok-gizli-bir-anahtar-kelime-lutfen-degistir',
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({ mongoUrl: connectionString }),
-        cookie: { secure: process.env.NODE_ENV === 'production' }
+        cookie: {
+            secure: process.env.NODE_ENV === 'production', // Sadece HTTPS'te cookie gönder
+            httpOnly: true, // Cookie'nin JavaScript tarafından okunmasını engelle
+            sameSite: 'lax' // CSRF saldırılarına karşı koruma
+        }
     }));
 
-    // --- KULLANICI YÖNETİMİ ---
+    // --- TÜM API ROUTE'LARI BURADA ---
+    // (Aşağıdaki kodlar, daha önce eklediğimiz ve doğru çalışan tüm özellikleri içerir)
+
+    // KULLANICI YÖNETİMİ
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
@@ -112,7 +126,7 @@ connectToDb().then(() => {
         } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
     });
 
-    // --- İLAN YÖNETİMİ ---
+    // İLAN YÖNETİMİ
     app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
