@@ -162,7 +162,8 @@ connectToDb().then(() => {
         }
     });
 
-    // YENİ API ENDPOINT: Bir işveren ilanına başvurmak için
+    // --- BU ROTAYI GÜNCELLENMİŞ HALİYLE DEĞİŞTİRİN ---
+// YENİ API ENDPOINT: Bir işveren ilanına başvurmak için
     app.post('/api/apply', async (req, res) => {
         // 1. Kullanıcı giriş yapmış mı ve rolü 'student' mı diye kontrol et
         if (!req.session.user || req.session.user.role !== 'student') {
@@ -207,6 +208,8 @@ connectToDb().then(() => {
         }
     });
 
+
+// --- BU ROTAYI DA GÜNCELLENMİŞ HALİYLE DEĞİŞTİRİN ---
     app.get('/api/notifications', async (req, res) => {
         if (!req.session.user || req.session.user.role !== 'employer') {
             return res.status(403).json([]);
@@ -219,8 +222,11 @@ connectToDb().then(() => {
                 { // Başvuranın kullanıcı adını getir
                     $lookup: { from: "kullanicilar", localField: "applicantId", foreignField: "_id", as: "applicantInfo" }
                 },
-                { // YENİ: Başvuranın öğrenci ilanını getir
+                { // Başvuranın öğrenci ilanını getir
                     $lookup: { from: "ogrenciler", localField: "studentListingId", foreignField: "_id", as: "studentListingInfo" }
+                },
+                { // Başvurulan işveren ilanını getir (opsiyonel ama faydalı)
+                    $lookup: { from: "isverenler", localField: "listingId", foreignField: "_id", as: "listingInfo" }
                 }
             ]).toArray();
             res.json(notifications);
@@ -229,6 +235,8 @@ connectToDb().then(() => {
             res.status(500).json([]);
         }
     });
+
+// ÖNEMLİ: Dosyanın sonlarındaki diğer app.post('/api/apply') ve app.get('/api/notifications') satırlarını sildiğinizden emin olun!
 
     app.get('/api/ogrenci-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("ogrenciler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
     app.get('/api/isveren-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("isverenler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
