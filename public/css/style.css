@@ -252,7 +252,14 @@ footer {
     font-size: 20px;
     cursor: pointer;
 }
-
+/* style.css dosyanızda .profile-avatar'ın olduğu yere ekleyebilirsiniz */
+.profile-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover; /* Resmin orantısını koruyarak alanı doldurur */
+    cursor: pointer;
+}
 .dropdown-content {
     display: none;
     position: absolute;

@@ -8,8 +8,8 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
+const path = require('path');
 
-// --- UYUMSUZ ARGO FİLTRESİ TAMAMEN KALDIRILDI ---
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +29,13 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
 });
 const upload = multer({ storage: storage });
+
+// Avatar (Profil Resmi) için Multer Ayarı
+const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => { cb(null, 'public/uploads/avatars'); }, // Resimleri avatars klasörüne kaydet
+    filename: (req, file, cb) => { cb(null, req.session.user.id + '-' + Date.now() + path.extname(file.originalname)); } // Dosya adını benzersiz yap
+});
+const uploadAvatar = multer({ storage: avatarStorage });
 
 async function connectToDb() {
     try {
@@ -89,6 +96,52 @@ connectToDb().then(() => {
             if (remember) { req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; } else { req.session.cookie.expires = false; }
             res.json({ success: true, message: 'Giriş başarılı!' });
         } catch (err) { console.error('Giriş sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+    });
+
+    // YENİ API ENDPOINT: Kullanıcı profilini (isim ve resim) günceller
+    app.post('/api/update-profile', uploadAvatar.single('profilePicture'), async (req, res) => {
+        // 1. Kullanıcı giriş yapmış mı diye kontrol et
+        if (!req.session.user) {
+            return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' });
+        }
+
+        try {
+            const { name } = req.body;
+            const updateData = {};
+
+            // Eğer yeni bir isim gönderildiyse, güncelleme objesine ekle
+            if (name) {
+                updateData.name = name;
+            }
+
+            // Eğer yeni bir resim yüklendiyse, onun yolunu da ekle
+            if (req.file) {
+                const picturePath = req.file.path.replace(/\\/g, '/').replace('public', '');
+                updateData.profilePicturePath = picturePath;
+            }
+
+            // Eğer güncellenecek bir şey yoksa, işlem yapma
+            if (Object.keys(updateData).length === 0) {
+                return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' });
+            }
+
+            const userId = new ObjectId(req.session.user.id);
+            await db.collection("kullanicilar").updateOne({ _id: userId }, { $set: updateData });
+
+            // Oturum (session) bilgilerini de anında güncelle, böylece navbar'da hemen görünür
+            if (updateData.name) {
+                req.session.user.name = updateData.name;
+            }
+            if (updateData.profilePicturePath) {
+                req.session.user.profilePicturePath = updateData.profilePicturePath;
+            }
+
+            res.json({ success: true, message: 'Profiliniz başarıyla güncellendi!', user: req.session.user });
+
+        } catch (err) {
+            console.error('Profil güncelleme sırasında hata:', err);
+            res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+        }
     });
 
     app.get('/api/current-user', (req, res) => {

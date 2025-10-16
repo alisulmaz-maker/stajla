@@ -169,8 +169,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
         if (currentUser && userNav) {
-            const userInitial = currentUser.name.charAt(0).toUpperCase();
-            userNav.innerHTML = `<div class="profile-dropdown"><div class="profile-avatar">${userInitial}</div><div class="dropdown-content"><a href="/profil.html">Profilim</a><a id="logout-btn" href="#">Çıkış Yap</a></div></div>`;
+            // EĞER kullanıcının profil resmi varsa, onu göster
+            if (currentUser.profilePicturePath) {
+                userNav.innerHTML = `
+            <div class="profile-dropdown">
+                <img src="${currentUser.profilePicturePath}" alt="Profil" class="profile-avatar-img">
+                <div class="dropdown-content">
+                    <a href="/profil.html">İlanlarım</a>
+                    <a href="/profil-duzenle.html">Profili Düzenle</a>
+                    <a id="logout-btn" href="#">Çıkış Yap</a>
+                </div>
+            </div>`;
+            } else {
+                // EĞER profil resmi yoksa, baş harfini göstermeye devam et
+                const userInitial = currentUser.name.charAt(0).toUpperCase();
+                userNav.innerHTML = `
+            <div class="profile-dropdown">
+                <div class="profile-avatar">${userInitial}</div>
+                <div class="dropdown-content">
+                    <a href="/profil.html">İlanlarım</a>
+                    <a href="/profil-duzenle.html">Profili Düzenle</a>
+                    <a id="logout-btn" href="#">Çıkış Yap</a>
+                </div>
+            </div>`;
+            }
             document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
         }
         updateUIAfterLogin();
@@ -299,5 +321,82 @@ async function setupNotifications() {
     }
     bell.addEventListener('click', () => {
         bell.parentElement.classList.toggle('active');
+    });
+}
+// Dosyanın en sonuna ekleyin
+if (window.location.pathname.endsWith('/profil-duzenle.html')) {
+    const editForm = document.getElementById('edit-profile-form');
+    const nameInput = document.getElementById('edit-name');
+    const picturePreview = document.getElementById('picture-preview');
+
+    // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
+    document.addEventListener('DOMContentLoaded', () => {
+        if (currentUser) {
+            nameInput.value = currentUser.name;
+            if (currentUser.profilePicturePath) {
+                picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
+            }
+        } else {
+            // Eğer kullanıcı bilgisi yoksa (giriş yapmamışsa), anasayfaya yönlendir
+            window.location.href = '/giris.html';
+        }
+    });
+
+    editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this); // Form verilerini (resim dahil) al
+
+        try {
+            const response = await fetch('/api/update-profile', {
+                method: 'POST',
+                body: formData // FormData'yı doğrudan body'ye gönder
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.success) {
+                window.location.href = '/profil.html'; // Başarılı olursa profil sayfasına yönlendir
+            }
+        } catch (err) {
+            alert('Profil güncellenirken bir hata oluştu.');
+            console.error(err);
+        }
+    });
+}// Dosyanın en sonuna ekleyin
+if (window.location.pathname.endsWith('/profil-duzenle.html')) {
+    const editForm = document.getElementById('edit-profile-form');
+    const nameInput = document.getElementById('edit-name');
+    const picturePreview = document.getElementById('picture-preview');
+
+    // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
+    document.addEventListener('DOMContentLoaded', () => {
+        if (currentUser) {
+            nameInput.value = currentUser.name;
+            if (currentUser.profilePicturePath) {
+                picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
+            }
+        } else {
+            // Eğer kullanıcı bilgisi yoksa (giriş yapmamışsa), anasayfaya yönlendir
+            window.location.href = '/giris.html';
+        }
+    });
+
+    editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this); // Form verilerini (resim dahil) al
+
+        try {
+            const response = await fetch('/api/update-profile', {
+                method: 'POST',
+                body: formData // FormData'yı doğrudan body'ye gönder
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.success) {
+                window.location.href = '/profil.html'; // Başarılı olursa profil sayfasına yönlendir
+            }
+        } catch (err) {
+            alert('Profil güncellenirken bir hata oluştu.');
+            console.error(err);
+        }
     });
 }

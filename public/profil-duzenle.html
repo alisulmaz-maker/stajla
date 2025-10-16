@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Düzenle - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .profile-picture-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #eee;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 20px auto;
+            border: 3px solid #FFD43B;
+        }
+    </style>
+</head>
+<body>
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
+    </nav>
+</header>
+<div id="mobile-nav"><a href="/index.html">Anasayfa</a><a href="/isveren-ilan.html">İşveren İlan</a><a href="/ogrenci-ilan.html">Öğrenci İlan</a><a href="/iletisim.html">İletişim</a></div>
+
+<main class="form-page">
+    <h2>Profilimi Düzenle</h2>
+    <form id="edit-profile-form" enctype="multipart/form-data">
+
+        <div class="profile-picture-preview" id="picture-preview"></div>
+
+        <label>
+            Profil Resmini Değiştir
+            <input type="file" name="profilePicture" id="edit-picture" accept="image/*">
+        </label>
+
+        <label>
+            Ad Soyad
+            <input type="text" name="name" id="edit-name" placeholder="Adınız Soyadınız">
+        </label>
+
+        <button type="submit">Değişiklikleri Kaydet</button>
+    </form>
+</main>
+
+<footer>
+    <p>© 2025 STAJLA | İletişim: <a href="mailto:stajladestek@gmail.com">stajladestek@gmail.com</a></p>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
