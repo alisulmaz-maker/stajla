@@ -24,10 +24,30 @@ async function renderResultsOnHome() {
             container.innerHTML = '<p>Henüz eklenmiş bir öğrenci ilanı yok.</p>';
             return;
         }
+        // renderResultsOnHome fonksiyonu içindeki döngüyü güncelleyin
         ilanlar.forEach(s => {
             const el = document.createElement('div');
             el.className = 'card';
-            el.innerHTML = `<h4>${escapeHtml(s.name)}</h4><p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p><p>${escapeHtml(s.dept||'')}</p><p>${escapeHtml(s.desc)}</p>${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}<p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p><a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>`;
+
+            // Profil resmi varsa onu, yoksa boş bir string oluştur
+            const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
+                ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
+                : '<div class="card-profile-pic-placeholder"></div>'; // Opsiyonel: Resim yoksa boş yer tutucu
+
+            el.innerHTML = `
+        <div class="card-header">
+            ${profilePicHtml}
+            <div class="card-info">
+                <h4>${escapeHtml(s.name)}</h4>
+                <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
+            </div>
+        </div>
+        <p>${escapeHtml(s.dept||'')}</p>
+        <p>${escapeHtml(s.desc)}</p>
+        ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+        <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
+    `;
             container.appendChild(el);
         });
     } catch (err) { console.error('Sonuçlar yüklenirken hata:', err); container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>'; }
@@ -228,8 +248,31 @@ document.body.addEventListener('click', async function(e) {
             container.innerHTML = '';
             if (results.length === 0) { container.innerHTML = '<p>Aradığınız kriterlere uygun bir sonuç bulunamadı.</p>'; return; }
             if (searchType === 'students') {
-                results.forEach(s => { const el = document.createElement('div'); el.className = 'card'; el.innerHTML = `<h4>${escapeHtml(s.name)}</h4><p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p><p>${escapeHtml(s.dept || '')}</p><p>${escapeHtml(s.desc)}</p>${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}<p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p><a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>`; container.appendChild(el); });
-            } else { // jobs
+                results.forEach(s => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+
+                    const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
+                        ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
+                        : '<div class="card-profile-pic-placeholder"></div>';
+
+                    el.innerHTML = `
+            <div class="card-header">
+                ${profilePicHtml}
+                <div class="card-info">
+                    <h4>${escapeHtml(s.name)}</h4>
+                    <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
+                </div>
+            </div>
+            <p>${escapeHtml(s.dept || '')}</p>
+            <p>${escapeHtml(s.desc)}</p>
+            ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+            <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+            <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
+        `;
+                    container.appendChild(el);
+                });
+            } else { // jobs// jobs
                 results.forEach(j => { const el = document.createElement('div'); el.className = 'card'; const applyButtonHTML = (currentUser && currentUser.role === 'student') ? `<div class="card-actions"><button class="apply-btn" data-id="${j._id}">Başvur</button></div>` : ''; el.innerHTML = `<div class="card-content"><h4>${escapeHtml(j.company)}</h4><p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p><p>${escapeHtml(j.sector)}</p><p>${escapeHtml(j.req)}</p><p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p><a href="#" class="report-link" data-id="${j._id}" data-type="employer">Bu ilanı şikayet et</a></div>${applyButtonHTML}`; container.appendChild(el); });
             }
         } catch (err) { console.error('Arama sırasında hata:', err); container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }

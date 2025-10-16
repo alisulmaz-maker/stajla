@@ -318,11 +318,80 @@ connectToDb().then(() => {
         }
     });
 
+    // GÜNCELLENMİŞ ROTA
+    app.get('/api/ogrenci-ilanlari', async (req, res) => {
+        try {
+            const ilanlar = await db.collection("ogrenciler").aggregate([
+                { $sort: { _id: -1 } }, // Önce en yeniye göre sırala
+                { $limit: 8 },         // Sadece 8 tane al
+                { // Şimdi ilan sahibinin bilgilerini "kullanicilar" koleksiyonundan getir
+                    $lookup: {
+                        from: "kullanicilar",
+                        localField: "createdBy",
+                        foreignField: "_id",
+                        as: "sahipInfo"
+                    }
+                },
+                { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } } // Gelen diziyi objeye çevir
+            ]).toArray();
+            res.json(ilanlar);
+        } catch (err) {
+            res.status(500).json([]);
+        }
+    });
 // ÖNEMLİ: Dosyanın sonlarındaki diğer app.post('/api/apply') ve app.get('/api/notifications') satırlarını sildiğinizden emin olun!
+// GÜNCELLENMİŞ ROTA
+    app.get('/api/isveren-ilanlari', async (req, res) => {
+        try {
+            const ilanlar = await db.collection("isverenler").aggregate([
+                { $sort: { _id: -1 } },
+                { $limit: 8 },
+                {
+                    $lookup: {
+                        from: "kullanicilar",
+                        localField: "createdBy",
+                        foreignField: "_id",
+                        as: "sahipInfo"
+                    }
+                },
+                { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } }
+            ]).toArray();
+            res.json(ilanlar);
+        } catch (err) {
+            res.status(500).json([]);
+        }
+    });
 
-    app.get('/api/ogrenci-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("ogrenciler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
-    app.get('/api/isveren-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("isverenler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
-    app.get('/api/search', async (req, res) => { try { const { type, area, city } = req.query; const filterQuery = {}; if (area) filterQuery.area = area; if (city) filterQuery.city = city; const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler'; const results = await db.collection(collectionName).find(filterQuery).sort({_id: -1}).toArray(); res.json(results); } catch (err) { res.status(500).json([]); } });
+    // GÜNCELLENMİŞ ROTA
+    app.get('/api/search', async (req, res) => {
+        try {
+            const { type, area, city } = req.query;
+            const filterQuery = {};
+            if (area) filterQuery.area = area;
+            if (city) filterQuery.city = city;
+
+            const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler';
+
+            const results = await db.collection(collectionName).aggregate([
+                { $match: filterQuery }, // Arama kriterlerine göre filtrele
+                { $sort: { _id: -1 } },   // Sonuçları en yeniye göre sırala
+                { // İlan sahibinin bilgilerini getir
+                    $lookup: {
+                        from: "kullanicilar",
+                        localField: "createdBy",
+                        foreignField: "_id",
+                        as: "sahipInfo"
+                    }
+                },
+                { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } }
+            ]).toArray();
+
+            res.json(results);
+        } catch (err) {
+            res.status(500).json([]);
+        }
+    });
+
     app.get('/api/listing/:id', async (req, res) => { try { const { id } = req.params; const { type } = req.query; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) }); if (!listing) { return res.status(404).json({ message: 'İlan bulunamadı.' }); } res.json(listing); } catch (err) { res.status(500).json({ message: 'Sunucu hatası.' }); } });
     app.get('/api/my-listings', async (req, res) => { if (!req.session.user) { return res.status(401).json({ message: 'Lütfen giriş yapın.' }); } try { const userId = new ObjectId(req.session.user.id); const studentListings = await db.collection("ogrenciler").find({ createdBy: userId }).toArray(); const employerListings = await db.collection("isverenler").find({ createdBy: userId }).toArray(); res.json({ student: studentListings, employer: employerListings }); } catch (err) { res.status(500).json({ message: 'İlanlar getirilirken bir hata oluştu.' }); } });
     app.post('/api/update-listing', async (req, res) => { if (!req.session.user) { return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' }); } try { const { id, type, data } = req.body; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) }); if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); } if (listing.createdBy.toString() !== req.session.user.id.toString()) { return res.status(403).json({ success: false, message: 'Bu ilanı düzenleme yetkiniz yok.' }); } await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $set: data }); res.json({ success: true, message: 'İlan başarıyla güncellendi.' }); } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); } });
