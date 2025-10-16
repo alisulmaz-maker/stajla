@@ -460,8 +460,12 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     margin: 0;
     font-weight: normal;
 }
-/* BİLDİRİM SİSTEMİ */
-.notifications { position: relative; }
+/* BİLDİRİM SİSTEMİ - NİHAİ DÜZELTME */
+.notifications {
+    position: relative; /* Bu, açılır menünün kendini buna göre konumlandırmasını sağlar */
+    display: flex;
+    align-items: center;
+}
 .notification-bell {
     font-size: 24px;
     color: white;
@@ -486,18 +490,37 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     display: none;
     position: absolute;
     right: 0;
-    top: 100%;
-    background-color: #f9f9f9;
-    min-width: 300px;
+    top: calc(100% + 10px); /* Üst menünün %100 altına ve 10px daha aşağıya açıl */
+    background-color: #fff; /* Tam beyaz yapalım */
+    min-width: 320px;
     max-height: 400px;
     overflow-y: auto;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 100;
+    border-radius: 8px;
+    border: 1px solid #eee;
 }
+/* YENİ EKLENEN KOD: Yazı rengini düzelt */
 .notification-item {
     padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #eee;
+    color: #333; /* Ana metin rengini koyu gri yap */
 }
-.notification-item:last-child { border-bottom: none; }
-.notification-item p { margin: 2px 0; }
-.notifications.active .notification-dropdown { display: block; }
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item p {
+    margin: 2px 0;
+    font-size: 14px;
+}
+.notification-item strong {
+    color: #000; /* İsimleri siyah yap */
+}
+.notification-item em {
+    font-style: normal; /* İtalik olmasın */
+    color: #007bff; /* İlan adını mavi yap */
+}
+/* ------------------------------------ */
+.notifications.active .notification-dropdown {
+    display: block;
+}
