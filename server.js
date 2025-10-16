@@ -9,19 +9,14 @@ const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
 
-// NİHAİ VE DOĞRU KÜTÜPHANE KURULUMU
-const BadWords = require('bad-words-next');
-const en = require('bad-words-next/data/en.json');
-const filter = new BadWords({ data: en });
-const turkceArgolar = ['aptal', 'salak', 'gerizekalı', 'lan', 'oruspu', 'orospuçocuğu', 'amk', 'aminakoyayim', 'mal'];
-filter.addWords(...turkceArgolar);
+// --- UYUMSUZ ARGO FİLTRESİ TAMAMEN KALDIRILDI ---
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Render için PORT ayarı
+const PORT = process.env.PORT || 3000;
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-    console.error("HATA: DATABASE_URL bulunamadı. Lütfen .env dosyanızı kontrol edin.");
+    console.error("HATA: DATABASE_URL bulunamadı. Lütfen .env dosyanızı veya Render'daki ayarlarınızı kontrol edin.");
     process.exit(1);
 }
 
@@ -61,9 +56,6 @@ connectToDb().then(() => {
     app.post('/api/register', async (req, res) => {
         try {
             const { name, email, pass, role } = req.body;
-            if (filter.isProfane(name)) {
-                return res.status(400).json({ success: false, message: 'Kullanıcı adında uygun olmayan kelimeler tespit edildi.' });
-            }
             const existingUser = await db.collection("kullanicilar").findOne({ email: email });
             if (existingUser) { return res.json({ success: false, message: 'Bu e-posta adresi zaten kullanılıyor.' }); }
             const hashedPassword = await bcrypt.hash(pass, 10);
@@ -103,7 +95,8 @@ connectToDb().then(() => {
             const testAccount = await nodemailer.createTestAccount();
             const transporter = nodemailer.createTransport({ host: "smtp.ethereal.email", port: 587, secure: false, auth: { user: testAccount.user, pass: testAccount.pass } });
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
-            await transporter.sendMail({ from: '"Stajla Destek" <destek@stajla.com>', to: user.email, subject: "Stajla Şifre Sıfırlama İsteği", html: `<p>Merhaba ${user.name},</p><p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayınız. Bu link 1 saat geçerlidir.</p><a href="${resetURL}">${resetURL}</a>` });
+            let info = await transporter.sendMail({ from: '"Stajla Destek" <destek@stajla.com>', to: user.email, subject: "Stajla Şifre Sıfırlama İsteği", html: `<p>Merhaba ${user.name},</p><p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayınız...</p><a href="${resetURL}">${resetURL}</a>` });
+            console.log("Test E-postasını Görüntüle: %s", nodemailer.getTestMessageUrl(info));
             res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
         } catch (err) { console.error('Şifre sıfırlama sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
     });
@@ -115,8 +108,8 @@ connectToDb().then(() => {
             if (!user) { return res.json({ success: false, message: 'Şifre sıfırlama anahtarı geçersiz veya süresi dolmuş.' }); }
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { password: hashedPassword, resetPasswordToken: undefined, resetPasswordExpires: undefined } });
-            res.json({ success: true, message: 'Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.' });
-        } catch (err) { console.error('Şifre güncellenirken hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
+            res.json({ success: true, message: 'Şifreniz başarıyla güncellendi.' });
+        } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
     });
 
     // --- İLAN YÖNETİMİ ---
@@ -124,39 +117,30 @@ connectToDb().then(() => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            if (filter.isProfane(yeniIlan.name) || filter.isProfane(yeniIlan.desc) || filter.isProfane(yeniIlan.dept)) {
-                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
-            }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
             if (req.file) { yeniIlan.cvPath = req.file.path.replace(/\\/g, '/').replace('public', ''); }
             await db.collection("ogrenciler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
-        } catch (err) { console.error("Öğrenci ilanı eklenirken hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+        } catch (err) { res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
     app.post('/api/isveren-ilan', async (req, res) => {
         if (!req.session.user || req.session.user.role !== 'employer') { return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' }); }
         try {
             const yeniIlan = req.body;
-            if (filter.isProfane(yeniIlan.company) || filter.isProfane(yeniIlan.sector) || filter.isProfane(yeniIlan.req)) {
-                return res.status(400).json({ success: false, message: 'İlan içeriğinde uygun olmayan kelimeler tespit edildi.' });
-            }
             yeniIlan.createdBy = new ObjectId(req.session.user.id);
             await db.collection("isverenler").insertOne(yeniIlan);
             res.json({ success: true, message: 'İlan başarıyla eklendi!' });
-        } catch (err) { console.error("İşveren ilanı eklenirken hata:", err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+        } catch (err) { res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
     app.get('/api/ogrenci-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("ogrenciler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
     app.get('/api/isveren-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("isverenler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
-
-    app.get('/api/search', async (req, res) => { try { const { type, area, city } = req.query; const filter = {}; if (area) filter.area = area; if (city) filter.city = city; const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler'; const results = await db.collection(collectionName).find(filter).sort({_id: -1}).toArray(); res.json(results); } catch (err) { res.status(500).json([]); } });
+    app.get('/api/search', async (req, res) => { try { const { type, area, city } = req.query; const filterQuery = {}; if (area) filterQuery.area = area; if (city) filterQuery.city = city; const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler'; const results = await db.collection(collectionName).find(filterQuery).sort({_id: -1}).toArray(); res.json(results); } catch (err) { res.status(500).json([]); } });
     app.get('/api/listing/:id', async (req, res) => { try { const { id } = req.params; const { type } = req.query; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) }); if (!listing) { return res.status(404).json({ message: 'İlan bulunamadı.' }); } res.json(listing); } catch (err) { res.status(500).json({ message: 'Sunucu hatası.' }); } });
     app.get('/api/my-listings', async (req, res) => { if (!req.session.user) { return res.status(401).json({ message: 'Lütfen giriş yapın.' }); } try { const userId = new ObjectId(req.session.user.id); const studentListings = await db.collection("ogrenciler").find({ createdBy: userId }).toArray(); const employerListings = await db.collection("isverenler").find({ createdBy: userId }).toArray(); res.json({ student: studentListings, employer: employerListings }); } catch (err) { res.status(500).json({ message: 'İlanlar getirilirken bir hata oluştu.' }); } });
     app.post('/api/update-listing', async (req, res) => { if (!req.session.user) { return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' }); } try { const { id, type, data } = req.body; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) }); if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); } if (listing.createdBy.toString() !== req.session.user.id.toString()) { return res.status(403).json({ success: false, message: 'Bu ilanı düzenleme yetkiniz yok.' }); } await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $set: data }); res.json({ success: true, message: 'İlan başarıyla güncellendi.' }); } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); } });
     app.post('/api/delete-listing', async (req, res) => { if (!req.session.user) { return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' }); } try { const { id, type } = req.body; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) }); if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); } if (listing.createdBy.toString() !== req.session.user.id.toString()) { return res.status(403).json({ success: false, message: 'Bu ilanı silme yetkiniz yok.' }); } await db.collection(collectionName).deleteOne({ _id: new ObjectId(id) }); res.json({ success: true, message: 'İlan başarıyla silindi.' }); } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); } });
-
-    // --- ETKİLEŞİM ---
     app.post('/api/apply', async (req, res) => { if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); } try { const { listingId } = req.body; const studentId = new ObjectId(req.session.user.id); const existingApplication = await db.collection("applications").findOne({ listingId: new ObjectId(listingId), applicantId: studentId }); if (existingApplication) { return res.status(400).json({ success: false, message: 'Bu ilana zaten başvurdunuz.' }); } const listing = await db.collection("isverenler").findOne({ _id: new ObjectId(listingId) }); if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); } const newApplication = { applicantId: studentId, listingId: new ObjectId(listingId), ownerId: listing.createdBy, status: 'pending', createdAt: new Date() }; await db.collection("applications").insertOne(newApplication); res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' }); } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); } });
     app.post('/api/report-listing', async (req, res) => { if (!req.session.user) { return res.status(401).json({ success: false, message: 'İçerik bildirmek için giriş yapmalısınız.' }); } try { const { id, type } = req.body; const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler'; await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $inc: { reportCount: 1 } }); res.json({ success: true, message: 'İlan bildiriminiz alınmıştır. Teşekkür ederiz.' }); } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); } });
     app.get('/api/notifications', async (req, res) => { if (!req.session.user || req.session.user.role !== 'employer') { return res.status(403).json([]); } try { const ownerId = new ObjectId(req.session.user.id); const notifications = await db.collection("applications").aggregate([ { $match: { ownerId: ownerId } }, { $sort: { createdAt: -1 } }, { $lookup: { from: "kullanicilar", localField: "applicantId", foreignField: "_id", as: "applicantInfo" } }, { $lookup: { from: "isverenler", localField: "listingId", foreignField: "_id", as: "listingInfo" } } ]).toArray(); res.json(notifications); } catch (err) { res.status(500).json([]); } });

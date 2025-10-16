@@ -37,6 +37,7 @@ async function fetchMyListings() {
     const studentContainer = document.getElementById('my-student-listings');
     const employerContainer = document.getElementById('my-employer-listings');
     if (!studentContainer || !employerContainer) return;
+
     const handleContainerClick = async (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const id = e.target.dataset.id;
@@ -53,6 +54,7 @@ async function fetchMyListings() {
     };
     studentContainer.addEventListener('click', handleContainerClick);
     employerContainer.addEventListener('click', handleContainerClick);
+
     studentContainer.innerHTML = "Yükleniyor...";
     employerContainer.innerHTML = "Yükleniyor...";
     try {
