@@ -215,16 +215,37 @@ document.body.addEventListener('click', async function(e) {
             } catch (err) { alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.'); }
         }
     }
+    /* --- Başvuru İşlemleri --- */
     const resultsContainer = document.getElementById('results-container');
-    if(resultsContainer && e.target.classList.contains('apply-btn')) {
-        const listingId = e.target.dataset.id;
-        try {
-            const response = await fetch('/api/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listingId }) });
-            const result = await response.json();
-            alert(result.message);
-        } catch (err) { alert('Bir hata oluştu. Lütfen tekrar deneyin.'); }
+    if (resultsContainer) {
+        resultsContainer.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('apply-btn')) {
+                const listingId = e.target.dataset.id;
+
+                // Önce öğrencinin kendi ilanını bulalım
+                const studentListingResponse = await fetch('/api/my-student-listing');
+                const studentListing = await studentListingResponse.json();
+
+                if (!studentListing) {
+                    alert('Başvuru yapabilmek için önce bir "Staj Arıyorum" ilanı oluşturmalısınız.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/apply', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // Sunucuya hem işveren ilanının ID'sini hem de kendi ilanımızın ID'sini gönderiyoruz
+                        body: JSON.stringify({ listingId: listingId, studentListingId: studentListing._id })
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                } catch (err) {
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            }
+        });
     }
-});
 
 /* --- Hamburger Menü İşlevselliği --- */
 const hamburger = document.getElementById('hamburger-menu');
@@ -251,10 +272,13 @@ async function setupNotifications() {
         countBadge.style.display = 'flex';
         notifications.forEach(notif => {
             const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
-            const listingCompany = notif.listingInfo[0]?.company || 'İlan';
+            // Artık öğrencinin alanını da alabiliyoruz!
+            const studentArea = notif.studentListingInfo[0]?.area || 'Bölüm belirtilmemiş';
+
             const item = document.createElement('div');
             item.className = 'notification-item';
-            item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong>, <em>${escapeHtml(listingCompany)}</em> ilanına başvurdu.</p>`;
+            // Bildirim metnini daha detaylı hale getirdik
+            item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
             dropdown.appendChild(item);
         });
     } else {

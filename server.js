@@ -148,6 +148,88 @@ connectToDb().then(() => {
         } catch (err) { res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
     });
 
+    // YENİ API ENDPOINT: Giriş yapmış öğrencinin kendi ilanını getirir
+    app.get('/api/my-student-listing', async (req, res) => {
+        if (!req.session.user || req.session.user.role !== 'student') {
+            return res.status(403).json(null);
+        }
+        try {
+            const studentId = new ObjectId(req.session.user.id);
+            const listing = await db.collection("ogrenciler").findOne({ createdBy: studentId });
+            res.json(listing); // Öğrencinin ilanını veya bulunamazsa null döner
+        } catch (err) {
+            res.status(500).json(null);
+        }
+    });
+
+    // YENİ API ENDPOINT: Bir işveren ilanına başvurmak için
+    app.post('/api/apply', async (req, res) => {
+        // 1. Kullanıcı giriş yapmış mı ve rolü 'student' mı diye kontrol et
+        if (!req.session.user || req.session.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' });
+        }
+
+        try {
+            const { listingId, studentListingId } = req.body; // Butona tıklandığında gelen ilan ID'leri
+            const studentId = new ObjectId(req.session.user.id);
+
+            // 2. Bu öğrenci bu ilana daha önce başvurmuş mu diye kontrol et
+            const existingApplication = await db.collection("applications").findOne({
+                listingId: new ObjectId(listingId),
+                applicantId: studentId
+            });
+            if (existingApplication) {
+                return res.status(400).json({ success: false, message: 'Bu ilana zaten başvurdunuz.' });
+            }
+
+            // 3. İlanın sahibinin ID'sini bul
+            const listing = await db.collection("isverenler").findOne({ _id: new ObjectId(listingId) });
+            if (!listing) {
+                return res.status(404).json({ success: false, message: 'İlan bulunamadı.' });
+            }
+
+            // 4. Yeni başvuru belgesini oluştur ve "applications" koleksiyonuna kaydet
+            const newApplication = {
+                applicantId: studentId,
+                listingId: new ObjectId(listingId),
+                ownerId: listing.createdBy, // İlan sahibinin ID'si
+                studentListingId: new ObjectId(studentListingId), // Başvuran öğrencinin kendi ilanının ID'si
+                status: 'pending', // Başvuru durumu: 'beklemede'
+                createdAt: new Date() // Başvuru tarihi
+            };
+            await db.collection("applications").insertOne(newApplication);
+
+            res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
+
+        } catch (err) {
+            console.error('Başvuru sırasında hata:', err);
+            res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
+        }
+    });
+
+    app.get('/api/notifications', async (req, res) => {
+        if (!req.session.user || req.session.user.role !== 'employer') {
+            return res.status(403).json([]);
+        }
+        try {
+            const ownerId = new ObjectId(req.session.user.id);
+            const notifications = await db.collection("applications").aggregate([
+                { $match: { ownerId: ownerId } },
+                { $sort: { createdAt: -1 } },
+                { // Başvuranın kullanıcı adını getir
+                    $lookup: { from: "kullanicilar", localField: "applicantId", foreignField: "_id", as: "applicantInfo" }
+                },
+                { // YENİ: Başvuranın öğrenci ilanını getir
+                    $lookup: { from: "ogrenciler", localField: "studentListingId", foreignField: "_id", as: "studentListingInfo" }
+                }
+            ]).toArray();
+            res.json(notifications);
+        } catch (err) {
+            console.error("Bildirimler getirilirken hata:", err);
+            res.status(500).json([]);
+        }
+    });
+
     app.get('/api/ogrenci-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("ogrenciler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
     app.get('/api/isveren-ilanlari', async (req, res) => { try { const ilanlar = await db.collection("isverenler").find().sort({_id: -1}).limit(8).toArray(); res.json(ilanlar); } catch (err) { res.status(500).json([]); } });
     app.get('/api/search', async (req, res) => { try { const { type, area, city } = req.query; const filterQuery = {}; if (area) filterQuery.area = area; if (city) filterQuery.city = city; const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler'; const results = await db.collection(collectionName).find(filterQuery).sort({_id: -1}).toArray(); res.json(results); } catch (err) { res.status(500).json([]); } });
