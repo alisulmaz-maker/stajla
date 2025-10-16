@@ -331,79 +331,46 @@ async function setupNotifications() {
         bell.parentElement.classList.toggle('active');
     });
 }
-// Dosyanın en sonuna ekleyin
-if (window.location.pathname.endsWith('/profil-duzenle.html')) {
+// ===================================================================================
+// BU BÖLÜMÜ main.js DOSYANIZIN EN SONUNA EKLEYİN
+// ===================================================================================
+
+/* --- Profil Düzenleme Sayfası Fonksiyonu --- */
+// Bu fonksiyon, sadece profil düzenleme sayfasındayken ve kullanıcı bilgisi alındıktan sonra çağrılacak.
+function initializeProfileEditPage() {
     const editForm = document.getElementById('edit-profile-form');
     const nameInput = document.getElementById('edit-name');
     const picturePreview = document.getElementById('picture-preview');
 
-    // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
-    document.addEventListener('DOMContentLoaded', () => {
-        if (currentUser) {
-            nameInput.value = currentUser.name;
-            if (currentUser.profilePicturePath) {
-                picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
-            }
-        } else {
-            // Eğer kullanıcı bilgisi yoksa (giriş yapmamışsa), anasayfaya yönlendir
-            window.location.href = '/giris.html';
+    // Bu fonksiyon sadece currentUser dolu olduğunda çağrılacağı için bu kontrol artık güvende.
+    if (currentUser) {
+        nameInput.value = currentUser.name;
+        if (currentUser.profilePicturePath) {
+            picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
         }
-    });
+    } else {
+        // Her ihtimale karşı bir güvenlik yönlendirmesi
+        window.location.href = '/giris.html';
+        return;
+    }
 
     editForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(this); // Form verilerini (resim dahil) al
+        const formData = new FormData(this);
 
         try {
             const response = await fetch('/api/update-profile', {
                 method: 'POST',
-                body: formData // FormData'yı doğrudan body'ye gönder
+                body: formData
             });
             const result = await response.json();
             alert(result.message);
             if (result.success) {
-                window.location.href = '/profil.html'; // Başarılı olursa profil sayfasına yönlendir
+                window.location.href = '/profil.html';
             }
         } catch (err) {
             alert('Profil güncellenirken bir hata oluştu.');
             console.error(err);
         }
     });
-// YENİ FONKSİYON: Sadece profil düzenleme sayfasındayken ve kullanıcı bilgisi alındıktan sonra çağrılacak.
-    function initializeProfileEditPage() {
-        const editForm = document.getElementById('edit-profile-form');
-        const nameInput = document.getElementById('edit-name');
-        const picturePreview = document.getElementById('picture-preview');
-
-        // Bu fonksiyon sadece currentUser dolu olduğunda çağrılacağı için bu kontrol artık güvende.
-        if (currentUser) {
-            nameInput.value = currentUser.name;
-            if (currentUser.profilePicturePath) {
-                picturePreview.style.backgroundImage = `url(${currentUser.profilePicturePath})`;
-            }
-        } else {
-            // Her ihtimale karşı bir güvenlik yönlendirmesi
-            window.location.href = '/giris.html';
-            return;
-        }
-
-        editForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            try {
-                const response = await fetch('/api/update-profile', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                alert(result.message);
-                if (result.success) {
-                    window.location.href = '/profil.html';
-                }
-            } catch (err) {
-                alert('Profil güncellenirken bir hata oluştu.');
-                console.error(err);
-            }
-        });
-    }
+}
