@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* --- Arama, Şikayet ve Başvuru İşlemleri --- */
 document.body.addEventListener('click', async function(e) {
+    // Arama butonu tıklandığında...
     if (e.target.id === 'search-btn') {
         const searchType = document.getElementById('search-type').value;
         const searchArea = document.getElementById('search-area').value;
@@ -203,6 +204,8 @@ document.body.addEventListener('click', async function(e) {
             }
         } catch (err) { console.error('Arama sırasında hata:', err); container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
     }
+
+    // Şikayet linki tıklandığında...
     if (e.target.classList.contains('report-link')) {
         e.preventDefault();
         const id = e.target.dataset.id;
@@ -216,37 +219,38 @@ document.body.addEventListener('click', async function(e) {
             } catch (err) { alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.'); }
         }
     }
-    /* --- Başvuru İşlemleri --- */
-    const resultsContainer = document.getElementById('results-container');
-    if (resultsContainer) {
-        resultsContainer.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('apply-btn')) {
-                const listingId = e.target.dataset.id;
+});
 
-                // Önce öğrencinin kendi ilanını bulalım
-                const studentListingResponse = await fetch('/api/my-student-listing');
-                const studentListing = await studentListingResponse.json();
+/* --- Başvuru İşlemleri --- */
+// Bu dinleyiciyi, dinamik olarak oluşturulan "Başvur" butonları için ayrı tutuyoruz.
+const resultsContainer = document.getElementById('results-container');
+if (resultsContainer) {
+    resultsContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('apply-btn')) {
+            const listingId = e.target.dataset.id;
 
-                if (!studentListing) {
-                    alert('Başvuru yapabilmek için önce bir "Staj Arıyorum" ilanı oluşturmalısınız.');
-                    return;
-                }
+            const studentListingResponse = await fetch('/api/my-student-listing');
+            const studentListing = await studentListingResponse.json();
 
-                try {
-                    const response = await fetch('/api/apply', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        // Sunucuya hem işveren ilanının ID'sini hem de kendi ilanımızın ID'sini gönderiyoruz
-                        body: JSON.stringify({ listingId: listingId, studentListingId: studentListing._id })
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                } catch (err) {
-                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-                }
+            if (!studentListing) {
+                alert('Başvuru yapabilmek için önce bir "Staj Arıyorum" ilanı oluşturmalısınız.');
+                return;
             }
-        });
-    }
+
+            try {
+                const response = await fetch('/api/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ listingId: listingId, studentListingId: studentListing._id })
+                });
+                const result = await response.json();
+                alert(result.message);
+            } catch (err) {
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+        }
+    });
+}
 
 /* --- Hamburger Menü İşlevselliği --- */
 const hamburger = document.getElementById('hamburger-menu');
@@ -273,12 +277,10 @@ async function setupNotifications() {
         countBadge.style.display = 'flex';
         notifications.forEach(notif => {
             const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
-            // Artık öğrencinin alanını da alabiliyoruz!
             const studentArea = notif.studentListingInfo[0]?.area || 'Bölüm belirtilmemiş';
 
             const item = document.createElement('div');
             item.className = 'notification-item';
-            // Bildirim metnini daha detaylı hale getirdik
             item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
             dropdown.appendChild(item);
         });
