@@ -279,9 +279,19 @@ async function setupNotifications() {
             const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
             const studentArea = notif.studentListingInfo[0]?.area || 'Bölüm belirtilmemiş';
 
+            // YENİ: Öğrencinin kendi ilanının ID'sini alıyoruz
+            const studentListingId = notif.studentListingInfo[0]?._id;
+
             const item = document.createElement('div');
             item.className = 'notification-item';
-            item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
+
+            // GÜNCELLEME: Eğer öğrenci ilanı bulunduysa, ismi link yapıyoruz
+            if (studentListingId) {
+                item.innerHTML = `<p><a href="/ogrenci-profil.html?id=${studentListingId}"><strong>${escapeHtml(applicantName)}</strong></a> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
+            } else {
+                item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
+            }
+
             dropdown.appendChild(item);
         });
     } else {

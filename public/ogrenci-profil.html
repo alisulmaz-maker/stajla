@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğrenci Profili - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <a href="/index.html" class="logo-link">
+            <img src="/img/logo.png" alt="STAJLA" class="logo-img">
+            <span class="logo-text">STAJLA</span>
+        </a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav">
+            <a href="/giris.html">Giriş / Kayıt</a>
+        </div>
+    </nav>
+</header>
+<div id="mobile-nav">
+    <a href="/index.html">Anasayfa</a>
+    <a href="/isveren-ilan.html">İşveren İlan</a>
+    <a href="/ogrenci-ilan.html">Öğrenci İlan</a>
+    <a href="/iletisim.html">İletişim</a>
+</div>
+<main class="form-page" style="padding-top: 60px; padding-bottom: 60px;">
+    <div id="student-profile-container">
+        <h2>Öğrenci Profili Yükleniyor...</h2>
+    </div>
+</main>
+<footer>
+    <p>© 2025 STAJLA | İletişim: <a href="mailto:stajladestek@gmail.com">stajladestek@gmail.com</a></p>
+</footer>
+<script>
+    /* Güvenlik için Yardımcı Fonksiyon */
+    function escapeHtml(text) {
+        if (typeof text !== 'string') return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '/': '&#47;', '=': '&#61;' };
+        return text.replace(/[&<>"'`=/]/g, s => map[s]);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const container = document.getElementById('student-profile-container');
+        const params = new URLSearchParams(window.location.search);
+        const listingId = params.get('id');
+
+        if (!listingId) {
+            container.innerHTML = '<h2>Geçersiz veya eksik profil ID\'si.</h2>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/ogrenci-ilan/${listingId}`);
+            if (!response.ok) {
+                throw new Error('Profil bulunamadı veya bir sunucu hatası oluştu.');
+            }
+            const s = await response.json(); // s = student
+
+            // Kartın içini gelen verilerle dolduruyoruz
+            container.innerHTML = `
+                <div class="card" style="text-align: left; max-width: 700px; margin: auto;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
+                    <p style="font-size: 1.1rem;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
+                    <p style="font-size: 1.1rem;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
+                    <p style="font-size: 1.1rem;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
+                    <hr style="margin: 20px 0;">
+                    <p style="line-height: 1.6;">${escapeHtml(s.desc)}</p>
+                    <hr style="margin: 20px 0;">
+                    <p style="font-size: 1.1rem;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
+                    ${s.cvPath ? `<div style="margin-top: 25px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" style="display: inline-block; font-weight: bold; background-color: #FFD43B; padding: 12px 20px; border-radius: 8px; color: #222; text-decoration: none;">CV Görüntüle</a></div>` : ''}
+                </div>
+            `;
+
+        } catch (err) {
+            console.error('Profil yüklenirken hata:', err);
+            container.innerHTML = '<h2>Öğrenci profili yüklenirken bir sorun oluştu.</h2>';
+        }
+    });
+</script>
+
+<script src="/js/main.js"></script>
+
+</body>
+</html>
