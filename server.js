@@ -92,7 +92,17 @@ connectToDb().then(() => {
             if (!user) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
             const isPasswordCorrect = await bcrypt.compare(pass, user.password);
             if (!isPasswordCorrect) { return res.json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
-            req.session.user = { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
+
+            // DÜZELTME: Session'a profilePicturePath alanını da ekliyoruz.
+            // Eğer kullanıcı resmi yoksa, bu alan 'undefined' olacak ve sorun yaratmayacaktır.
+            req.session.user = {
+                id: user._id.toString(),
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                profilePicturePath: user.profilePicturePath // <-- EKLENEN SATIR
+            };
+
             if (remember) { req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; } else { req.session.cookie.expires = false; }
             res.json({ success: true, message: 'Giriş başarılı!' });
         } catch (err) { console.error('Giriş sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
