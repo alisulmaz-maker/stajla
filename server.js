@@ -184,18 +184,7 @@ connectToDb().then(() => {
 
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
 
-            const msg = {
-                to: user.email,
-                from: 'stajladestek@gmail.com', // SendGrid'de doğruladığınız e-posta adresi
-                subject: 'Stajla Şifre Sıfırlama İsteği',
-                html: `
-        <p>Merhaba ${user.name},</p>
-        <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
-        <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
-    `
-            };
 
-            await sgMail.send(msg);
 // SendGrid için mail objesini oluştur
             const msg = {
                 to: user.email,
