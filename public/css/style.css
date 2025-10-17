@@ -664,3 +664,49 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     background-color: #dc3545;
     color: white;
 }
+/* =============================================== */
+/* ANA SAYFA ESTETİK GÜNCELLEMELERİ                */
+/* =============================================== */
+
+/* Sayfa içeriğini ortalayan ve genişliği sınırlayan ana konteyner */
+.container {
+    max-width: 1100px; /* İçeriğin maksimum genişliği */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;  /* Mobil cihazlar için yan boşluklar */
+    padding-right: 24px;
+}
+
+/* Ana sayfadaki her bir bölüm için genel stil */
+.homepage-section {
+    padding: 64px 0; /* Bölümler arasına dikey boşluk ekler */
+    text-align: center;
+}
+
+/* Bölüm Başlıkları (Son Eklenenler, STAJLA'nın Öyküsü vb.) */
+.section-title {
+    font-size: 2.25rem; /* Başlıkları daha büyük ve dikkat çekici yapar */
+    font-weight: 700;
+    color: #212529; /* Koyu bir renk */
+    margin-bottom: 24px; /* Başlığın altındaki boşluk */
+}
+
+/* Başlıkların altındaki açıklama metinleri */
+.section-description {
+    font-size: 1.15rem;
+    color: #6c757d; /* Daha yumuşak bir gri tonu */
+    line-height: 1.6; /* Satır aralığını artırarak okunabilirliği iyileştirir */
+    max-width: 750px; /* Uzun metinlerin satır genişliğini sınırlar */
+    margin: 0 auto; /* Paragrafı kendi içinde ortalar */
+}
+
+/* "Henüz ilan yok" gibi mesajlar için özel stil */
+.no-results-message {
+    background-color: #f8f9fa; /* Çok hafif bir arka plan rengi */
+    border: 1px dashed #ced4da; /* Kesikli çizgi ile bunun bir bildirim olduğunu belirtir */
+    border-radius: 8px;
+    padding: 40px;
+    margin-top: 32px;
+    color: #6c757d;
+    font-style: italic; /* İtalik stil ile normal metinden ayrıştırır */
+}

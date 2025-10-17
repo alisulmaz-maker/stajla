@@ -14,48 +14,58 @@ function escapeHtml(text) {
 /* --- Arayüz Güncelleme Fonksiyonları --- */
 async function renderResultsOnHome() {
     const container = document.getElementById('results-container');
-    if (!container) return;
+    // YENİ: "İlan yok" mesajını göstereceğimiz alanı da seçiyoruz.
+    const noResultsPlaceholder = document.getElementById('no-results-placeholder');
+
+    // YENİ: Her iki alanın da var olduğundan emin oluyoruz.
+    if (!container || !noResultsPlaceholder) return;
+
     container.innerHTML = 'Yükleniyor...';
+    noResultsPlaceholder.style.display = 'none'; // Başlangıçta yeni mesaj alanını gizliyoruz.
+
     try {
         const response = await fetch('/api/ogrenci-ilanlari');
         const ilanlar = await response.json();
-        container.innerHTML = '';
+        container.innerHTML = ''; // İlanlar geldikten sonra "Yükleniyor..." yazısını temizliyoruz.
+
+        // DEĞİŞTİ: İlan yoksa, basit bir yazı eklemek yerine yeni ve şık mesaj alanımızı gösteriyoruz.
         if (!ilanlar || ilanlar.length === 0) {
-            container.innerHTML = '<p>Henüz eklenmiş bir öğrenci ilanı yok.</p>';
-            return;
+            noResultsPlaceholder.style.display = 'block';
+        } else {
+            // Eğer ilan varsa, her zamanki gibi kartları oluşturuyoruz.
+            ilanlar.forEach(s => {
+                const el = document.createElement('div');
+                el.className = 'card';
+
+                const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
+                    ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
+                    : '<div class="card-profile-pic-placeholder"></div>';
+
+                el.innerHTML = `
+                    <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
+                        <div class="card-header">
+                            ${profilePicHtml}
+                            <div class="card-info">
+                                <h4>${escapeHtml(s.name)}</h4>
+                                <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="card-body">
+                        <p>${escapeHtml(s.dept || '')}</p>
+                        <p>${escapeHtml(s.desc)}</p>
+                        ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+                        <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+                        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
         }
-        // renderResultsOnHome fonksiyonu içindeki döngüyü güncelleyin
-        ilanlar.forEach(s => {
-            const el = document.createElement('div');
-            el.className = 'card';
-
-            // Profil resmi varsa onu, yoksa boş bir string oluştur
-            const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
-                ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
-                : '<div class="card-profile-pic-placeholder"></div>'; // Opsiyonel: Resim yoksa boş yer tutucu
-
-            // renderResultsOnHome fonksiyonu içindeki el.innerHTML'i değiştirin
-            el.innerHTML = `
-    <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
-        <div class="card-header">
-            ${profilePicHtml}
-            <div class="card-info">
-                <h4>${escapeHtml(s.name)}</h4>
-                <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
-            </div>
-        </div>
-    </a>
-    <div class="card-body">
-        <p>${escapeHtml(s.dept||'')}</p>
-        <p>${escapeHtml(s.desc)}</p>
-        ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
-        <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-    </div>
-`;
-            container.appendChild(el);
-        });
-    } catch (err) { console.error('Sonuçlar yüklenirken hata:', err); container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>'; }
+    } catch (err) {
+        console.error('Sonuçlar yüklenirken hata:', err);
+        container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>';
+    }
 }
 
 async function fetchMyListings() {
