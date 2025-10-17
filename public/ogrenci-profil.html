@@ -4,7 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Öğrenci Profili - STAJLA</title>
+
     <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .profile-pic-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 20px auto;
+            border: 4px solid #FFD43B;
+        }
+        .profile-pic-placeholder-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            margin: 0 auto 20px auto;
+            border: 4px solid #f0f0f0;
+        }
+    </style>
 </head>
 <body>
 
@@ -70,19 +91,31 @@
             const s = await response.json(); // s = student
 
             // Kartın içini gelen verilerle dolduruyoruz
+// ... script'in başındaki kodlar aynı kalacak ...
+
+            const s = await response.json(); // s = student
+
+            // Profil resmi için HTML oluşturuyoruz
+            const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
+                ? `<div class="profile-pic-large" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
+                : '<div class="profile-pic-placeholder-large"></div>'; // Resim yoksa yer tutucu
+
+            // GÜNCELLENMİŞ HTML
             container.innerHTML = `
-                <div class="card" style="text-align: left; max-width: 700px; margin: auto;">
-                    <h2 style="font-size: 2rem; margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
-                    <p style="font-size: 1.1rem;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
-                    <p style="font-size: 1.1rem;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
-                    <p style="font-size: 1.1rem;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
-                    <hr style="margin: 20px 0;">
-                    <p style="line-height: 1.6;">${escapeHtml(s.desc)}</p>
-                    <hr style="margin: 20px 0;">
-                    <p style="font-size: 1.1rem;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
-                    ${s.cvPath ? `<div style="margin-top: 25px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" style="display: inline-block; font-weight: bold; background-color: #FFD43B; padding: 12px 20px; border-radius: 8px; color: #222; text-decoration: none;">CV Görüntüle</a></div>` : ''}
+                <div class="card" style="text-align: center;">
+                    ${profilePicHtml}
+                    <h2 style="margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
+                    <p style="text-align: left;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
+                    <p style="text-align: left;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
+                    <p style="text-align: left;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
+                    <hr style="margin: 15px 0;">
+                    <p style="text-align: left;">${escapeHtml(s.desc)}</p>
+                    <hr style="margin: 15px 0;">
+                    <p style="text-align: left;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
+                    ${s.cvPath ? `<p style="margin-top: 20px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222;">CV Görüntüle</a></p>` : ''}
                 </div>
             `;
+// ... script'in geri kalanı aynı kalacak ...
 
         } catch (err) {
             console.error('Profil yüklenirken hata:', err);

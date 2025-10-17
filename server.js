@@ -225,19 +225,37 @@ connectToDb().then(() => {
         }
     });
 
-    // YENİ API ENDPOINT: ID'ye göre tek bir öğrenci ilanını getirir
+// GÜNCELLENMİŞ ROTA: ID'ye göre tek bir öğrenci ilanını, sahibinin bilgileriyle birlikte getirir
     app.get('/api/ogrenci-ilan/:id', async (req, res) => {
         try {
             const { id } = req.params;
-            // ID'nin geçerli bir ObjectId olup olmadığını kontrol etmek önemlidir
             if (!ObjectId.isValid(id)) {
                 return res.status(400).json({ message: 'Geçersiz İlan IDsi.' });
             }
-            const ilan = await db.collection("ogrenciler").findOne({ _id: new ObjectId(id) });
-            if (!ilan) {
+
+            // Eski findOne() sorgusu yerine aggregate kullanıyoruz
+            const ilanlar = await db.collection("ogrenciler").aggregate([
+                { $match: { _id: new ObjectId(id) } }, // Önce doğru ilanı bul
+                { // Sonra sahibinin bilgilerini "kullanicilar" koleksiyonundan getir
+                    $lookup: {
+                        from: "kullanicilar",
+                        localField: "createdBy",
+                        foreignField: "_id",
+                        as: "sahipInfo"
+                    }
+                },
+                // Gelen diziyi tek bir objeye çevir
+                { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } }
+            ]).toArray();
+
+            // Eğer sonuç bulunamazsa 404 hatası döndür
+            if (!ilanlar || ilanlar.length === 0) {
                 return res.status(404).json({ message: 'Öğrenci ilanı bulunamadı.' });
             }
-            res.json(ilan);
+
+            // Sonucun ilk elemanını (yani ilanın kendisini) gönder
+            res.json(ilanlar[0]);
+
         } catch (err) {
             console.error("Tekil öğrenci ilanı alınırken hata:", err);
             res.status(500).json({ message: 'Sunucuda bir hata oluştu.' });
