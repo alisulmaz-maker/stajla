@@ -163,11 +163,7 @@ connectToDb().then(() => {
         req.session.destroy(err => { if (err) { return res.json({ success: false }); } res.clearCookie('connect.sid'); res.json({ success: true }); });
     });
 
-    // GÜNCELLENMİŞ FİNAL ROTA
-    app.post('/api/forgot-password', async (req, res) => {
-        // SendGrid API anahtarını ortam değişkeninden alıp ayarla
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+    app.post('/api/forgot-password', async (req, res) => { // <-- 'async' kelimesi burada
         try {
             const { email } = req.body;
             const user = await db.collection("kullanicilar").findOne({ email: email });
@@ -177,34 +173,40 @@ connectToDb().then(() => {
             }
 
             const resetToken = crypto.randomBytes(20).toString('hex');
+            const resetTokenExpires = Date.now() + 3600000; // 1 saat geçerli
+
             await db.collection("kullanicilar").updateOne(
                 { _id: user._id },
-                { $set: { resetPasswordToken: resetToken, resetPasswordExpires: Date.now() + 3600000 } }
+                { $set: { resetPasswordToken: resetToken, resetPasswordExpires: resetTokenExpires } }
             );
+
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
 
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
 
-            // E-posta içeriğini (msg objesi) hazırla
-            const msg = {
+            const mailOptions = {
+                from: `"Stajla Destek" <${process.env.EMAIL_USER}>`,
                 to: user.email,
-                from: 'stajladestek@gmail.com', // SendGrid'de doğruladığınız e-posta adresi
-                subject: 'Stajla Şifre Sıfırlama İsteği',
+                subject: "Stajla Şifre Sıfırlama İsteği",
                 html: `
                 <p>Merhaba ${user.name},</p>
-                <p>Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için lütfen aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+                <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
                 <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
-                <p>Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.</p>
-            `,
+            `
             };
 
-            // E-postayı SendGrid üzerinden gönder
-            await sgMail.send(msg);
+            await transporter.sendMail(mailOptions);
 
             res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
 
         } catch (err) {
             console.error('Şifre sıfırlama sırasında hata:', err);
-            // Hata detaylarını görmek isterseniz: console.error(err.response.body);
             res.status(500).json({ success: false, message: 'E-posta gönderilirken bir hata oluştu.' });
         }
     });
