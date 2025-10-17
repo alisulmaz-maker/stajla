@@ -188,9 +188,9 @@ connectToDb().then(() => {
 // SendGrid için mail objesini oluştur
             const msg = {
                 to: user.email,
-                from: 'stajladestek@gmail.com', // ÖNEMLİ: Bu e-postayı SendGrid'de doğrulamış olmalısınız!
+                from: 'destek@stajla.net', // <-- GÜNCELLENDİ
                 subject: 'Stajla Şifre Sıfırlama İsteği',
-                html: `
+                html: `...`
         <p>Merhaba ${user.name},</p>
         <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
         <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
