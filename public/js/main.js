@@ -34,7 +34,9 @@ async function renderResultsOnHome() {
                 ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                 : '<div class="card-profile-pic-placeholder"></div>'; // Opsiyonel: Resim yoksa boş yer tutucu
 
+            // renderResultsOnHome fonksiyonu içindeki el.innerHTML'i değiştirin
             el.innerHTML = `
+    <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
         <div class="card-header">
             ${profilePicHtml}
             <div class="card-info">
@@ -42,12 +44,15 @@ async function renderResultsOnHome() {
                 <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
             </div>
         </div>
+    </a>
+    <div class="card-body">
         <p>${escapeHtml(s.dept||'')}</p>
         <p>${escapeHtml(s.desc)}</p>
         ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
         <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
         <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-    `;
+    </div>
+`;
             container.appendChild(el);
         });
     } catch (err) { console.error('Sonuçlar yüklenirken hata:', err); container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>'; }
@@ -159,8 +164,25 @@ if (loginForm) {
 /* --- Şifre Sıfırlama İşlemleri --- */
 const forgotPasswordForm = document.getElementById('forgot-password-form');
 if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener('submit', async function(e) { e.preventDefault(); const email = document.getElementById('forgot-email').value; const button = this.querySelector('button'); button.textContent = 'Gönderiliyor...'; try { const response = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); const result = await response.json(); alert(result.message); button.textContent = 'Sıfırlama Linki Gönder'; } catch (err) { alert('Bir hata oluştu. Lütfen tekrar deneyin.'); button.textContent = 'Sıfırlama Linki Gönder'; } });
-}
+    // forgotPasswordForm event listener'ını bununla değiştirin
+    forgotPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('forgot-email').value;
+        const button = this.querySelector('button');
+        button.textContent = 'Gönderiliyor...';
+        button.disabled = true; // Butonu geçici olarak devre dışı bırak
+        try {
+            const response = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+            const result = await response.json();
+            alert(result.message);
+        } catch (err) {
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        } finally {
+            // Bu blok, işlem başarılı da olsa başarısız da olsa çalışır.
+            button.textContent = 'Sıfırlama Linki Gönder';
+            button.disabled = false; // Butonu tekrar aktif et
+        }
+    });
 if (window.location.pathname.endsWith('/reset-password.html')) {
     const resetPasswordForm = document.getElementById('reset-password-form');
     resetPasswordForm.addEventListener('submit', async function(e) { e.preventDefault(); const pass1 = document.getElementById('reset-pass1').value; const pass2 = document.getElementById('reset-pass2').value; if (pass1 !== pass2) { alert('Girdiğiniz şifreler uyuşmuyor.'); return; } const params = new URLSearchParams(window.location.search); const token = params.get('token'); try { const response = await fetch('/api/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token, newPassword: pass1 }) }); const result = await response.json(); alert(result.message); if (result.success) { window.location.href = '/giris.html'; } } catch (err) { alert('Bir hata oluştu.'); } });
@@ -256,20 +278,25 @@ document.body.addEventListener('click', async function(e) {
                         ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                         : '<div class="card-profile-pic-placeholder"></div>';
 
+                    // Arama sonuçları (students) içindeki el.innerHTML'i değiştirin
                     el.innerHTML = `
-            <div class="card-header">
-                ${profilePicHtml}
-                <div class="card-info">
-                    <h4>${escapeHtml(s.name)}</h4>
-                    <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
-                </div>
+    <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
+        <div class="card-header">
+            ${profilePicHtml}
+            <div class="card-info">
+                <h4>${escapeHtml(s.name)}</h4>
+                <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
             </div>
-            <p>${escapeHtml(s.dept || '')}</p>
-            <p>${escapeHtml(s.desc)}</p>
-            ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
-            <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-            <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
-        `;
+        </div>
+    </a>
+    <div class="card-body">
+        <p>${escapeHtml(s.dept || '')}</p>
+        <p>${escapeHtml(s.desc)}</p>
+        ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+        <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+        <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
+    </div>
+`;
                     container.appendChild(el);
                 });
             } else { // jobs// jobs
@@ -335,38 +362,58 @@ if (hamburger && mobileNav) {
 }
 
 /* --- Bildirim Sistemi İşlemleri --- */
+// GÜNCELLENMİŞ FONKSİYON
 async function setupNotifications() {
+    if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
+
     const userNav = document.getElementById('user-nav');
-    if (!userNav) return;
     const notificationHTML = `<div class="notifications"><div class="notification-bell">🔔</div><div class="notification-count" style="display: none;">0</div><div class="notification-dropdown"></div></div>`;
     userNav.insertAdjacentHTML('beforebegin', notificationHTML);
     const bell = document.querySelector('.notification-bell');
     const countBadge = document.querySelector('.notification-count');
     const dropdown = document.querySelector('.notification-dropdown');
-    const response = await fetch('/api/notifications');
-    const notifications = await response.json();
+
+    let notifications = [];
+    // Kullanıcının rolüne göre doğru API'dan bildirimleri çek
+    if (currentUser.role === 'employer') {
+        const response = await fetch('/api/notifications');
+        notifications = await response.json();
+        // İşveren bildirimlerini oluştur
+        if (notifications.length > 0) {
+            notifications.forEach(notif => {
+                const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
+                const studentListingId = notif.studentListingInfo[0]?._id;
+                const item = document.createElement('div');
+                item.className = 'notification-item';
+                if (studentListingId) {
+                    item.innerHTML = `<p><a href="/ogrenci-profil.html?id=${studentListingId}"><strong>${escapeHtml(applicantName)}</strong></a> ilanınıza başvurdu.</p>`;
+                } else {
+                    item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> ilanınıza başvurdu.</p>`;
+                }
+                dropdown.appendChild(item);
+            });
+        }
+    } else if (currentUser.role === 'student') {
+        const response = await fetch('/api/get-my-offers');
+        notifications = await response.json();
+        // Öğrenci bildirimlerini (iş tekliflerini) oluştur
+        if (notifications.length > 0) {
+            notifications.forEach(offer => {
+                const companyName = offer.jobInfo[0]?.company || 'Bir Şirket';
+                const jobArea = offer.jobInfo[0]?.area || 'bir pozisyon';
+                const item = document.createElement('div');
+                item.className = 'notification-item';
+                // TODO: Gelecekte bu linki iş ilanı detay sayfasına yönlendirebiliriz.
+                item.innerHTML = `<p><strong>${escapeHtml(companyName)}</strong> size <em>${escapeHtml(jobArea)}</em> pozisyonunu teklif etti.</p>`;
+                dropdown.appendChild(item);
+            });
+        }
+    }
+
+    // Bildirim sayısı ve zil tıklama olayını ayarla
     if (notifications.length > 0) {
         countBadge.textContent = notifications.length;
         countBadge.style.display = 'flex';
-        notifications.forEach(notif => {
-            const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
-            const studentArea = notif.studentListingInfo[0]?.area || 'Bölüm belirtilmemiş';
-
-            // YENİ: Öğrencinin kendi ilanının ID'sini alıyoruz
-            const studentListingId = notif.studentListingInfo[0]?._id;
-
-            const item = document.createElement('div');
-            item.className = 'notification-item';
-
-            // GÜNCELLEME: Eğer öğrenci ilanı bulunduysa, ismi link yapıyoruz
-            if (studentListingId) {
-                item.innerHTML = `<p><a href="/ogrenci-profil.html?id=${studentListingId}"><strong>${escapeHtml(applicantName)}</strong></a> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
-            } else {
-                item.innerHTML = `<p><strong>${escapeHtml(applicantName)}</strong> (${escapeHtml(studentArea)}) ilanınıza başvurdu.</p>`;
-            }
-
-            dropdown.appendChild(item);
-        });
     } else {
         dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
     }

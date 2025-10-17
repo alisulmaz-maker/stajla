@@ -61,10 +61,22 @@
     <div id="student-profile-container">
         <h2>Öğrenci Profili Yükleniyor...</h2>
     </div>
+
 </main>
+
 <footer>
     <p>© 2025 STAJLA | İletişim: <a href="mailto:stajladestek@gmail.com">stajladestek@gmail.com</a></p>
 </footer>
+
+<div id="offer-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Hangi İlanınızı Teklif Etmek İstersiniz?</h3>
+        <div id="employer-listings-container">
+        </div>
+    </div>
+</div>
+
 <script>
     /* Güvenlik için Yardımcı Fonksiyon */
     function escapeHtml(text) {
@@ -88,34 +100,86 @@
             if (!response.ok) {
                 throw new Error('Profil bulunamadı veya bir sunucu hatası oluştu.');
             }
-            const s = await response.json(); // s = student
+            const s = await response.json();
 
-            // Kartın içini gelen verilerle dolduruyoruz
-// ... script'in başındaki kodlar aynı kalacak ...
-
-            const s = await response.json(); // s = student
-
-            // Profil resmi için HTML oluşturuyoruz
             const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
                 ? `<div class="profile-pic-large" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
-                : '<div class="profile-pic-placeholder-large"></div>'; // Resim yoksa yer tutucu
+                : '<div class="profile-pic-placeholder-large"></div>';
 
-            // GÜNCELLENMİŞ HTML
             container.innerHTML = `
-                <div class="card" style="text-align: center;">
-                    ${profilePicHtml}
-                    <h2 style="margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
-                    <p style="text-align: left;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
-                    <p style="text-align: left;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
-                    <p style="text-align: left;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
-                    <hr style="margin: 15px 0;">
-                    <p style="text-align: left;">${escapeHtml(s.desc)}</p>
-                    <hr style="margin: 15px 0;">
-                    <p style="text-align: left;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
-                    ${s.cvPath ? `<p style="margin-top: 20px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222;">CV Görüntüle</a></p>` : ''}
-                </div>
-            `;
-// ... script'in geri kalanı aynı kalacak ...
+                    <div class="card" style="text-align: center;">
+                        ${profilePicHtml}
+                        <h2 style="margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
+                        <p style="text-align: left;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
+                        <p style="text-align: left;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
+                        <p style="text-align: left;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
+                        <hr style="margin: 15px 0;">
+                        <p style="text-align: left;">${escapeHtml(s.desc)}</p>
+                        <hr style="margin: 15px 0;">
+                        <p style="text-align: left;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
+                        ${s.cvPath ? `<p style="margin-top: 20px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222;">CV Görüntüle</a></p>` : ''}
+                        <div style="margin-top: 25px;">
+                            <button id="offer-job-btn" class="edit-btn" style="width: 100%; padding: 15px; font-size: 1.1rem;">Bu Adaya İş Teklif Et</button>
+                        </div>
+                    </div>
+                `;
+
+            // --- Buton ve Modal'ı yönetecek kod ---
+            const offerBtn = document.getElementById('offer-job-btn');
+            const modal = document.getElementById('offer-modal');
+            const closeModalBtn = document.querySelector('.close-modal');
+            const listingsContainer = document.getElementById('employer-listings-container');
+            const studentId = listingId;
+
+            const localCurrentUser = await fetch('/api/current-user').then(res => res.json());
+            if (!localCurrentUser || localCurrentUser.role !== 'employer') {
+                offerBtn.style.display = 'none';
+            }
+
+            offerBtn.addEventListener('click', async () => {
+                listingsContainer.innerHTML = '<i>İlanlarınız yükleniyor...</i>';
+                const response = await fetch('/api/my-listings');
+                const data = await response.json();
+
+                if (data.employer && data.employer.length > 0) {
+                    listingsContainer.innerHTML = '';
+                    data.employer.forEach(listing => {
+                        const listingEl = document.createElement('div');
+                        listingEl.className = 'listing-offer-item';
+                        listingEl.innerHTML = `<span>${escapeHtml(listing.company)} - ${escapeHtml(listing.area)}</span><button data-listing-id="${listing._id}">Teklif Gönder</button>`;
+                        listingsContainer.appendChild(listingEl);
+                    });
+                } else {
+                    listingsContainer.innerHTML = '<p>Bu adaya teklif gönderebileceğiniz aktif bir iş ilanınız bulunmuyor. Lütfen önce bir ilan oluşturun.</p>';
+                }
+                modal.style.display = 'flex';
+            });
+
+            closeModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+            modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.display = 'none'; } });
+
+            listingsContainer.addEventListener('click', async (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const jobListingId = e.target.dataset.listingId;
+                    e.target.textContent = 'Gönderiliyor...';
+                    try {
+                        const response = await fetch('/api/send-offer', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ studentId, jobListingId })
+                        });
+                        const result = await response.json();
+                        alert(result.message);
+                        if(result.success) {
+                            modal.style.display = 'none';
+                        }
+                        e.target.textContent = 'Teklif Gönder';
+                    } catch(err) {
+                        alert('Bir hata oluştu.');
+                        e.target.textContent = 'Teklif Gönder';
+                    }
+                }
+            });
 
         } catch (err) {
             console.error('Profil yüklenirken hata:', err);
