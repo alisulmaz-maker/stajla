@@ -180,18 +180,22 @@ connectToDb().then(() => {
                 { $set: { resetPasswordToken: resetToken, resetPasswordExpires: resetTokenExpires } }
             );
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
             sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
 
+            const msg = {
+                to: user.email,
+                from: 'stajladestek@gmail.com', // SendGrid'de doğruladığınız e-posta adresi
+                subject: 'Stajla Şifre Sıfırlama İsteği',
+                html: `
+        <p>Merhaba ${user.name},</p>
+        <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+        <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
+    `
+            };
+
+            await sgMail.send(msg);
 // SendGrid için mail objesini oluştur
             const msg = {
                 to: user.email,
