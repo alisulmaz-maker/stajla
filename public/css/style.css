@@ -642,3 +642,25 @@ alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     border-top: 1px solid #f0f0f0;
     margin-top: 15px;
 }
+/* Bildirim Menüsü Footer Stilleri */
+.notification-footer {
+    padding: 8px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+#clear-notifications-btn {
+    background-color: transparent;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    width: 100%;
+}
+
+#clear-notifications-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}

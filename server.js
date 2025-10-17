@@ -219,6 +219,21 @@ connectToDb().then(() => {
         }
     });
 
+    // server.js'e ekleyin (örneğin /api/send-offer'ın altına)
+    app.post('/api/clear-notifications', async (req, res) => {
+        if (!req.session.user || req.session.user.role !== 'employer') {
+            return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
+        }
+        try {
+            const employerId = new ObjectId(req.session.user.id);
+            await db.collection("applications").deleteMany({ ownerId: employerId });
+            res.json({ success: true, message: 'Tüm bildirimler temizlendi.' });
+        } catch (err) {
+            console.error('Bildirimler temizlenirken hata:', err);
+            res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+        }
+    });
+
     // İLAN YÖNETİMİ
     // YENİ API ENDPOINT: İşverenin bir öğrenciye iş teklifi göndermesi için
     app.post('/api/send-offer', async (req, res) => {

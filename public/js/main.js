@@ -219,28 +219,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userNav = document.getElementById('user-nav');
         if (currentUser && userNav) {
             // EĞER kullanıcının profil resmi varsa, onu göster
+            // =======================================================
+// MEVCUT if/else BLOĞUNUZU BUNUNLA DEĞİŞTİRİN
+// =======================================================
+
+// Kullanıcının rolü öğrenci ise "İş Tekliflerim" linkini oluştur, değilse boş bırak
+            const studentLinks = currentUser.role === 'student'
+                ? '<a href="/is-tekliflerim.html">İş Tekliflerim</a>'
+                : '';
+
+// EĞER kullanıcının profil resmi varsa, onu göster
             if (currentUser.profilePicturePath) {
                 userNav.innerHTML = `
-            <div class="profile-dropdown">
-                <img src="${currentUser.profilePicturePath}" alt="Profil" class="profile-avatar-img">
-                <div class="dropdown-content">
-                    <a href="/profil.html">İlanlarım</a>
-                    <a href="/profil-duzenle.html">Profili Düzenle</a>
-                    <a id="logout-btn" href="#">Çıkış Yap</a>
-                </div>
-            </div>`;
+        <div class="profile-dropdown">
+            <img src="${currentUser.profilePicturePath}" alt="Profil" class="profile-avatar-img">
+            <div class="dropdown-content">
+                <a href="/profil.html">İlanlarım</a>
+                ${studentLinks} <a href="/profil-duzenle.html">Profili Düzenle</a>
+                <a id="logout-btn" href="#">Çıkış Yap</a>
+            </div>
+        </div>`;
             } else {
                 // EĞER profil resmi yoksa, baş harfini göstermeye devam et
                 const userInitial = currentUser.name.charAt(0).toUpperCase();
                 userNav.innerHTML = `
-            <div class="profile-dropdown">
-                <div class="profile-avatar">${userInitial}</div>
-                <div class="dropdown-content">
-                    <a href="/profil.html">İlanlarım</a>
-                    <a href="/profil-duzenle.html">Profili Düzenle</a>
-                    <a id="logout-btn" href="#">Çıkış Yap</a>
-                </div>
-            </div>`;
+        <div class="profile-dropdown">
+            <div class="profile-avatar">${userInitial}</div>
+            <div class="dropdown-content">
+                <a href="/profil.html">İlanlarım</a>
+                ${studentLinks} <a href="/profil-duzenle.html">Profili Düzenle</a>
+                <a id="logout-btn" href="#">Çıkış Yap</a>
+            </div>
+        </div>`;
             }
             document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
         }
@@ -254,6 +264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Profil düzenleme sayfasının fonksiyonunu burada güvenle çağırıyoruz.
         if (window.location.pathname.endsWith('/profil-duzenle.html')) {
             initializeProfileEditPage();
+        }
+// DOMContentLoaded listener'ının sonundaki if bloklarının yanına ekleyin
+        if (window.location.pathname.endsWith('/is-tekliflerim.html')) {
+            renderMyOffers();
         }
 
     } catch (err) {
@@ -382,11 +396,18 @@ async function setupNotifications() {
 
     let notifications = [];
     // Kullanıcının rolüne göre doğru API'dan bildirimleri çek
+    // ===================================================================
+// MEVCUT if (currentUser.role === 'employer') BLOĞUNUZU BUNUNLA DEĞİŞTİRİN
+// ===================================================================
+
     if (currentUser.role === 'employer') {
         const response = await fetch('/api/notifications');
         notifications = await response.json();
+
         // İşveren bildirimlerini oluştur
         if (notifications.length > 0) {
+
+            // ÖNCE: Mevcut bildirimleri listeleme kodunuz (BU KISIM AYNI KALIYOR)
             notifications.forEach(notif => {
                 const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
                 const studentListingId = notif.studentListingInfo[0]?._id;
@@ -399,7 +420,27 @@ async function setupNotifications() {
                 }
                 dropdown.appendChild(item);
             });
+
+            // SONRA: YENİ "Temizle" butonunu listenin sonuna ekleyin
+            const footer = document.createElement('div');
+            footer.className = 'notification-footer';
+            footer.innerHTML = `<button id="clear-notifications-btn">Tümünü Temizle</button>`;
+            dropdown.appendChild(footer);
+
+            document.getElementById('clear-notifications-btn').addEventListener('click', async () => {
+                const response = await fetch('/api/clear-notifications', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    // Arayüzü anında güncelle
+                    dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
+                    countBadge.style.display = 'none';
+                    countBadge.textContent = '0';
+                } else {
+                    alert(result.message);
+                }
+            });
         }
+    }
     } else if (currentUser.role === 'student') {
         const response = await fetch('/api/get-my-offers');
         notifications = await response.json();
@@ -470,4 +511,38 @@ function initializeProfileEditPage() {
             console.error(err);
         }
     });
+}
+// main.js'in sonuna ekleyin
+function renderMyOffers() {
+    const container = document.getElementById('offers-container');
+    if (!container) return;
+
+    fetch('/api/get-my-offers')
+        .then(res => res.json())
+        .then(offers => {
+            container.innerHTML = ''; // Temizle
+            if (!offers || offers.length === 0) {
+                container.innerHTML = '<p>Henüz bir iş teklifi almadınız.</p>';
+                return;
+            }
+
+            offers.forEach(offer => {
+                const companyName = offer.jobInfo[0]?.company || 'Bir Şirket';
+                const jobArea = offer.jobInfo[0]?.area || 'bir pozisyon';
+                const offerDate = new Date(offer.createdAt).toLocaleDateString('tr-TR');
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h4><strong>${escapeHtml(companyName)}</strong></h4>
+                    <p>Size <strong>${escapeHtml(jobArea)}</strong> pozisyonu için bir iş teklifi gönderdi.</p>
+                    <p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;">Tarih: ${offerDate}</p>
+                `;
+                container.appendChild(card);
+            });
+        })
+        .catch(err => {
+            console.error('Teklifler yüklenirken hata:', err);
+            container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen giriş yaptığınızdan emin olun.</p>';
+        });
 }
