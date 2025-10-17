@@ -164,25 +164,32 @@ if (loginForm) {
 /* --- Şifre Sıfırlama İşlemleri --- */
 const forgotPasswordForm = document.getElementById('forgot-password-form');
 if (forgotPasswordForm) {
-    // forgotPasswordForm event listener'ını bununla değiştirin
     forgotPasswordForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('forgot-email').value;
         const button = this.querySelector('button');
         button.textContent = 'Gönderiliyor...';
         button.disabled = true; // Butonu geçici olarak devre dışı bırak
+
         try {
-            const response = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+            const response = await fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
             const result = await response.json();
             alert(result.message);
         } catch (err) {
             alert('Bir hata oluştu. Lütfen tekrar deneyin.');
         } finally {
-            // Bu blok, işlem başarılı da olsa başarısız da olsa çalışır.
+            // Bu blok, işlem başarılı da olsa başarısız da olsa çalışır
             button.textContent = 'Sıfırlama Linki Gönder';
             button.disabled = false; // Butonu tekrar aktif et
         }
     });
+}
+
+// reset-password.html sayfasını yöneten kod (Bu kısma dokunmayın, zaten doğru)
 if (window.location.pathname.endsWith('/reset-password.html')) {
     const resetPasswordForm = document.getElementById('reset-password-form');
     resetPasswordForm.addEventListener('submit', async function(e) { e.preventDefault(); const pass1 = document.getElementById('reset-pass1').value; const pass2 = document.getElementById('reset-pass2').value; if (pass1 !== pass2) { alert('Girdiğiniz şifreler uyuşmuyor.'); return; } const params = new URLSearchParams(window.location.search); const token = params.get('token'); try { const response = await fetch('/api/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token, newPassword: pass1 }) }); const result = await response.json(); alert(result.message); if (result.success) { window.location.href = '/giris.html'; } } catch (err) { alert('Bir hata oluştu.'); } });
