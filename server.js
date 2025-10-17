@@ -190,11 +190,11 @@ connectToDb().then(() => {
                 to: user.email,
                 from: 'destek@stajla.net', // <-- GÜNCELLENDİ
                 subject: 'Stajla Şifre Sıfırlama İsteği',
-                html: `...`
-        <p>Merhaba ${user.name},</p>
-        <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
-        <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
-    `
+                html: `
+    <p>Merhaba ${user.name},</p>
+    <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+    <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
+`
             };
 
             await sgMail.send(msg);
