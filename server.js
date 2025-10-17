@@ -162,34 +162,126 @@ connectToDb().then(() => {
         req.session.destroy(err => { if (err) { return res.json({ success: false }); } res.clearCookie('connect.sid'); res.json({ success: true }); });
     });
 
+    // GÜNCELLENMİŞ ROTA
     app.post('/api/forgot-password', async (req, res) => {
         try {
             const { email } = req.body;
             const user = await db.collection("kullanicilar").findOne({ email: email });
-            if (!user) { return res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' }); }
-            const resetToken = crypto.randomBytes(20).toString('hex');
-            await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { resetPasswordToken: resetToken, resetPasswordExpires: Date.now() + 3600000 } });
-            const testAccount = await nodemailer.createTestAccount();
-            const transporter = nodemailer.createTransport({ host: "smtp.ethereal.email", port: 587, secure: false, auth: { user: testAccount.user, pass: testAccount.pass } });
-            const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
-            let info = await transporter.sendMail({ from: '"Stajla Destek" <destek@stajla.com>', to: user.email, subject: "Stajla Şifre Sıfırlama İsteği", html: `<p>Merhaba ${user.name},</p><p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayınız...</p><a href="${resetURL}">${resetURL}</a>` });
-            console.log("Test E-postasını Görüntüle: %s", nodemailer.getTestMessageUrl(info));
-            res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
-        } catch (err) { console.error('Şifre sıfırlama sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
-    });
 
-    app.post('/api/reset-password', async (req, res) => {
-        try {
-            const { token, newPassword } = req.body;
-            const user = await db.collection("kullanicilar").findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
-            if (!user) { return res.json({ success: false, message: 'Şifre sıfırlama anahtarı geçersiz veya süresi dolmuş.' }); }
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { password: hashedPassword, resetPasswordToken: undefined, resetPasswordExpires: undefined } });
-            res.json({ success: true, message: 'Şifreniz başarıyla güncellendi.' });
-        } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
+            // Kullanıcı bulunamasa bile, e-posta adresinin sistemde olup olmadığına dair ipucu vermemek için
+            // her zaman başarılı bir mesaj gönderiyoruz. Bu bir güvenlik önlemidir.
+            if (!user) {
+                return res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
+            }
+
+            const resetToken = crypto.randomBytes(20).toString('hex');
+            const resetTokenExpires = Date.now() + 3600000; // 1 saat geçerli
+
+            await db.collection("kullanicilar").updateOne(
+                { _id: user._id },
+                { $set: { resetPasswordToken: resetToken, resetPasswordExpires: resetTokenExpires } }
+            );
+
+            // --- NODEMAILER GÜNCELLEMESİ BURADA ---
+            // Artık Ethereal test hesabını kullanmıyoruz.
+            const transporter = nodemailer.createTransport({
+                service: 'gmail', // Servis olarak Gmail'i belirtiyoruz
+                auth: {
+                    user: process.env.EMAIL_USER, // Render'a eklediğiniz e-posta adresi
+                    pass: process.env.EMAIL_PASS  // Render'a eklediğiniz 16 haneli Uygulama Şifresi
+                }
+            });
+
+            // E-postanın gideceği linki oluşturuyoruz
+            const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
+
+            // E-posta içeriğini hazırlıyoruz
+            const mailOptions = {
+                from: `"Stajla Destek" <${process.env.EMAIL_USER}>`,
+                to: user.email, // Veritabanından gelen kullanıcının gerçek e-posta adresi
+                subject: "Stajla Şifre Sıfırlama İsteği",
+                html: `
+                <p>Merhaba ${user.name},</p>
+                <p>Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için lütfen aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+                <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
+                <p>Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.</p>
+            `
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            // Artık test linkini console'a yazdırmıyoruz.
+            res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
+
+        } catch (err) {
+            console.error('Şifre sıfırlama sırasında hata:', err);
+            res.status(500).json({ success: false, message: 'E-posta gönderilirken bir hata oluştu.' });
+        }
     });
 
     // İLAN YÖNETİMİ
+    // YENİ API ENDPOINT: İşverenin bir öğrenciye iş teklifi göndermesi için
+    app.post('/api/send-offer', async (req, res) => {
+        // Kullanıcının işveren olarak giriş yaptığını doğrula
+        if (!req.session.user || req.session.user.role !== 'employer') {
+            return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
+        }
+        try {
+            const { studentId, jobListingId } = req.body;
+            const employerId = new ObjectId(req.session.user.id);
+
+            // Bu işverenin bu öğrenciye aynı ilanı daha önce teklif edip etmediğini kontrol et
+            const existingOffer = await db.collection("jobOffers").findOne({
+                employerId: employerId,
+                studentId: new ObjectId(studentId),
+                jobListingId: new ObjectId(jobListingId)
+            });
+
+            if (existingOffer) {
+                return res.status(400).json({ success: false, message: 'Bu adaya bu ilanı zaten teklif ettiniz.' });
+            }
+
+            // Yeni teklifi veritabanına kaydet
+            const newOffer = {
+                employerId: employerId,
+                studentId: new ObjectId(studentId),
+                jobListingId: new ObjectId(jobListingId),
+                status: 'sent', // Durum: gönderildi
+                createdAt: new Date()
+            };
+            await db.collection("jobOffers").insertOne(newOffer);
+
+            res.json({ success: true, message: 'İş teklifiniz adaya başarıyla gönderildi!' });
+
+        } catch (err) {
+            console.error('İş teklifi gönderilirken hata:', err);
+            res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+        }
+    });
+
+// YENİ API ENDPOINT: Giriş yapmış öğrencinin aldığı iş tekliflerini (bildirimlerini) getirir
+    app.get('/api/get-my-offers', async (req, res) => {
+        // Kullanıcının öğrenci olarak giriş yaptığını doğrula
+        if (!req.session.user || req.session.user.role !== 'student') {
+            return res.status(403).json([]);
+        }
+        try {
+            const studentId = new ObjectId(req.session.user.id);
+            const offers = await db.collection("jobOffers").aggregate([
+                { $match: { studentId: studentId } },
+                { $sort: { createdAt: -1 } },
+                // Teklifi gönderen işverenin bilgilerini getir
+                { $lookup: { from: "kullanicilar", localField: "employerId", foreignField: "_id", as: "employerInfo" } },
+                // Teklif edilen iş ilanının bilgilerini getir
+                { $lookup: { from: "isverenler", localField: "jobListingId", foreignField: "_id", as: "jobInfo" } }
+            ]).toArray();
+            res.json(offers);
+        } catch (err) {
+            console.error("İş teklifleri getirilirken hata:", err);
+            res.status(500).json([]);
+        }
+    });
+
     app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
         if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
         try {
