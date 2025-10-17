@@ -217,40 +217,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch('/api/current-user');
         currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
-        if (currentUser && userNav) {
-            // EĞER kullanıcının profil resmi varsa, onu göster
-            // =======================================================
-// MEVCUT if/else BLOĞUNUZU BUNUNLA DEĞİŞTİRİN
+        // =======================================================
+// MEVCUT if (currentUser && userNav) BLOĞUNUZU BUNUNLA DEĞİŞTİRİN
 // =======================================================
 
-// Kullanıcının rolü öğrenci ise "İş Tekliflerim" linkini oluştur, değilse boş bırak
+        if (currentUser && userNav) {
+            // Kullanıcının rolü öğrenci ise "İş Tekliflerim" linkini oluştur, değilse boş bırak
             const studentLinks = currentUser.role === 'student'
                 ? '<a href="/is-tekliflerim.html">İş Tekliflerim</a>'
                 : '';
 
-// EĞER kullanıcının profil resmi varsa, onu göster
+            // EĞER kullanıcının profil resmi varsa, onu göster
             if (currentUser.profilePicturePath) {
                 userNav.innerHTML = `
-        <div class="profile-dropdown">
-            <img src="${currentUser.profilePicturePath}" alt="Profil" class="profile-avatar-img">
-            <div class="dropdown-content">
-                <a href="/profil.html">İlanlarım</a>
-                ${studentLinks} <a href="/profil-duzenle.html">Profili Düzenle</a>
-                <a id="logout-btn" href="#">Çıkış Yap</a>
-            </div>
-        </div>`;
+            <div class="profile-dropdown">
+                <img src="${currentUser.profilePicturePath}" alt="Profil" class="profile-avatar-img">
+                <div class="dropdown-content">
+                    <a href="/profil.html">İlanlarım</a>
+                    ${studentLinks}
+                    <a href="/profil-duzenle.html">Profili Düzenle</a>
+                    <a id="logout-btn" href="#">Çıkış Yap</a>
+                </div>
+            </div>`;
             } else {
                 // EĞER profil resmi yoksa, baş harfini göstermeye devam et
                 const userInitial = currentUser.name.charAt(0).toUpperCase();
                 userNav.innerHTML = `
-        <div class="profile-dropdown">
-            <div class="profile-avatar">${userInitial}</div>
-            <div class="dropdown-content">
-                <a href="/profil.html">İlanlarım</a>
-                ${studentLinks} <a href="/profil-duzenle.html">Profili Düzenle</a>
-                <a id="logout-btn" href="#">Çıkış Yap</a>
-            </div>
-        </div>`;
+            <div class="profile-dropdown">
+                <div class="profile-avatar">${userInitial}</div>
+                <div class="dropdown-content">
+                    <a href="/profil.html">İlanlarım</a>
+                    ${studentLinks}
+                    <a href="/profil-duzenle.html">Profili Düzenle</a>
+                    <a id="logout-btn" href="#">Çıkış Yap</a>
+                </div>
+            </div>`;
             }
             document.getElementById('logout-btn').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/api/logout'); window.location.href = '/index.html'; });
         }
