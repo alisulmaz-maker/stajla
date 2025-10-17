@@ -5,6 +5,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
@@ -162,35 +163,51 @@ connectToDb().then(() => {
         req.session.destroy(err => { if (err) { return res.json({ success: false }); } res.clearCookie('connect.sid'); res.json({ success: true }); });
     });
 
-    // GÜNCELLENMİŞ ROTA
+    // GÜNCELLENMİŞ FİNAL ROTA
     app.post('/api/forgot-password', async (req, res) => {
+        // SendGrid API anahtarını ortam değişkeninden alıp ayarla
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
         try {
             const { email } = req.body;
             const user = await db.collection("kullanicilar").findOne({ email: email });
 
-            // Kullanıcı bulunamasa bile, e-posta adresinin sistemde olup olmadığına dair ipucu vermemek için
-            // her zaman başarılı bir mesaj gönderiyoruz. Bu bir güvenlik önlemidir.
             if (!user) {
                 return res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
             }
 
             const resetToken = crypto.randomBytes(20).toString('hex');
-            const resetTokenExpires = Date.now() + 3600000; // 1 saat geçerli
-
             await db.collection("kullanicilar").updateOne(
                 { _id: user._id },
-                { $set: { resetPasswordToken: resetToken, resetPasswordExpires: resetTokenExpires } }
+                { $set: { resetPasswordToken: resetToken, resetPasswordExpires: Date.now() + 3600000 } }
             );
 
-            // --- NODEMAILER GÜNCELLEMESİ BURADA ---
-            // Artık Ethereal test hesabını kullanmıyoruz.
-            const transporter = nodemailer.createTransport({
-                service: 'gmail', // Servis olarak Gmail'i belirtiyoruz
-                auth: {
-                    user: process.env.EMAIL_USER, // Render'a eklediğiniz e-posta adresi
-                    pass: process.env.EMAIL_PASS  // Render'a eklediğiniz 16 haneli Uygulama Şifresi
-                }
-            });
+            const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
+
+            // E-posta içeriğini (msg objesi) hazırla
+            const msg = {
+                to: user.email,
+                from: 'stajladestek@gmail.com', // SendGrid'de doğruladığınız e-posta adresi
+                subject: 'Stajla Şifre Sıfırlama İsteği',
+                html: `
+                <p>Merhaba ${user.name},</p>
+                <p>Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için lütfen aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+                <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
+                <p>Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.</p>
+            `,
+            };
+
+            // E-postayı SendGrid üzerinden gönder
+            await sgMail.send(msg);
+
+            res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
+
+        } catch (err) {
+            console.error('Şifre sıfırlama sırasında hata:', err);
+            // Hata detaylarını görmek isterseniz: console.error(err.response.body);
+            res.status(500).json({ success: false, message: 'E-posta gönderilirken bir hata oluştu.' });
+        }
+    });
 
             // E-postanın gideceği linki oluşturuyoruz
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
