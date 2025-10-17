@@ -188,20 +188,23 @@ connectToDb().then(() => {
                 }
             });
 
+            sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
             const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
 
-            const mailOptions = {
-                from: `"Stajla Destek" <${process.env.EMAIL_USER}>`,
+// SendGrid için mail objesini oluştur
+            const msg = {
                 to: user.email,
-                subject: "Stajla Şifre Sıfırlama İsteği",
+                from: 'stajladestek@gmail.com', // ÖNEMLİ: Bu e-postayı SendGrid'de doğrulamış olmalısınız!
+                subject: 'Stajla Şifre Sıfırlama İsteği',
                 html: `
-                <p>Merhaba ${user.name},</p>
-                <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
-                <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
-            `
+        <p>Merhaba ${user.name},</p>
+        <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
+        <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
+    `
             };
 
-            await transporter.sendMail(mailOptions);
+            await sgMail.send(msg);
 
             res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
 
