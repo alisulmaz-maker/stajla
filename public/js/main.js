@@ -385,10 +385,17 @@ if (hamburger && mobileNav) {
 
 /* --- Bildirim Sistemi İşlemleri --- */
 // GÜNCELLENMİŞ FONKSİYON
+// =======================================================
+// MEVCUT setupNotifications FONKSİYONUNUZU BUNUNLA DEĞİŞTİRİN
+// =======================================================
+
 async function setupNotifications() {
     if (!currentUser) return; // Kullanıcı giriş yapmamışsa hiçbir şey yapma
 
     const userNav = document.getElementById('user-nav');
+    // Eğer bildirim zili zaten varsa, tekrar ekleme (sayfa geçişlerinde oluşabilecek bir hatayı önler)
+    if (document.querySelector('.notification-bell')) return;
+
     const notificationHTML = `<div class="notifications"><div class="notification-bell">🔔</div><div class="notification-count" style="display: none;">0</div><div class="notification-dropdown"></div></div>`;
     userNav.insertAdjacentHTML('beforebegin', notificationHTML);
     const bell = document.querySelector('.notification-bell');
@@ -396,19 +403,12 @@ async function setupNotifications() {
     const dropdown = document.querySelector('.notification-dropdown');
 
     let notifications = [];
-    // Kullanıcının rolüne göre doğru API'dan bildirimleri çek
-    // ===================================================================
-// MEVCUT if (currentUser.role === 'employer') BLOĞUNUZU BUNUNLA DEĞİŞTİRİN
-// ===================================================================
 
     if (currentUser.role === 'employer') {
         const response = await fetch('/api/notifications');
         notifications = await response.json();
 
-        // İşveren bildirimlerini oluştur
         if (notifications.length > 0) {
-
-            // ÖNCE: Mevcut bildirimleri listeleme kodunuz (BU KISIM AYNI KALIYOR)
             notifications.forEach(notif => {
                 const applicantName = notif.applicantInfo[0]?.name || 'Bilinmeyen Aday';
                 const studentListingId = notif.studentListingInfo[0]?._id;
@@ -422,7 +422,6 @@ async function setupNotifications() {
                 dropdown.appendChild(item);
             });
 
-            // SONRA: YENİ "Temizle" butonunu listenin sonuna ekleyin
             const footer = document.createElement('div');
             footer.className = 'notification-footer';
             footer.innerHTML = `<button id="clear-notifications-btn">Tümünü Temizle</button>`;
@@ -432,7 +431,6 @@ async function setupNotifications() {
                 const response = await fetch('/api/clear-notifications', { method: 'POST' });
                 const result = await response.json();
                 if (result.success) {
-                    // Arayüzü anında güncelle
                     dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
                     countBadge.style.display = 'none';
                     countBadge.textContent = '0';
@@ -441,36 +439,33 @@ async function setupNotifications() {
                 }
             });
         }
-    }
     } else if (currentUser.role === 'student') {
         const response = await fetch('/api/get-my-offers');
         notifications = await response.json();
-        // Öğrenci bildirimlerini (iş tekliflerini) oluştur
+
         if (notifications.length > 0) {
             notifications.forEach(offer => {
                 const companyName = offer.jobInfo[0]?.company || 'Bir Şirket';
                 const jobArea = offer.jobInfo[0]?.area || 'bir pozisyon';
                 const item = document.createElement('div');
                 item.className = 'notification-item';
-                // TODO: Gelecekte bu linki iş ilanı detay sayfasına yönlendirebiliriz.
                 item.innerHTML = `<p><strong>${escapeHtml(companyName)}</strong> size <em>${escapeHtml(jobArea)}</em> pozisyonunu teklif etti.</p>`;
                 dropdown.appendChild(item);
             });
         }
     }
 
-    // Bildirim sayısı ve zil tıklama olayını ayarla
     if (notifications.length > 0) {
         countBadge.textContent = notifications.length;
         countBadge.style.display = 'flex';
     } else {
         dropdown.innerHTML = '<div class="notification-item"><p>Yeni bildirim yok.</p></div>';
     }
+
     bell.addEventListener('click', () => {
         bell.parentElement.classList.toggle('active');
     });
-}
-// ===================================================================================
+} ===================================================================================
 // BU BÖLÜMÜ main.js DOSYANIZIN EN SONUNA EKLEYİN
 // ===================================================================================
 
