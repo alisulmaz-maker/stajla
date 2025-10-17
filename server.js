@@ -211,32 +211,6 @@ connectToDb().then(() => {
         }
     });
 
-            // E-postanın gideceği linki oluşturuyoruz
-            const resetURL = `https://${req.get('host')}/reset-password.html?token=${resetToken}`;
-
-            // E-posta içeriğini hazırlıyoruz
-            const mailOptions = {
-                from: `"Stajla Destek" <${process.env.EMAIL_USER}>`,
-                to: user.email, // Veritabanından gelen kullanıcının gerçek e-posta adresi
-                subject: "Stajla Şifre Sıfırlama İsteği",
-                html: `
-                <p>Merhaba ${user.name},</p>
-                <p>Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için lütfen aşağıdaki linke tıklayın. Bu link 1 saat geçerlidir.</p>
-                <p><a href="${resetURL}" style="padding: 10px 15px; background-color: #FFD43B; color: #222; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a></p>
-                <p>Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.</p>
-            `
-            };
-
-            await transporter.sendMail(mailOptions);
-
-            // Artık test linkini console'a yazdırmıyoruz.
-            res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama linki gönderilecektir.' });
-
-        } catch (err) {
-            console.error('Şifre sıfırlama sırasında hata:', err);
-            res.status(500).json({ success: false, message: 'E-posta gönderilirken bir hata oluştu.' });
-        }
-    });
 
     // server.js'e ekleyin (örneğin /api/send-offer'ın altına)
     app.post('/api/clear-notifications', async (req, res) => {
