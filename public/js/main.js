@@ -465,11 +465,7 @@ async function setupNotifications() {
     bell.addEventListener('click', () => {
         bell.parentElement.classList.toggle('active');
     });
-} ===================================================================================
-// BU BÖLÜMÜ main.js DOSYANIZIN EN SONUNA EKLEYİN
-// ===================================================================================
-
-/* --- Profil Düzenleme Sayfası Fonksiyonu --- */
+}
 // Bu fonksiyon, sadece profil düzenleme sayfasındayken ve kullanıcı bilgisi alındıktan sonra çağrılacak.
 function initializeProfileEditPage() {
     const editForm = document.getElementById('edit-profile-form');
