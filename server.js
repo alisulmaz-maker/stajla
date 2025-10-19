@@ -110,7 +110,7 @@ app.get('/forgot-password.html', (req, res) => { res.sendFile(path.join(__dirnam
 app.get('/reset-password.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reset-password.html')); });
 app.get('/gizlilik.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'gizlilik.html')); });
 app.get('/kullanim-sartlari.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kullanim-sartlari.html')); });
-
+app.get('/blog.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'blog.html')); });
 
 // --- 6. API ROTALARI (MLP Stabilizasyonu) ---
 
