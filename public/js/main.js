@@ -510,7 +510,7 @@ function renderMyOffers() {
 
 const verifyForm = document.getElementById('verify-form');
 const verifyCard = document.getElementById('verify-card');
-const loginCard = document.querySelector('.form-page .card'); // Ana form kartı
+const registerCard = document.getElementById('register-card');
 
 if (registerForm) {
     registerForm.addEventListener('submit', async function(e) {
@@ -534,7 +534,7 @@ if (registerForm) {
             if (result.success) {
                 // Kayıt başarılıysa doğrulama ekranına geç
                 document.getElementById('verification-email').value = userData.email;
-                loginCard.style.display = 'none';
+                registerCard.style.display = 'none';
                 verifyCard.style.display = 'block';
             }
         } catch (err) {

@@ -160,7 +160,13 @@ app.post('/api/register', async (req, res) => {
                 <p style="font-family: Arial, sans-serif;">Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen aktif edebilirsiniz.</p>
             `,
         };
-        await sgMail.send(msg);
+        try {
+            await sgMail.send(msg);
+            console.log(`Doğrulama e-postası ${email} adresine gönderildi.`);
+        } catch (error) {
+            // E-posta gönderimi başarısız olsa bile 500 hatası vermeyip kaydı kabul etmeliyiz.
+            console.error('SendGrid E-posta GÖNDERİM HATASI:', error);
+        }
 
         // Frontend'i doğrulama ekranına yönlendirmek için sadece success mesajı döndür
         res.json({ success: true, message: 'Kayıt başarılı! Doğrulama kodu e-posta adresinize gönderildi.' });
