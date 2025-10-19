@@ -308,7 +308,21 @@ a:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Hover efekti */
 }
+/* --- KART İÇİ BOŞLUK OPTİMİZASYONU --- */
+.card p {
+    margin: 5px 0 !important; /* Dikey boşluğu sadece 5px'e düşür */
+    font-size: 0.95rem; /* Yazı fontunu hafif küçült */
+    line-height: 1.4;
+}
 
+.card h4 {
+    margin-bottom: 5px !important; /* Başlık altındaki boşluğu azalt */
+}
+
+.card-body {
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
 .form-page label {
     display: block;
     margin-bottom: 15px;

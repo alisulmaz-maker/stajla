@@ -50,8 +50,8 @@ async function renderResultsOnHome() {
                         </a>
                         <div class="card-body">
                             <p>${escapeHtml(s.dept || 'Üniversite/Bölüm Bilgisi')}</p>
-                            <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-                            ${s.cvPath ? `<p style="margin-top: 10px;"><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+                            <p>${escapeHtml(s.dept || 'Üniversite/Bölüm Bilgisi')}</p>
+    <p>Bölüm: <strong>${escapeHtml(s.area)}</strong> - Şehir: <strong>${escapeHtml(s.city)}</strong></p>
                             
                             <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
                                 <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
