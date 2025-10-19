@@ -507,7 +507,7 @@ function renderMyOffers() {
 }
 // --- E-POSTA DOĞRULAMA MANTIĞI ---
 
-const registerForm = document.getElementById('register-form');
+
 const verifyForm = document.getElementById('verify-form');
 const verifyCard = document.getElementById('verify-card');
 const loginCard = document.querySelector('.form-page .card'); // Ana form kartı
