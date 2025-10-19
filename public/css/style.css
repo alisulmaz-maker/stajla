@@ -289,6 +289,25 @@ a:hover {
     flex-direction: column;
     gap: 0; /* Form elemanları arasında boşluk bırakılır */
 }
+/* style.css içindeki .card sınıfının yeni içeriği */
+.card {
+    background-color: #ffffff; /* KRİTİK: Arkaplanı kesinlikle beyaz yap */
+    border-radius: 10px; /* Köşeleri yuvarla */
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* MLP GÖLGE: Belirgin bir gölge ver */
+    text-align: left;
+    border: 1px solid #e0e0e0; /* Hafif bir sınır ekle (Gereksiz beyaz boşluğu engeller) */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    /* İlan listeleme yapısı için düzeni ayarlar: */
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Hover efekti */
+}
 
 .form-page label {
     display: block;
