@@ -52,9 +52,9 @@ async function uploadToCloudinary(filePath, resourceType, folderName) {
             resource_type: resourceType,
             folder: `stajla/${folderName}`,
             quality: "auto",
-            fetch_format: "auto"
-            type: 'upload',
-            access_mode: 'public'
+            fetch_format: "auto",
+            type: 'upload', // Sözdizimi hatası çözümü için bu parametre eklendi.
+            access_mode: 'public' // KRİTİK: CV erişim sorununu çözer.
         });
         fs.unlinkSync(filePath); // Başarılı yükleme sonrası yerel dosyayı sil
         return result.secure_url;
@@ -93,7 +93,7 @@ app.use(session({
 }));
 
 
-// --- 5. HTML DOSYALARINI YÖNLENDİRME (Tüm Sayfalar) ---
+// --- 5. HTML DOSYALARINI YÖNLENDİRME ---
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 app.get('/index.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 app.get('/giris.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'giris.html')); });
@@ -114,14 +114,8 @@ app.get('/kullanim-sartlari.html', (req, res) => { res.sendFile(path.join(__dirn
 
 // --- 6. API ROTALARI (MLP Stabilizasyonu) ---
 
-// KONTROL: Kullanıcı oturumunu döndürür (main.js'teki KRİTİK HATA ÇÖZÜMÜ)
-app.get('/api/current-user', (req, res) => {
-    if (req.session.user) {
-        res.json(req.session.user);
-    } else {
-        res.json(null); // Giriş yapılmamışsa 404 yerine null döndürür
-    }
-});
+// KONTROL: Kullanıcı oturumunu döndürür
+app.get('/api/current-user', (req, res) => { if (req.session.user) { res.json(req.session.user); } else { res.json(null); } });
 
 // ÇIKIŞ YAP
 app.post('/api/logout', (req, res) => {
@@ -132,7 +126,7 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-// KULLANICI KAYIT
+// KULLANICI KAYIT & GİRİŞ (Diğerleri)
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, pass, role } = req.body;
@@ -145,7 +139,6 @@ app.post('/api/register', async (req, res) => {
     } catch (err) { console.error('Kayıt hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// KULLANICI GİRİŞ
 app.post('/api/login', async (req, res) => {
     try {
         const { email, pass } = req.body;
@@ -167,6 +160,7 @@ app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
         yeniIlan.createdBy = new ObjectId(req.session.user.id);
         yeniIlan.createdAt = new Date();
         if (req.file) {
+            // resourceType: 'raw' olarak ayarlı
             yeniIlan.cvPath = await uploadToCloudinary(req.file.path, 'raw', 'cvs');
         } else { yeniIlan.cvPath = null; }
         await db.collection("ogrenciler").insertOne(yeniIlan);
@@ -227,15 +221,15 @@ app.get('/api/ogrenci-ilanlari', async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// ROL BAZLI ARAMA (KRİTİK MLP ÖZELLİĞİ)
+// ROL BAZLI ARAMA
 app.get('/api/search', async (req, res) => {
     if (!req.session.user) { req.session.user = { role: 'guest' }; }
 
     let collectionName;
     if (req.session.user.role === 'student' || req.session.user.role === 'guest') {
-        collectionName = 'isverenler'; // Öğrenci/Misafir, iş arar
+        collectionName = 'isverenler';
     } else if (req.session.user.role === 'employer') {
-        collectionName = 'ogrenciler'; // İşveren, öğrenci arar
+        collectionName = 'ogrenciler';
     } else {
         collectionName = 'isverenler';
     }
@@ -262,6 +256,37 @@ app.get('/api/search', async (req, res) => {
     } catch (err) { console.error('Arama yapılırken hata:', err); res.status(500).json([]); }
 });
 
+// PROFİL DETAYINI GETİRME (ogrenci-profil.html'nin kullandığı rota)
+app.get('/api/student-profile/:id', async (req, res) => {
+    try {
+        const ilanId = new ObjectId(req.params.id);
+        const studentListing = await db.collection("ogrenciler").findOne({ _id: ilanId });
+
+        if (!studentListing) {
+            return res.status(404).json({ success: false, message: 'Öğrenci ilanı bulunamadı.' });
+        }
+
+        const user = await db.collection("kullanicilar").findOne({ _id: studentListing.createdBy });
+
+        const profileInfo = {
+            name: studentListing.name,
+            dept: studentListing.dept,
+            city: studentListing.city,
+            area: studentListing.area,
+            desc: studentListing.desc,
+            contact: studentListing.contact,
+            cvPath: studentListing.cvPath,
+            profilePicturePath: user ? user.profilePicturePath : null,
+            listingId: studentListing._id
+        };
+
+        res.json({ success: true, profileInfo });
+
+    } catch (err) {
+        console.error('Öğrenci profili getirilirken hata:', err);
+        res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
+    }
+});
 // --- DİĞER İŞLEVSEL ROTALAR (Silme, Başvuru, Teklifler, Şifre Sıfırlama) ---
 
 app.get('/api/my-listings', async (req, res) => {
