@@ -131,7 +131,7 @@ app.post('/api/register', async (req, res) => {
     try {
         const { name, email, pass, role } = req.body;
 
-        if (password.length < 6) { return res.status(400).json({ success: false, message: 'Şifreniz en az 6 karakter olmalıdır.' }); }
+        if (pass.length < 6) { return res.status(400).json({ success: false, message: 'Şifreniz en az 6 karakter olmalıdır.' }); }
         const existingUser = await db.collection("kullanicilar").findOne({ email });
         if (existingUser) { return res.status(400).json({ success: false, message: 'Bu e-posta adresi zaten kayıtlı.' }); }
 

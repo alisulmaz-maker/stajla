@@ -48,13 +48,15 @@
         <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">
             Kayıt olduğunuz e-posta adresine 6 haneli doğrulama kodunu gönderdik. Lütfen kutuya girin.
         </p>
-        <form id="verify-form">
-            <label>Doğrulama Kodu
-                <input type="text" id="verify-code" maxlength="6" required placeholder="Örn: A1B2C3" style="text-align: center; font-size: 1.5rem; text-transform: uppercase;">
-            </label>
-            <button type="submit">Hesabı Aktive Et</button>
-        </form>
-        <p style="text-align: center; margin-top: 15px;"><a href="#" id="resend-code">Kodu Tekrar Gönder</a></p>
+    <form id="verify-form" style="display: flex; flex-direction: column; gap: 15px;">
+        <label>Doğrulama Kodu
+            <input type="text" id="verify-code" maxlength="6" required placeholder="Örn: A1B2C3" style="text-align: center; font-size: 1.5rem; text-transform: uppercase;">
+        </label>
+        <button type="submit" style="width: 100%;" class="cta-primary">Hesabı Aktive Et</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="#" id="resend-code" style="font-weight: bold;">Kodu Tekrar Gönder</a>
+    </p>
         <input type="hidden" id="verification-email"> </div>
     <div class="card" id="register-card" style="max-width: 500px; margin: 0 auto;">
         <h2>Kariyerine STAJLA Başla</h2>
