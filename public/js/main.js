@@ -52,7 +52,7 @@ async function renderResultsOnHome() {
                         <div class="card-body">
                             <p style="margin-top: 0;">Üniversite: <strong>${escapeHtml(s.dept || 'Belirtilmemiş')}</strong></p>
                             <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
-                            ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+                            ${s.cvPath ? `<p><a href="${s.cvPath}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
                             
                             <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
                                 <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
