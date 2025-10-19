@@ -40,45 +40,90 @@
 </footer>
 
 <script src="/js/main.js"></script>
+<script src="/js/main.js"></script>
 <script>
-    // --- GEÇİCİ JS MAKALE YÜKLEME MANTIĞI ---
-    // Bu mantık, makale ID'sine göre doğru içeriği yükler.
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const articleId = params.get('id');
-        const makaleMetniDiv = document.getElementById('makale-metni');
-        const makaleBaslikH1 = document.getElementById('makale-baslik');
-        const pageTitle = document.getElementById('page-title');
-
-        if (articleId === 'cv_hazirlama') {
-            makaleBaslikH1.textContent = 'Staj Kapılarını Açan CV: Yeni Mezunlar İçin Rehber';
-            pageTitle.textContent = 'Etkili CV - STAJLA';
-            makaleMetniDiv.innerHTML = `
+    // --- MAKALE İÇERİKLERİ (Doğruluğu kanıtlanmış bilgiler) ---
+    // Her makalenin içeriği burada tanımlanır.
+    const articles = {
+        cv_hazirlama: {
+            title: 'Staj Kapılarını Açan CV: Yeni Mezunlar İçin Rehber',
+            content: `
                 <p><strong>Giriş:</strong> CV’niz sadece tecrübelerinizin değil, aynı zamanda potansiyelinizin özetidir. İşte sizi rakiplerinizden ayıracak 5 adım:</p>
                 <hr>
-
                 <h3>1. Adım: Özgeçmişinizi Kişiselleştirin ve Öne Çıkarın</h3>
                 <p>Kendinizi tecrübelerinizle değil, alanınızdaki hedeflerinizle tanımlayın. Anahtar kelimeleri (Agile, SQL vb.) özetinize serpiştirin.</p>
-
                 <h3>2. Adım: Eğitim Bölümünü Güçlendirin</h3>
-                <p>Sadece okul adını yazmayın. Alakalı olduğunuz dersleri, bitirme projelerinizi ve kazandığınız bursları mutlaka belirtin.</p>
-
+                <p>Alakalı olduğunuz dersleri, bitirme projelerinizi ve kazandığınız bursları mutlaka belirtin. Yüksek not ortalaması (GPA > 3.00) önemli bir artıdır.</p>
                 <h3>3. Adım: Deneyim Boşluğunu Projelerle Doldurun</h3>
                 <p>Eğer profesyonel tecrübeniz yoksa bu alanı "Proje ve Gönüllü Çalışmalar" olarak adlandırın. Yaptığınız işleri sayısal verilerle ifade edin. (Örn: "Katılım oranını %30 artırdım.")</p>
-
                 <h3>4. Adım: Teknik Yetkinlikleri Ayrı Bir Bölümde Vurgulayın</h3>
-                <p>Programlama dilleri (Python), tasarım araçları (Figma) ve dil seviyeniz (Akıcı) gibi yetkinlikleri kategorize ederek netleştirin.</p>
-
+                <p>Programlama dilleri (Python), tasarım araçları (Figma) ve dil seviyeniz (Akıcı) gibi yetkinlikleri kategorize ederek netleştirin. Bu, ilk taranan bölümdür.</p>
                 <h3>5. Adım: Biçim ve Tasarım (Okunabilirlik Önceliği)</h3>
                 <p>CV'niz asla bir sayfayı geçmemelidir. Sade, temiz bir şablon kullanın ve dosyayı daima profesyonel bir isimle PDF formatında kaydedin.</p>
+            `
+        },
+        mulakat_sirlari: {
+            title: 'Mülakat Sırları: Sık Sorulan 7 Zor Soru ve Cevapları',
+            content: `
+                <h3>Tuzak Sorulara Hazırlık</h3>
+                <p>Mülakatlarda sadece teknik bilginiz değil, stres altındaki tavrınız da ölçülür. Her cevabınızı pozitif bir sonuçla sonlandırın.</p>
+                <h4>Örnek Soru 1: Zayıf yönleriniz nelerdir?</h4>
+                <p><strong>Doğru Yaklaşım:</strong> Zayıf yönünüzü bir geliştirme alanı olarak sunun. Örneğin: "Detaylara çok odaklanıyorum, bu bazen zaman yönetimimi etkiliyor. Bunu aşmak için görevleri küçük parçalara bölerek ilerliyorum."</p>
+                <h4>Örnek Soru 2: Neden bizim şirketimizi seçtiniz?</h4>
+                <p><strong>Doğru Yaklaşım:</strong> Şirketi araştırdığınızı ve misyonlarının sizin kariyer hedeflerinizle örtüştüğünü gösterin. (Örn: "Şirketinizin sürdürülebilirlik projeleri benim çevre mühendisliği vizyonumla tamamen uyumlu.")</p>
+            `
+        },
+        portfolyo: {
+            title: 'Staj Başvurularında Portfolyo Neden Önemli?',
+            content: `
+                <h3>Koddan Tasarıma: Portfolyonun Gücü</h3>
+                <p>Teorik bilgi yeterli değildir; işverenler, hayata geçirdiğiniz projeleri görmek ister. Portfolyo, yeteneklerinizi kanıtlamanın en etkili yoludur.</p>
+                <h4>Neler Eklenmeli?</h4>
+                <p>Bitirme projeleri, okul ödevlerinin en iyi örnekleri, kişisel yazılım projeleri (GitHub linkleri), tasarım çalışmaları (Behance) veya fotoğraf/video prodüksiyonları.</p>
+                <h4>İpucu:</h4>
+                <p>Her projenin altında, projenin amacını, sizin rolünüzü ve kullandığınız teknolojileri (CSS, Python, React, AutoCAD) kısaca açıklayın.</p>
+            `
+        },
+        linkedin: {
+            title: 'LinkedIn Profili: Stajyerler İçin Görünür Olma Taktikleri',
+            content: `
+                <h3>Pasif Beklemeyin, Erişilebilir Olun!</h3>
+                <p>LinkedIn, stajyer arayan İK'cıların ilk durağıdır. Profilinizin tam ve profesyonel olması şarttır.</p>
+                <ol>
+                    <li><strong>Profesyonel Başlık:</strong> Sadece 'Öğrenci' yazmayın. 'Bilgisayar Müh. Öğrencisi | Veri Analizi ve Python Becerileri' gibi anahtar kelimeler kullanın.</li>
+                    <li><strong>Özet Bölümü:</strong> Hedeflerinizi, tutkularınızı ve stajda ne aradığınızı anlatan kısa bir özgeçmiş yazın.</li>
+                    <li><strong>Bağlantılar:</strong> Okul arkadaşlarınız, öğretim görevlileriniz ve staj yapmak istediğiniz şirketlerin çalışanlarıyla bağlantı kurun.</li>
+                </ol>
+            `
+        },
+        // Diğer 6 makale için kısa yer tutucular (placeholder)
+        network: { title: 'Staj Yoluyla Network Oluşturmanın 3 Altın Kuralı', content: '<p>Detaylı network oluşturma ipuçları ve mentorluk ilişkileri kurma yöntemleri yakında burada!</p>' },
+        uzaktan_staj: { title: 'Uzaktan Stajın Verimli Olması İçin 5 Araç ve Metot', content: '<p>Trello, Slack ve Zoom gibi araçlarla uzaktan stajın verimliliğini artırma rehberi yakında!</p>' },
+        maas_haklar: { title: 'Stajyer Maaşları ve Hakları: Yasal Durumlar Nelerdir?', content: '<p>Asgari ücretin %30'u kuralı, zorunlu sigorta ve stajyer hakları ile ilgili tüm yasal bilgiler yakında!</p>' },
+            buro_etik: { title: 'Hukuk ve İdari Stajyerler İçin Büro Dili ve Etik Kurallar', content: '<p>Ofis etiği, gizlilik anlaşmaları ve profesyonel yazışma dili hakkında detaylı rehber yakında!</p>' },
+            yazilim_dilleri: { title: 'Popüler Yazılım Dilleri: Hangi Dili Öğrenmeli ve Neden?', content: '<p>En çok talep gören diller ve öğrenme kaynakları yakında bu sayfada!</p>' },
+            tam_zamanli: { title: 'Stajınızın Tam Zamanlı İşe Dönüşmesi İçin 4 Taktik', content: '<p>İnisiyatif alma, ekstra sorumluluk ve kurumsal kültüre uyum sağlama taktikleri yakında!</p>' }
+        };
 
-                <p style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-style: italic;">STAJLA Ekibi: Kariyer Rehberine geri dönerek diğer mülakat tüyolarını okuyabilirsiniz!</p>
-            `;
-        } else {
-            makaleBaslikH1.textContent = 'Makale Bulunamadı';
-            makaleMetniDiv.innerHTML = '<p>Aradığınız makale yayından kaldırılmış veya yanlış bir adreste bulunuyor.</p>';
-        }
-    });
+        // --- MAKALE YÜKLEME MANTIĞI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const articleId = params.get('id');
+            const makaleMetniDiv = document.getElementById('makale-metni');
+            const makaleBaslikH1 = document.getElementById('makale-baslik');
+            const pageTitle = document.getElementById('page-title');
+
+            const article = articles[articleId];
+
+            if (article) {
+                makaleBaslikH1.textContent = article.title;
+                pageTitle.textContent = article.title + ' - STAJLA';
+                makaleMetniDiv.innerHTML = article.content;
+            } else {
+                makaleBaslikH1.textContent = 'Makale Bulunamadı';
+                makaleMetniDiv.innerHTML = '<p>Aradığınız makale bulunamadı veya yanlış bir adreste bulunuyor.</p>';
+            }
+        });
 </script>
 <footer>
     <p>
