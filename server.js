@@ -11,26 +11,30 @@ const path = require('path');
 const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 
+// --- 1. CLOUDINARY VE AWS/SENDGRID KONFİGÜRASYONLARI ---
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+
+// --- 2. TEMEL UYGULAMA VE VERİTABANI AYARLARI ---
 const app = express();
 const PORT = process.env.PORT || 3000;
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-    console.error("HATA: DATABASE_URL bulunamadı.");
+    console.error("HATA: DATABASE_URL bulunamadı. Uygulama başlatılamıyor.");
     process.exit(1);
 }
 
 const client = new MongoClient(connectionString);
 let db;
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// --- 3. MULTER (GEÇİCİ DEPOLAMA) VE CLOUDINARY HELPER FONKSİYONLARI ---
 const tempDir = 'public/temp_uploads';
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
@@ -50,15 +54,17 @@ async function uploadToCloudinary(filePath, resourceType, folderName) {
             quality: "auto",
             fetch_format: "auto"
         });
-        fs.unlinkSync(filePath);
+        fs.unlinkSync(filePath); // Başarılı yükleme sonrası yerel dosyayı sil
         return result.secure_url;
     } catch (error) {
-        if (fs.existsSync(filePath)) { fs.unlinkSync(filePath); }
+        if (fs.existsSync(filePath)) { fs.unlinkSync(filePath); } // Hata durumunda da yerel dosyayı sil
         console.error("Cloudinary yükleme hatası:", error);
         throw new Error("Dosya yüklenirken bir sorun oluştu.");
     }
 }
 
+
+// --- 4. MIDDLEWARE'LER VE OTURUM YÖNETİMİ ---
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -72,7 +78,7 @@ const sessionStore = MongoStore.create({
 });
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'gizli-anahtar-gerekir',
+    secret: process.env.SESSION_SECRET || 'cok-gizli-anahtar-olmalidir',
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
@@ -85,7 +91,7 @@ app.use(session({
 }));
 
 
-// HTML Dosyalarını Yönlendirme (EK ETTİKLERİMİZ DAHİL)
+// --- 5. HTML DOSYALARINI YÖNLENDİRME (Tüm Sayfalar) ---
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 app.get('/index.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 app.get('/giris.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'giris.html')); });
@@ -103,25 +109,28 @@ app.get('/reset-password.html', (req, res) => { res.sendFile(path.join(__dirname
 app.get('/gizlilik.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'gizlilik.html')); });
 app.get('/kullanim-sartlari.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kullanim-sartlari.html')); });
 
-// ******************************************************
-// API ROTALARI
-// ******************************************************
 
-// *KRİTİK DÜZELTME: main.js'in beklediği rota.*
+// --- 6. API ROTALARI (MLP Stabilizasyonu) ---
+
+// KONTROL: Kullanıcı oturumunu döndürür (main.js'teki KRİTİK HATA ÇÖZÜMÜ)
 app.get('/api/current-user', (req, res) => {
     if (req.session.user) {
-        // Oturumdaki kullanıcı bilgisini main.js'e gönderir
         res.json(req.session.user);
     } else {
-        // Kullanıcı giriş yapmamışsa null gönderir (404 hatası düzelir)
-        res.json(null);
+        res.json(null); // Giriş yapılmamışsa 404 yerine null döndürür
     }
 });
 
-// Kayıt, Giriş, İlan Ekleme/Silme/Güncelleme ve Diğer API Rotaları
-// (Daha önceki mesajlarımızda yer alan çalışan kodlar buraya dahildir)
+// ÇIKIŞ YAP
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) { return res.json({ success: false }); }
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: 'Çıkış başarılı.' });
+    });
+});
 
-// 1. Kullanıcı Kayıt
+// KULLANICI KAYIT
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, pass, role } = req.body;
@@ -134,7 +143,7 @@ app.post('/api/register', async (req, res) => {
     } catch (err) { console.error('Kayıt hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// 2. Kullanıcı Giriş
+// KULLANICI GİRİŞ
 app.post('/api/login', async (req, res) => {
     try {
         const { email, pass } = req.body;
@@ -145,45 +154,25 @@ app.post('/api/login', async (req, res) => {
     } catch (err) { console.error('Giriş hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// 3. Oturum ve Çıkış
-app.get('/api/check-session', (req, res) => {
-    if (req.session.user) {
-        res.json({ success: true, user: req.session.user });
-    } else {
-        res.json({ success: false, user: null });
-    }
-});
-
-app.post('/api/logout', (req, res) => { req.session.destroy(err => { if (err) { return res.json({ success: false }); } res.clearCookie('connect.sid'); res.json({ success: true }); }); });
-
-// 4. Öğrenci İlanı Ekleme (Cloudinary CV YÜKLEME)
+// ÖĞRENCİ İLANI EKLEME (CV YÜKLEME)
 app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'student') {
-        if (req.file && fs.existsSync(req.file.path)) { fs.unlinkSync(req.file.path); }
+        if (req.file) { fs.unlinkSync(req.file.path); }
         return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' });
     }
-
     try {
         const yeniIlan = req.body;
         yeniIlan.createdBy = new ObjectId(req.session.user.id);
         yeniIlan.createdAt = new Date();
-
         if (req.file) {
-            const cvUrl = await uploadToCloudinary(req.file.path, 'raw', 'cvs');
-            yeniIlan.cvPath = cvUrl;
-        } else {
-            yeniIlan.cvPath = null;
-        }
-
+            yeniIlan.cvPath = await uploadToCloudinary(req.file.path, 'raw', 'cvs');
+        } else { yeniIlan.cvPath = null; }
         await db.collection("ogrenciler").insertOne(yeniIlan);
         res.json({ success: true, message: 'İlan başarıyla eklendi!' });
-    } catch (err) {
-        console.error('Öğrenci ilan eklenirken hata:', err);
-        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
-    }
+    } catch (err) { console.error('Öğrenci ilan eklenirken hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// 5. İşveren İlanı Ekleme
+// İŞVEREN İLANI EKLEME
 app.post('/api/isveren-ilan', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'employer') {
         return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
@@ -194,29 +183,22 @@ app.post('/api/isveren-ilan', async (req, res) => {
         yeniIlan.createdAt = new Date();
         await db.collection("isverenler").insertOne(yeniIlan);
         res.json({ success: true, message: 'İlan başarıyla eklendi!' });
-    } catch (err) {
-        console.error('İşveren ilan eklenirken hata:', err);
-        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
-    }
+    } catch (err) { console.error('İşveren ilan eklenirken hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// 6. Profil Güncelleme (Cloudinary RESİM YÜKLEME)
+// PROFİL GÜNCELLEME (RESİM YÜKLEME)
 app.post('/api/update-profile', upload.single('profilePicture'), async (req, res) => {
     if (!req.session.user) {
-        if (req.file && fs.existsSync(req.file.path)) { fs.unlinkSync(req.file.path); }
+        if (req.file) { fs.unlinkSync(req.file.path); }
         return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' });
     }
-
     try {
         const { name } = req.body;
         const updateData = {};
         if (name) { updateData.name = name; }
-
         if (req.file) {
-            const profilePictureUrl = await uploadToCloudinary(req.file.path, 'image', 'avatars');
-            updateData.profilePicturePath = profilePictureUrl;
+            updateData.profilePicturePath = await uploadToCloudinary(req.file.path, 'image', 'avatars');
         }
-
         if (Object.keys(updateData).length === 0) { return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' }); }
 
         const userId = new ObjectId(req.session.user.id);
@@ -227,13 +209,10 @@ app.post('/api/update-profile', upload.single('profilePicture'), async (req, res
 
         res.json({ success: true, message: 'Profiliniz başarıyla güncellendi!', user: req.session.user });
 
-    } catch (err) {
-        console.error('Profil güncelleme sırasında hata:', err);
-        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
-    }
+    } catch (err) { console.error('Profil güncelleme sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// 7. İlan Listeleme ve Arama Rotaları (Diğerleri)
+// ANASAYFA İLAN LİSTELEME
 app.get('/api/ogrenci-ilanlari', async (req, res) => {
     try {
         const ilanlar = await db.collection("ogrenciler").aggregate([
@@ -246,24 +225,16 @@ app.get('/api/ogrenci-ilanlari', async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// 10. Arama Rotası (ROL KONTROLÜ İLE GÜNCELLENDİ)
+// ROL BAZLI ARAMA (KRİTİK MLP ÖZELLİĞİ)
 app.get('/api/search', async (req, res) => {
-    // 1. Kullanıcının rolünü kontrol et
-    if (!req.session.user) {
-        // Giriş yapmamışsa, varsayılan olarak iş ilanlarını göstersin (Daha genel bir kitleye hitap eder)
-        req.session.user = { role: 'guest' };
-    }
+    if (!req.session.user) { req.session.user = { role: 'guest' }; }
 
-    // 2. Rolüne göre arama yapılacak koleksiyonu belirle
     let collectionName;
     if (req.session.user.role === 'student' || req.session.user.role === 'guest') {
-        // Öğrenci veya misafir, İşverenlerin ilanlarını arar
-        collectionName = 'isverenler';
+        collectionName = 'isverenler'; // Öğrenci/Misafir, iş arar
     } else if (req.session.user.role === 'employer') {
-        // İşveren, Öğrencilerin ilanlarını arar
-        collectionName = 'ogrenciler';
+        collectionName = 'ogrenciler'; // İşveren, öğrenci arar
     } else {
-        // Tanımlanmamış rol durumunda varsayılan
         collectionName = 'isverenler';
     }
 
@@ -272,45 +243,34 @@ app.get('/api/search', async (req, res) => {
         let searchCriteria = {};
 
         if (query) {
-            // Arama anahtar kelimesini hem öğrenci hem de işveren ilanlarında uygun alanlarda ara
             searchCriteria.$or = [
-                // Öğrenci aranıyorsa (İşveren rolü)
                 { name: { $regex: query, $options: 'i' } },
                 { dept: { $regex: query, $options: 'i' } },
                 { desc: { $regex: query, $options: 'i' } },
-                // İş aranıyorsa (Öğrenci rolü)
                 { company: { $regex: query, $options: 'i' } },
                 { req: { $regex: query, $options: 'i' } }
-            ].filter(c => Object.keys(c).length > 0); // Boş objeleri temizle
+            ].filter(c => Object.keys(c).length > 0);
         }
 
-        if (city && city !== 'Şehir seç' && city !== 'Tüm Şehirler') {
-            searchCriteria.city = city;
-        }
-
-        if (area && area !== 'Alan seç' && area !== 'Tüm Alanlar') {
-            searchCriteria.area = area;
-        }
+        if (city && city !== 'Şehir seç' && city !== 'Tüm Şehirler') { searchCriteria.city = city; }
+        if (area && area !== 'Alan seç' && area !== 'Tüm Alanlar') { searchCriteria.area = area; }
 
         const results = await db.collection(collectionName).find(searchCriteria).sort({ createdAt: -1 }).toArray();
         res.json(results);
-    } catch (err) {
-        console.error('Arama yapılırken hata:', err);
-        res.status(500).json([]);
-    }
+    } catch (err) { console.error('Arama yapılırken hata:', err); res.status(500).json([]); }
 });
 
-// (Diğer rotalar: my-listings, delete-listing, report-listing, student-profile, apply, notifications, offers, password-reset rotaları, önceki mesajlarda olduğu gibi)
+// --- DİĞER İŞLEVSEL ROTALAR (Silme, Başvuru, Teklifler, Şifre Sıfırlama) ---
+
 app.get('/api/my-listings', async (req, res) => {
     if (!req.session.user) { return res.status(401).json({ success: false, message: 'Giriş yapılmadı.' }); }
     try {
         const userId = new ObjectId(req.session.user.id);
-        const query = { createdBy: userId };
         let student = [], employer = [];
         if (req.session.user.role === 'student') {
-            student = await db.collection("ogrenciler").find(query).sort({ createdAt: -1 }).toArray();
+            student = await db.collection("ogrenciler").find({ createdBy: userId }).sort({ createdAt: -1 }).toArray();
         } else if (req.session.user.role === 'employer') {
-            employer = await db.collection("isverenler").find(query).sort({ createdAt: -1 }).toArray();
+            employer = await db.collection("isverenler").find({ createdBy: userId }).sort({ createdAt: -1 }).toArray();
         }
         res.json({ student, employer });
     } catch (err) { console.error('Kullanıcının ilanları getirilirken hata:', err); res.status(500).json({ student: [], employer: [] }); }
@@ -342,28 +302,56 @@ app.post('/api/apply', async (req, res) => {
         const studentId = new ObjectId(req.session.user.id);
         const listing = await db.collection("isverenler").findOne({ _id: new ObjectId(listingId) });
         if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
-
         const existingApplication = await db.collection("applications").findOne({ listingId: new ObjectId(listingId), applicantId: studentId });
         if (existingApplication) { return res.status(400).json({ success: false, message: 'Bu ilana zaten başvurdunuz.' }); }
-
         const newApplication = { applicantId: studentId, listingId: new ObjectId(listingId), ownerId: listing.createdBy, studentListingId: new ObjectId(studentListingId), status: 'pending', createdAt: new Date() };
         await db.collection("applications").insertOne(newApplication);
-
         res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
     } catch (err) { console.error('Başvuru sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
 });
 
-// *Diğer rotaların devamı için yer ayrılmıştır*
+// Şifre Sıfırlama Rotaları
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await db.collection("kullanicilar").findOne({ email });
+        if (!user) { return res.json({ success: true, message: 'Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama talimatları size gönderilecektir.' }); }
 
-// Veritabanı bağlantısı ve sunucu başlatma
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiration = Date.now() + 3600000;
+        await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { resetToken, tokenExpiration } });
+
+        const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}&email=${email}`;
+        const msg = { to: email, from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net', subject: 'STAJLA - Şifre Sıfırlama Talebi', html: `<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. <a href="${resetLink}">Şifremi Sıfırla</a></p>`, };
+        await sgMail.send(msg);
+
+        res.json({ success: true, message: 'E-posta adresinize şifre sıfırlama linki gönderildi.' });
+    } catch (err) { console.error('Şifre sıfırlama hatası:', err); res.status(500).json({ success: false, message: 'E-posta gönderimi sırasında bir hata oluştu.' }); }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email, token, newPassword } = req.body;
+        const user = await db.collection("kullanicilar").findOne({ email });
+
+        if (!user || user.resetToken !== token || user.tokenExpiration < Date.now() || newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'Geçersiz veya süresi dolmuş şifre sıfırlama linki ya da şifre çok kısa.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { password: hashedPassword }, $unset: { resetToken: "", tokenExpiration: "" } });
+
+        res.json({ success: true, message: 'Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.' });
+    } catch (err) { console.error('Şifre sıfırlama hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+});
+
+// --- 7. VERİTABANI BAĞLANTISI VE SUNUCU BAŞLATMA ---
 async function connectToDb() {
     try {
         await client.connect();
         db = client.db("StajlaDB");
         console.log("MongoDB'ye başarıyla bağlanıldı!");
-        app.listen(PORT, () => {
-            console.log(`Sunucu ${PORT} portunda çalışıyor.`);
-        });
+        app.listen(PORT, () => { console.log(`Sunucu ${PORT} portunda çalışıyor.`); });
     } catch (err) {
         console.error("Veritabanı bağlantı hatası:", err);
         process.exit(1);

@@ -1,5 +1,5 @@
 // ===================================================================================
-//                                  STAJLA - main.js (NİHAİ MÜKEMMEL VERSİYON)
+//                                  STAJLA - main.js (NİHAİ MÜKEMMEL VE HATASIZ VERSİYON)
 // ===================================================================================
 
 let currentUser = null;
@@ -22,7 +22,6 @@ async function renderResultsOnHome() {
     noResultsPlaceholder.style.display = 'none';
 
     try {
-        // Anasayfada varsayılan olarak öğrenci ilanları listelenir
         const response = await fetch('/api/ogrenci-ilanlari');
         const ilanlar = await response.json();
         container.innerHTML = '';
@@ -94,7 +93,7 @@ async function fetchMyListings() {
         if (!response.ok) throw new Error('Giriş yapmamış olabilirsiniz.');
         const data = await response.json();
         studentContainer.innerHTML = '';
-        if (data.student.length > 0) {
+        if (data.student && data.student.length > 0) {
             data.student.forEach(s => {
                 const el = document.createElement('div');
                 el.className = 'card';
@@ -103,7 +102,7 @@ async function fetchMyListings() {
             });
         } else { studentContainer.innerHTML = '<p>Henüz oluşturduğunuz bir stajyer ilanı yok.</p>'; }
         employerContainer.innerHTML = '';
-        if (data.employer.length > 0) {
+        if (data.employer && data.employer.length > 0) {
             data.employer.forEach(j => {
                 const el = document.createElement('div');
                 el.className = 'card';
@@ -125,7 +124,7 @@ function updateUIAfterLogin() {
     }
 }
 
-/* --- Form Gönderme İşlemleri (Tüm formlar aynı mantıkla devam eder) --- */
+/* --- Form Gönderme İşlemleri --- */
 const studentForm = document.getElementById('student-form');
 if (studentForm) {
     studentForm.addEventListener('submit', async function(e) { e.preventDefault(); const formData = new FormData(); formData.append('name', document.getElementById('s-name').value.trim()); formData.append('dept', document.getElementById('s-dept').value.trim()); formData.append('city', document.getElementById('s-city').value); formData.append('area', document.getElementById('s-area').value); formData.append('desc', document.getElementById('s-desc').value.trim()); formData.append('contact', document.getElementById('s-contact').value.trim()); const cvFile = document.getElementById('s-cv').files[0]; if (cvFile) { formData.append('cv', cvFile); } try { const response = await fetch('/api/ogrenci-ilan', { method: 'POST', body: formData }); const result = await response.json(); alert(result.message); if (result.success) studentForm.reset(); } catch (err) { alert('Sunucuya bağlanırken bir hata oluştu.'); } });
@@ -211,6 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
 
+        // KRİTİK KONTROL: Kullanıcı giriş yapmışsa
         if (currentUser && userNav) {
             const studentLinks = currentUser.role === 'student'
                 ? '<a href="/is-tekliflerim.html">İş Tekliflerim</a>'
@@ -236,7 +236,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <a id="logout-btn" href="#">Çıkış Yap</a>
                     </div>
                 </div>`;
-            // *** ÇÖZÜM: ÇIKIŞ YAP DINLEYICISINI BURAYA ATIYORUZ ***
+
+            // ÇÖZÜM: ÇIKIŞ YAP DINLEYICISINI DOĞRU ZAMANDA VE YERE ATIYORUZ
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async (e) => {
@@ -246,10 +247,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
         }
+
+        // Giriş yapmamışsa, index.html'deki Giriş/Kayıt butonu kalır.
+
         updateUIAfterLogin();
-        if (currentUser && currentUser.role === 'employer') {
-            // setupNotifications();
-        }
+
+        // Sayfa Bazlı Yüklemeler
         if (document.getElementById('results-container')) { renderResultsOnHome(); }
         if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
         if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
@@ -259,7 +262,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
     }
 });
-/* --- Arama, Şikayet ve Başvuru İşlemleri (Aynı kalır) --- */
+
+/* --- Arama, Şikayet ve Başvuru İşlemleri --- */
 document.body.addEventListener('click', async function(e) {
     if (e.target.id === 'search-btn') {
         const searchArea = document.getElementById('search-area').value;
@@ -317,8 +321,23 @@ document.body.addEventListener('click', async function(e) {
             } catch (err) { console.error('Arama sırasında hata:', err); container.innerHTML = '<p>Arama sırasında bir sorun oluştu.</p>'; }
         }
     }
-    // ... (Şikayet ve Başvuru işlemleri) ...
+
+    // Şikayet linki tıklandığında... (Diğer olay dinleyicileri)
+    if (e.target.classList.contains('report-link')) {
+        e.preventDefault();
+        const id = e.target.dataset.id;
+        const type = e.target.dataset.type;
+        if (confirm('Bu ilanı uygunsuz içerik olarak bildirmek istediğinizden emin misiniz?')) {
+            try {
+                const response = await fetch('/api/report-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) { e.target.style.display = 'none'; }
+            } catch (err) { alert('Bir hata oluştu. Lütfen giriş yaptığınızdan emin olun.'); }
+        }
+    }
 });
+
 const resultsContainer = document.getElementById('results-container');
 if (resultsContainer) {
     resultsContainer.addEventListener('click', async (e) => {
@@ -346,6 +365,7 @@ if (resultsContainer) {
         }
     });
 }
+
 const hamburger = document.getElementById('hamburger-menu');
 const mobileNav = document.getElementById('mobile-nav');
 if (hamburger && mobileNav) {
@@ -353,6 +373,8 @@ if (hamburger && mobileNav) {
         mobileNav.classList.toggle('active');
     });
 }
+
+// Profil Düzenleme Fonksiyonu (Diğer sayfalarda kullanılıyor)
 function initializeProfileEditPage() {
     const editForm = document.getElementById('edit-profile-form');
     const nameInput = document.getElementById('edit-name');
@@ -383,6 +405,8 @@ function initializeProfileEditPage() {
         }
     });
 }
+
+// Teklifleri Gösterme Fonksiyonu (Diğer sayfalarda kullanılıyor)
 function renderMyOffers() {
     const container = document.getElementById('offers-container');
     if (!container) return;
@@ -396,8 +420,8 @@ function renderMyOffers() {
                 return;
             }
             offers.forEach(offer => {
-                const companyName = offer.jobInfo[0]?.company || 'Bir Şirket';
-                const jobArea = offer.jobInfo[0]?.area || 'bir pozisyon';
+                const companyName = offer.jobInfo && offer.jobInfo[0] ? offer.jobInfo[0].company : 'Bir Şirket';
+                const jobArea = offer.jobInfo && offer.jobInfo[0] ? offer.jobInfo[0].area : 'bir pozisyon';
                 const offerDate = new Date(offer.createdAt).toLocaleDateString('tr-TR');
 
                 const card = document.createElement('div');
