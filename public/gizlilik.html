@@ -5,10 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gizlilik Politikası - STAJLA</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/img/logo.png">
 </head>
 <body>
 <header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <a href="/index.html" class="logo-link">
+            <img src="/img/logo.png" alt="STAJLA" class="logo-img">
+            <span class="logo-text">STAJLA</span>
+        </a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav">
+            <a href="/giris.html">Giriş / Kayıt</a>
+        </div>
+    </nav>
 </header>
+<div id="mobile-nav">
+    <a href="/index.html">Anasayfa</a>
+    <a href="/isveren-ilan.html">İşveren İlan</a>
+    <a href="/ogrenci-ilan.html">Öğrenci İlan</a>
+    <a href="/iletisim.html">İletişim</a>
+</div>
+
 <main class="form-page" style="max-width: 900px;">
     <h2 class="section-title">Gizlilik Politikası</h2>
     <p class="section-description" style="margin-bottom: 50px;">STAJLA platformu olarak kullanıcılarımızın gizliliğini ciddiye alıyoruz. Lütfen okuyunuz.</p>
@@ -18,15 +46,23 @@
         <p>Platformumuzu kullandığınızda ad, soyad, e-posta, üniversite bilgileri ve yüklediğiniz CV/profil resmi gibi bilgileri toplarız. Bu veriler, yalnızca staj bulma ve ilan yayınlama amacıyla kullanılır.</p>
 
         <h3>2. Verilerin Paylaşımı</h3>
-        <p>Öğrenci ilanları sadece kayıtlı işverenlerle, işveren ilanları ise sadece kayıtlı öğrencilerle paylaşılır. Yasal zorunluluklar dışında verileriniz üçüncü taraflarla paylaşılmaz.</p>
+        <p>Öğrenci ilanları sadece kayıtlı işverenlerle, işveren ilanları ise sadece kayıtlı öğrencilerle paylaşılır. Yasal zorunluluklar dışında (Mahkeme kararı gibi) verileriniz üçüncü taraflarla paylaşılmaz.</p>
 
         <h3>3. Güvenlik</h3>
-        <p>Kişisel verilerinizin güvenliği için Cloudinary (dosyalar) ve MongoDB (veritabanı) gibi güvenli altyapılar kullanmaktayız. Şifreleriniz şifrelenmiş olarak tutulur.</p>
+        <p>Kişisel verilerinizin güvenliği için şifreleriniz şifrelenmiş olarak tutulur ve Cloudinary (dosyalar) ve MongoDB (veritabanı) gibi güvenli altyapılar kullanılmaktadır. Erişim, sadece yetkili personelle sınırlıdır.</p>
 
+        <h3>4. Çerezler (Cookies)</h3>
+        <p>Giriş bilgilerinizi hatırlamak ve site performansını analiz etmek için çerezler kullanırız. Tarayıcı ayarlarınızdan çerezleri reddedebilirsiniz, ancak bu bazı site fonksiyonlarını etkileyebilir.</p>
     </div>
 </main>
+
 <footer>
-    <p>© 2025 STAJLA | İletişim: <a href="mailto:stajladestek@gmail.com">stajladestek@gmail.com</a></p>
+    <p>
+        © 2025 STAJLA |
+        <a href="/gizlilik.html">Gizlilik Politikası</a> |
+        <a href="/kullanim-sartlari.html">Kullanım Şartları</a> |
+        <a href="mailto:stajladestek@gmail.com">İletişim</a>
+    </p>
 </footer>
 <script src="/js/main.js"></script>
 </body>
