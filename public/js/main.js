@@ -69,6 +69,65 @@ async function renderResultsOnHome() {
     }
 }
 
+async function loadStudentProfileData() {
+    const container = document.getElementById('student-profile-container');
+    const params = new URLSearchParams(window.location.search);
+    const listingId = params.get('id');
+
+    if (!listingId) {
+        container.innerHTML = '<h2>Geçersiz veya eksik profil ID\'si.</h2>';
+        return;
+    }
+
+    try {
+        // API ROTASI ÇAĞRILIYOR
+        const response = await fetch(`/api/student-profile/${listingId}`);
+        if (!response.ok) {
+            throw new Error('Profil bulunamadı veya bir sunucu hatası oluştu.');
+        }
+        const { profileInfo: s } = await response.json(); // Data'yı profileInfo olarak al
+
+        // Eğer kullanıcı işveren değilse (veya misafir), 'Teklif Et' butonu görünmez
+        const canOffer = currentUser && currentUser.role === 'employer';
+        const offerBtnHtml = canOffer
+            ? `<button id="offer-job-btn" class="edit-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; background-color: #FFD43B; color: #222; border: none; font-weight: bold; cursor: pointer;">Bu Adaya İş Teklif Et</button>`
+            : '';
+
+        const profilePicHtml = s.profilePicturePath
+            ? `<div class="profile-pic-large" style="background-image: url('${s.profilePicturePath}')"></div>`
+            : '<div class="profile-pic-placeholder-large"></div>';
+
+        container.innerHTML = `
+                <div class="card" style="text-align: center;">
+                    ${profilePicHtml}
+                    <h2 style="margin-bottom: 20px;">${escapeHtml(s.name)}</h2>
+                    <p style="text-align: left;"><strong>Bölüm:</strong> ${escapeHtml(s.dept || 'Belirtilmemiş')}</p>
+                    <p style="text-align: left;"><strong>Şehir:</strong> ${escapeHtml(s.city)}</p>
+                    <p style="text-align: left;"><strong>İlgilendiği Alan:</strong> ${escapeHtml(s.area)}</p>
+                    <hr style="margin: 15px 0;">
+                    <p style="text-align: left;">${escapeHtml(s.desc)}</p>
+                    <hr style="margin: 15px 0;">
+                    <p style="text-align: left;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
+                    ${s.cvPath ? `<p style="margin-top: 20px;"><a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; display: inline-block;">CV Görüntüle</a></p>` : ''}
+                    <div style="margin-top: 25px;">
+                        ${offerBtnHtml}
+                    </div>
+                </div>
+            `;
+        // Modal ve buton mantığını buradan sonra initialize etmelisiniz.
+        if (canOffer) {
+            // Modal mantığını buraya dahil edin
+            const offerBtn = document.getElementById('offer-job-btn');
+            // ... (Geri kalan Modal ve teklif gönderme mantığı) ...
+        }
+
+
+    } catch (err) {
+        console.error('Profil yüklenirken hata:', err);
+        container.innerHTML = '<h2>Öğrenci profili yüklenirken bir sorun oluştu.</h2>';
+    }
+}
+
 async function fetchMyListings() {
     const studentContainer = document.getElementById('my-student-listings');
     const employerContainer = document.getElementById('my-employer-listings');
@@ -229,7 +288,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const userInitial = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
                 avatarHtml = `<div class="profile-avatar">${userInitial}</div>`;
             }
-
+            if (window.location.pathname.endsWith('/ogrenci-profil.html')) {
+                loadStudentProfileData();
+            }
             // userNav içeriğini temiz Dropdown yapısıyla doldur
             userNav.innerHTML = `
                 <div class="profile-dropdown">
