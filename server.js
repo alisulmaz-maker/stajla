@@ -49,7 +49,7 @@ const upload = multer({ storage: storage });
 async function uploadToCloudinary(filePath, resourceType, folderName) {
     try {
         const result = await cloudinary.uploader.upload(filePath, {
-            resource_type: resourceType,
+            resource_type: 'auto',
             folder: `stajla/${folderName}`,
             quality: "auto",
             fetch_format: "auto",
