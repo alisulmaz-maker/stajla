@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title id="page-title">Makale Detayı - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/img/logo.png">
+</head>
+<body>
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/blog.html" class="desktop-link" style="font-weight: bold;">Kariyer Rehberi</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
+    </nav>
+</header>
+<div id="mobile-nav">
+</div>
+
+<main class="form-page" style="max-width: 800px; text-align: left;">
+    <p><a href="/blog.html" style="font-size: 0.9rem;">&larr; Kariyer Rehberine Geri Dön</a></p>
+
+    <div id="makale-icerigi" class="card" style="padding: 40px;">
+        <h1 id="makale-baslik" class="section-title" style="margin-bottom: 20px;">Yükleniyor...</h1>
+        <div id="makale-metni">
+            <p>Lütfen bekleyiniz, makale içeriği hazırlanıyor.</p>
+        </div>
+    </div>
+</main>
+
+<footer>
+</footer>
+
+<script src="/js/main.js"></script>
+<script>
+    // --- GEÇİCİ JS MAKALE YÜKLEME MANTIĞI ---
+    // Bu mantık, makale ID'sine göre doğru içeriği yükler.
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('id');
+        const makaleMetniDiv = document.getElementById('makale-metni');
+        const makaleBaslikH1 = document.getElementById('makale-baslik');
+        const pageTitle = document.getElementById('page-title');
+
+        if (articleId === 'cv_hazirlama') {
+            makaleBaslikH1.textContent = 'Staj Kapılarını Açan CV: Yeni Mezunlar İçin Rehber';
+            pageTitle.textContent = 'Etkili CV - STAJLA';
+            makaleMetniDiv.innerHTML = `
+                <p><strong>Giriş:</strong> CV’niz sadece tecrübelerinizin değil, aynı zamanda potansiyelinizin özetidir. İşte sizi rakiplerinizden ayıracak 5 adım:</p>
+                <hr>
+
+                <h3>1. Adım: Özgeçmişinizi Kişiselleştirin ve Öne Çıkarın</h3>
+                <p>Kendinizi tecrübelerinizle değil, alanınızdaki hedeflerinizle tanımlayın. Anahtar kelimeleri (Agile, SQL vb.) özetinize serpiştirin.</p>
+
+                <h3>2. Adım: Eğitim Bölümünü Güçlendirin</h3>
+                <p>Sadece okul adını yazmayın. Alakalı olduğunuz dersleri, bitirme projelerinizi ve kazandığınız bursları mutlaka belirtin.</p>
+
+                <h3>3. Adım: Deneyim Boşluğunu Projelerle Doldurun</h3>
+                <p>Eğer profesyonel tecrübeniz yoksa bu alanı "Proje ve Gönüllü Çalışmalar" olarak adlandırın. Yaptığınız işleri sayısal verilerle ifade edin. (Örn: "Katılım oranını %30 artırdım.")</p>
+
+                <h3>4. Adım: Teknik Yetkinlikleri Ayrı Bir Bölümde Vurgulayın</h3>
+                <p>Programlama dilleri (Python), tasarım araçları (Figma) ve dil seviyeniz (Akıcı) gibi yetkinlikleri kategorize ederek netleştirin.</p>
+
+                <h3>5. Adım: Biçim ve Tasarım (Okunabilirlik Önceliği)</h3>
+                <p>CV'niz asla bir sayfayı geçmemelidir. Sade, temiz bir şablon kullanın ve dosyayı daima profesyonel bir isimle PDF formatında kaydedin.</p>
+
+                <p style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-style: italic;">STAJLA Ekibi: Kariyer Rehberine geri dönerek diğer mülakat tüyolarını okuyabilirsiniz!</p>
+            `;
+        } else {
+            makaleBaslikH1.textContent = 'Makale Bulunamadı';
+            makaleMetniDiv.innerHTML = '<p>Aradığınız makale yayından kaldırılmış veya yanlış bir adreste bulunuyor.</p>';
+        }
+    });
+</script>
+<footer>
+    <p>
+        © 2025 STAJLA |
+        <a href="/gizlilik.html">Gizlilik Politikası</a> |
+        <a href="/kullanim-sartlari.html">Kullanım Şartları</a> |
+        <a href="mailto:stajladestek@gmail.com">İletişim</a>
+    </p>
+</footer>
+<script src="/js/main.js"></script>
+</body>
+</html>
