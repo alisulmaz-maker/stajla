@@ -1,5 +1,5 @@
 /* =================================================================================== */
-/* STAJLA - style.css (NİHAİ CİLA VERSİYONU)         */
+/* STAJLA - style.css (NİHAİ MLP VERSİYONU)         */
 /* =================================================================================== */
 
 /* Temel sıfırlama ve Font */
@@ -9,7 +9,7 @@
 
 html, body {
     width: 100%;
-    overflow-x: hidden; /* YATAY TAŞMAYI KESİN OLARAK ENGELLER */
+    overflow-x: hidden;
 }
 
 body {
@@ -27,7 +27,7 @@ main {
 }
 
 a {
-    text-decoration: none; /* TÜM LİNKLERİN ALTINDAKİ ÇİZGİYİ EN BAŞTAN KALDIRIR (1. HATA ÇÖZÜMÜ) */
+    text-decoration: none;
 }
 
 /* NAVBAR */
@@ -42,7 +42,9 @@ a {
 }
 
 .logo-link {
-    text-decoration: none !important; /* Logo linkinin altındaki çizgiyi kesin olarak kaldırır */
+    display: flex;
+    align-items: center;
+    text-decoration: none !important;
 }
 
 .logo-img {
@@ -50,6 +52,7 @@ a {
     width: 40px;
     object-fit: contain;
     margin-right: 10px;
+    display: block;
 }
 
 .left {
@@ -61,18 +64,6 @@ a {
     color: #FFD43B;
     font-weight: 700;
     font-size: 22px;
-}
-
-/* NAVBAR LOGO HİZALAMASI İÇİN NİHAİ KOD */
-.navbar .logo-link {
-    display: flex;
-    align-items: center; /* BU SATIR, İÇİNDEKİ HER ŞEYİ (LOGO VE YAZI) DİKEY OLARAK MÜKEMMEL BİR ŞEKİLDE ORTALAR */
-    text-decoration: none !important; /* Altındaki çizgiyi kesin olarak kaldırır */
-}
-
-/* Logo resminin etrafındaki olası boşlukları sıfırla */
-.navbar .logo-link .logo-img {
-    display: block;
 }
 
 .nav-links {
@@ -93,31 +84,35 @@ a {
 /* HERO & ARAMA */
 .hero {
     text-align: center;
-    padding: 48px 24px;
-    background: #fff;
-    position: relative; /* iOS TIKLAMA HATASI İÇİN (4. HATA ÇÖZÜMÜ) */
+    padding: 60px 24px 80px; /* MLP İyileştirmesi: Daha fazla dikey boşluk */
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%); /* MLP İyileştirmesi: Hafif degrade */
+    position: relative;
     z-index: 1;
 }
 
 .hero h1 {
     margin: 0 0 8px;
-    font-size: 2.5rem;
+    font-size: 2.8rem; /* MLP İyileştirmesi: Daha büyük başlık */
+    font-weight: 800;
 }
 
 .hero p {
     margin: 0 0 24px;
-    color: #6c757d;
+    color: #495057; /* Daha koyu açıklama metni */
     font-size: 1.1rem;
 }
 
 .search-box {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px; /* Boşluk artırıldı */
     flex-wrap: wrap;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* MLP İyileştirmesi: Arama kutusuna hafif gölge */
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
 }
 
-/* TÜM TARAYICILARDA FORM ELEMANI STİLLERİNİ SIFIRLA (2. ve 3. HATA ÇÖZÜMÜ) */
 .search-box select,
 .search-box button {
     -webkit-appearance: none;
@@ -125,10 +120,11 @@ a {
     appearance: none;
     padding: 12px 16px;
     font-size: 1rem;
-    border-radius: 8px;
+    border-radius: 10px; /* Yuvarlama artırıldı */
     border: 1px solid #ced4da;
     background-color: white;
     color: #212529;
+    transition: all 0.3s ease;
 }
 
 .search-box button {
@@ -136,10 +132,13 @@ a {
     border: none;
     cursor: pointer;
     font-weight: bold;
+    padding: 12px 25px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* MLP İyileştirmesi: Buton gölgesi */
 }
 
 .search-box button:hover {
     background-color: #eab60a;
+    transform: translateY(-1px);
 }
 
 .search-box select {
@@ -149,6 +148,14 @@ a {
     background-size: 16px 12px;
     padding-right: 2.5rem;
 }
+/* Arama kutusu altındaki güven metinleri */
+.trust-indicators {
+    margin-top: 35px;
+    font-size: 0.95rem;
+    color: #495057;
+    font-weight: 500;
+}
+
 
 /* SONUÇLAR VE KARTLAR */
 .results {
@@ -173,10 +180,17 @@ a {
 .card {
     background: #fff;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px; /* MLP İyileştirmesi */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
+    border: 1px solid #f0f0f0; /* MLP İyileştirmesi: İnce sınır */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* MLP İyileştirmesi */
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* MLP İyileştirmesi */
 }
 
 .card h4 {
@@ -197,6 +211,13 @@ a {
     margin: 0 auto;
 }
 
+.form-page .card {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
 .form-page label {
     display: block;
     margin-bottom: 16px;
@@ -208,8 +229,16 @@ a {
     padding: 12px;
     margin-top: 8px;
     border: 1px solid #ced4da;
-    border-radius: 8px;
+    border-radius: 6px; /* MLP İyileştirmesi */
     font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+/* MLP İyileştirmesi: Form odaklanma stili */
+.form-page input:focus, .form-page textarea:focus, .form-page select:focus {
+    border-color: #FFD43B;
+    box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.5);
+    outline: none;
 }
 
 .form-page button {
@@ -222,71 +251,87 @@ a {
     font-size: 1.1rem;
     font-weight: bold;
     margin-top: 10px;
+    transition: background 0.2s ease;
 }
+.form-page button:hover {
+    background: #eab60a;
+}
+
+/* MLP İyileştirmesi: Ana Sayfa Bölüm Başlıkları ve Açıklamalar */
+.homepage-section {
+    padding: 64px 0;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.section-description {
+    font-size: 1.1rem;
+    color: #495057;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto 40px;
+}
+.no-results-message {
+    background-color: #fff;
+    border: 1px dashed #ced4da;
+    border-radius: 8px;
+    padding: 40px;
+    margin-top: 32px;
+    color: #6c757d;
+    font-style: italic;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
 
 /* FOOTER */
 footer {
     text-align: center;
-    padding: 24px;
-    background: #222;
-    color: #aaa;
+    padding: 30px 24px;
+    background: #2b2b2b; /* MLP İyileştirmesi: Daha koyu siyah */
+    color: #bdbdbd;
     margin-top: 48px;
+    border-top: 5px solid #FFD43B; /* MLP İyileştirmesi: Sarı çizgi */
 }
 
-/* PROFİL MENÜSÜ */
-.profile-dropdown {
-    position: relative;
-    display: inline-block;
+footer a {
+    color: #FFD43B;
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-.profile-avatar {
-    background-color: #FFD43B;
-    color: #222;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+footer a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* KART İÇİ STİLLER (PROFİL RESMİ, BUTONLAR) */
+.card-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 20px;
-    cursor: pointer;
+    gap: 15px;
+    margin-bottom: 12px;
 }
-/* style.css dosyanızda .profile-avatar'ın olduğu yere ekleyebilirsiniz */
-.profile-avatar-img {
-    width: 40px;
-    height: 40px;
+.card-profile-pic, .card-profile-pic-placeholder {
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    object-fit: cover; /* Resmin orantısını koruyarak alanı doldurur */
-    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    border: 2px solid #f0f0f0;
 }
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: #f9f9f9;
-    min-width: 120px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    border-radius: 6px;
-    overflow: hidden;
-}
+.card-profile-pic-placeholder { background-color: #e9ecef; }
+.card-info h4, .card-info p { margin: 0; }
+.card-body { padding-top: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; }
 
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    display: block;
-}
-
-.dropdown-content a:hover {
-    background-color: #f1f1f1;
-}
-
-.profile-dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* KART İÇİ BUTONLAR (DÜZENLE/SİL) */
+/* DÜZENLE/SİL BUTONLARI */
 .card-actions {
     display: flex;
     justify-content: flex-end;
@@ -295,46 +340,8 @@ footer {
     padding-top: 16px;
     border-top: 1px solid #f1f1f1;
 }
-/* İlan Kartı Profil Resmi Stilleri */
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Resimle yazı arasındaki boşluk */
-    margin-bottom: 12px;
-}
 
-.card-profile-pic {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0; /* Küçülmesini engelle */
-    border: 2px solid #f0f0f0;
-}
-
-/* Resim yoksa görünecek olan boş yer tutucu (opsiyonel) */
-.card-profile-pic-placeholder {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    flex-shrink: 0;
-    border: 2px solid #f0f0f0;
-}
-
-.card-info {
-    display: flex;
-    flex-direction: column;
-}
-
-/* İsim ve altındaki yazıların boşluklarını sıfırla */
-.card-info h4,
-.card-info p {
-    margin: 0;
-}
-.card-actions .edit-btn,
-.card-actions .delete-btn {
+.card-actions .edit-btn, .card-actions .delete-btn, .offer-btn-primary {
     color: white;
     padding: 6px 12px;
     border-radius: 5px;
@@ -344,424 +351,53 @@ footer {
     font-weight: 500;
     margin: 0;
     width: auto;
+    transition: background-color 0.2s;
 }
 
-.card-actions .edit-btn {
-    background-color: #28a745;
-}
+.card-actions .edit-btn, .offer-btn-primary { background-color: #28a745; }
+.card-actions .edit-btn:hover, .offer-btn-primary:hover { background-color: #218838; }
 
-.card-actions .edit-btn:hover {
-    background-color: #218838;
-}
+.card-actions .delete-btn { background-color: #dc3545; }
+.card-actions .delete-btn:hover { background-color: #c82333; }
 
-.card-actions .delete-btn {
-    background-color: #dc3545;
-}
+/* DİĞER KÜÇÜK İYİLEŞTİRMELER */
+.report-link { font-size: 12px; color: #6c757d; text-decoration: underline; margin-top: 10px; display: block; text-align: right; }
+.report-link:hover { color: #dc3545; }
+.remember-me { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 500; }
+.remember-me input[type="checkbox"] { margin: 0; width: 16px; height: 16px; }
+.remember-me label { margin: 0; font-weight: normal; }
 
-.card-actions .delete-btn:hover {
-    background-color: #c82333;
-}
+/* BİLDİRİM VE MODAL STİLLERİ */
+.notifications { position: relative; display: flex; align-items: center; }
+.notification-bell { font-size: 24px; color: white; cursor: pointer; }
+.notification-count { position: absolute; top: -5px; right: -8px; background-color: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.notification-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 10px); background-color: #fff; min-width: 320px; max-height: 400px; overflow-y: auto; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100; border-radius: 8px; border: 1px solid #eee; }
+.notifications.active .notification-dropdown { display: block; }
+.notification-item { padding: 12px 16px; border-bottom: 1px solid #eee; color: #333; }
+.notification-item:last-child { border-bottom: none; }
 
-/* =============================================== */
-/* MOBİL UYUMLULUK (NİHAİ VE TAM ÇÖZÜM) */
-/* =============================================== */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.modal-content { background-color: #fff; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.close-modal { position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
+.listing-offer-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
 
-/* Önce Hamburger menüyü ve mobil nav'ı normalde gizle */
-#hamburger-menu, #mobile-nav {
-    display: none;
-}
+
+/* MOBİL UYUMLULUK */
+#hamburger-menu, #mobile-nav { display: none; }
 
 @media (max-width: 768px) {
-
-    /* YATAY TAŞMAYI KESİNLİKLE ENGELLE */
-    html, body {
-        width: 100%;
-        overflow-x: hidden;
-    }
-
-    /* Bilgisayar linklerini mobilde gizle */
-    .desktop-link {
-        display: none;
-    }
-
-    /* Hamburger ikonunu göster ve şekillendir */
-    #hamburger-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        cursor: pointer;
-        padding: 8px;
-        margin-right: 10px;
-    }
-    .bar {
-        width: 22px;
-        height: 3px;
-        background-color: white;
-        border-radius: 2px;
-    }
-
-    /* Açılır mobil menüyü şekillendir */
+    html, body { width: 100%; overflow-x: hidden; }
+    .desktop-link { display: none; }
+    #hamburger-menu { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 8px; margin-right: 10px; }
+    .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
     #mobile-nav {
-        position: fixed;
-        top: 61px;
-        left: -100%;
-        width: 80%;
-        max-width: 300px;
-        height: 100%;
-        background-color: #333;
-        z-index: 1000;
-        transition: left 0.3s ease-in-out;
+        position: fixed; top: 61px; left: -100%; width: 80%; max-width: 300px; height: 100%; background-color: #333; z-index: 1000; transition: left 0.3s ease-in-out;
     }
-    #mobile-nav.active {
-        left: 0;
-        display: block;
-    }
-    #mobile-nav a {
-        color: white;
-        display: block;
-        padding: 20px;
-        text-decoration: none;
-        border-bottom: 1px solid #444;
-    }
-
-    /* Navbar'ı ve diğer elemanları düzenle */
+    #mobile-nav.active { left: 0; display: block; }
+    #mobile-nav a { color: white; display: block; padding: 20px; text-decoration: none; border-bottom: 1px solid #444; }
     .navbar { padding: 10px 16px; }
-
-    .search-box {
-        flex-direction: column;
-        /* align-items: stretch; KURALINI KALDIRDIK! */
-    }
-
-    /* ARAMA KUTUSU ELEMANLARINI %100 GENİŞLİK YAP */
-    .search-box select,
-    .search-box button {
-        width: 100%; /* Tüm elemanları tam genişlik yap */
-        max-width: 100%;
-        min-width: 0;
-    }
-
-    /* UZUN BAŞLIĞIN TAŞMASINI ENGELLE */
-    .hero h1 {
-        font-size: 1.8rem;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
+    .search-box { flex-direction: column; gap: 10px; }
+    .search-box select, .search-box button { width: 100%; max-width: 100%; min-width: 0; }
+    .hero h1 { font-size: 2.1rem; word-wrap: break-word; overflow-wrap: break-word; }
     .card-grid { grid-template-columns: 1fr; }
-}
-.report-link {
-    font-size: 12px;
-    color: #6c757d;
-    text-decoration: underline;
-    margin-top: 10px;
-    display: block;
-    text-align: right;
-}
-.report-link:hover {
-    color: #dc3545; /* Kırmızı */
-}
-/* --- Başvuru İşlemleri --- */
-const resultsContainer = document.getElementById('results-container');
-if (resultsContainer) {
-resultsContainer.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('apply-btn')) {
-    const listingId = e.target.dataset.id;
-
-try {
-    const response = await fetch('/api/apply', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ listingId: listingId })
-});
-const result = await response.json();
-alert(result.message);
-} catch (err) {
-alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-}
-}
-});
-}
-/* =============================================== */
-/* GİRİŞ SAYFASI - "BENİ HATIRLA" DÜZELTMESİ */
-/* =============================================== */
-.remember-me {
-    display: flex;       /* İçindeki elemanları (kutucuk ve yazı) yan yana diz */
-    align-items: center; /* Dikey olarak tam ortada hizala */
-    gap: 8px;            /* Aralarına 8px boşluk koy */
-    margin-bottom: 20px; /* Altındaki "Giriş Yap" butonuyla arasına boşluk koy */
-    font-weight: 500;    /* Yazıyı çok kalın olmaktan çıkarıp normale yaklaştır */
-}
-
-/* Checkbox'ın kendisi için tarayıcının eklediği varsayılan boşlukları kaldır */
-.remember-me input[type="checkbox"] {
-    margin: 0;
-    width: 16px;  /* Kutucuğun boyutunu standart hale getir */
-    height: 16px;
-}
-
-/* Label için varsayılan kalın fontu ve gereksiz boşlukları sıfırla */
-.remember-me label {
-    margin: 0;
-    font-weight: normal;
-}
-/* BİLDİRİM SİSTEMİ - NİHAİ DÜZELTME */
-.notifications {
-    position: relative; /* Bu, açılır menünün kendini buna göre konumlandırmasını sağlar */
-    display: flex;
-    align-items: center;
-}
-.notification-bell {
-    font-size: 24px;
-    color: white;
-    cursor: pointer;
-}
-.notification-count {
-    position: absolute;
-    top: -5px;
-    right: -8px;
-    background-color: red;
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-}
-.notification-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 10px); /* Üst menünün %100 altına ve 10px daha aşağıya açıl */
-    background-color: #fff; /* Tam beyaz yapalım */
-    min-width: 320px;
-    max-height: 400px;
-    overflow-y: auto;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 100;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
-/* YENİ EKLENEN KOD: Yazı rengini düzelt */
-.notification-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #eee;
-    color: #333; /* Ana metin rengini koyu gri yap */
-}
-.notification-item:last-child {
-    border-bottom: none;
-}
-.notification-item p {
-    margin: 2px 0;
-    font-size: 14px;
-}
-.notification-item strong {
-    color: #000; /* İsimleri siyah yap */
-}
-.notification-item em {
-    font-style: normal; /* İtalik olmasın */
-    color: #007bff; /* İlan adını mavi yap */
-}
-/* ------------------------------------ */
-.notifications.active .notification-dropdown {
-    display: block;
-}
-/* Teklif Modalı Stilleri */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    max-width: 500px;
-    width: 90%;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.close-modal {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
-}
-.close-modal:hover {
-    color: #000;
-}
-
-#employer-listings-container {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-top: 20px;
-}
-
-.listing-offer-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-}
-.listing-offer-item:last-child {
-    border-bottom: none;
-}
-.listing-offer-item button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 500;
-}
-.listing-offer-item button:hover {
-    background-color: #218838;
-}
-.card-link-wrapper {
-    text-decoration: none;
-    color: inherit; /* Kartın normal yazı rengini alsın */
-}
-.card-body {
-    padding-top: 15px;
-    border-top: 1px solid #f0f0f0;
-    margin-top: 15px;
-}
-/* Bildirim Menüsü Footer Stilleri */
-.notification-footer {
-    padding: 8px;
-    text-align: center;
-    border-top: 1px solid #eee;
-}
-
-#clear-notifications-btn {
-    background-color: transparent;
-    border: 1px solid #dc3545;
-    color: #dc3545;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    width: 100%;
-}
-
-#clear-notifications-btn:hover {
-    background-color: #dc3545;
-    color: white;
-}
-/* =============================================== */
-/* ANA SAYFA ESTETİK GÜNCELLEMELERİ                */
-/* =============================================== */
-
-/* Sayfa içeriğini ortalayan ve genişliği sınırlayan ana konteyner */
-.container {
-    max-width: 1100px; /* İçeriğin maksimum genişliği */
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 24px;  /* Mobil cihazlar için yan boşluklar */
-    padding-right: 24px;
-}
-
-/* Ana sayfadaki her bir bölüm için genel stil */
-.homepage-section {
-    padding: 64px 0; /* Bölümler arasına dikey boşluk ekler */
-    text-align: center;
-}
-
-/* Bölüm Başlıkları (Son Eklenenler, STAJLA'nın Öyküsü vb.) */
-.section-title {
-    font-size: 2.25rem; /* Başlıkları daha büyük ve dikkat çekici yapar */
-    font-weight: 700;
-    color: #212529; /* Koyu bir renk */
-    margin-bottom: 24px; /* Başlığın altındaki boşluk */
-}
-
-/* Başlıkların altındaki açıklama metinleri */
-.section-description {
-    font-size: 1.15rem;
-    color: #6c757d; /* Daha yumuşak bir gri tonu */
-    line-height: 1.6; /* Satır aralığını artırarak okunabilirliği iyileştirir */
-    max-width: 750px; /* Uzun metinlerin satır genişliğini sınırlar */
-    margin: 0 auto; /* Paragrafı kendi içinde ortalar */
-}
-
-/* "Henüz ilan yok" gibi mesajlar için özel stil */
-.no-results-message {
-    background-color: #f8f9fa; /* Çok hafif bir arka plan rengi */
-    border: 1px dashed #ced4da; /* Kesikli çizgi ile bunun bir bildirim olduğunu belirtir */
-    border-radius: 8px;
-    padding: 40px;
-    margin-top: 32px;
-    color: #6c757d;
-    font-style: italic; /* İtalik stil ile normal metinden ayrıştırır */
-}
-/* =============================================== */
-/* MLP TASARIM GÜNCELLEMELERİ CSS */
-/* =============================================== */
-
-/* Tüm ana başlıkları daha vurgulu hale getirin */
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #212529;
-    margin-bottom: 20px;
-    display: block; /* Yeni satırda olmasını sağla */
-}
-
-/* Başlık altındaki açıklama metni için stil */
-.section-description {
-    font-size: 1.1rem;
-    color: #495057;
-    line-height: 1.6;
-    max-width: 700px;
-    margin: 0 auto 40px;
-}
-
-/* Card'lara hover efekti ekleyerek sevilebilirlik katın */
-.card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-}
-
-/* Form sayfasındaki card'ı merkezle */
-.form-page .card {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 30px; /* İç boşluğu artır */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08); /* Hafif gölge */
-}
-
-/* Yeni Buton Stili (Teklif Gönder vb. için gerekirse) */
-.offer-btn-primary {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
-}
-
-.offer-btn-primary:hover {
-    background-color: #218838;
 }
