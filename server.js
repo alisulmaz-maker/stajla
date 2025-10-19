@@ -130,25 +130,103 @@ app.post('/api/logout', (req, res) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, pass, role } = req.body;
-        if (pass.length < 6) { return res.status(400).json({ success: false, message: 'Şifreniz en az 6 karakter olmalıdır.' }); }
+
+        if (password.length < 6) { return res.status(400).json({ success: false, message: 'Şifreniz en az 6 karakter olmalıdır.' }); }
         const existingUser = await db.collection("kullanicilar").findOne({ email });
         if (existingUser) { return res.status(400).json({ success: false, message: 'Bu e-posta adresi zaten kayıtlı.' }); }
-        const hashedPassword = await bcrypt.hash(pass, 10);
-        await db.collection("kullanicilar").insertOne({ name, email, password: hashedPassword, role, createdAt: new Date() });
-        res.json({ success: true, message: 'Kayıt başarılı! Giriş yapabilirsiniz.' });
-    } catch (err) { console.error('Kayıt hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
-});
 
+        const hashedPassword = await bcrypt.hash(pass, 10);
+        const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 haneli kod
+
+        await db.collection("kullanicilar").insertOne({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            isVerified: false, // KRİTİK: Doğrulanana kadar FALSE
+            verificationCode: verificationCode,
+            createdAt: new Date()
+        });
+
+        // Doğrulama e-postası gönderme
+        const msg = {
+            to: email,
+            from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
+            subject: 'STAJLA Hesap Doğrulama Kodunuz',
+            html: `
+                <p>Merhaba ${name},</p>
+                <p>STAJLA hesabınızı aktive etmek için aşağıdaki kodu kullanın:</p>
+                <h3 style="color: #FFD43B;">${verificationCode}</h3>
+                <p>Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen aktif edebilirsiniz. Kodunuz 1 saat geçerlidir.</p>
+            `,
+        };
+        await sgMail.send(msg);
+
+        // Frontend'i doğrulama ekranına yönlendirmek için sadece success mesajı döndür
+        res.json({ success: true, message: 'Kayıt başarılı! Doğrulama kodu e-posta adresinize gönderildi.' });
+    } catch (err) {
+        console.error('Kayıt/Doğrulama E-posta hatası:', err);
+        res.status(500).json({ success: false, message: 'Kayıt sırasında bir hata oluştu. E-posta ayarlarınızı kontrol edin.' });
+    }
+});
+// KULLANICI GİRİŞ ROTASI (DOĞRULAMA KONTROLÜ EKLENDİ)
 app.post('/api/login', async (req, res) => {
     try {
         const { email, pass } = req.body;
         const user = await db.collection("kullanicilar").findOne({ email });
+
         if (!user || !(await bcrypt.compare(pass, user.password))) { return res.status(400).json({ success: false, message: 'Hatalı e-posta veya şifre.' }); }
+
+        // KRİTİK KONTROL: Hesap doğrulanmış mı?
+        if (!user.isVerified) {
+            return res.status(403).json({ success: false, message: 'Hesabınız doğrulanmamış. Lütfen e-postanızı kontrol edin.' });
+        }
+
         req.session.user = { id: user._id.toString(), name: user.name, email: user.email, role: user.role, profilePicturePath: user.profilePicturePath || null };
         res.json({ success: true, message: 'Giriş başarılı!' });
     } catch (err) { console.error('Giriş hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
+// YENİ: HESAP DOĞRULAMA ROTASI
+app.post('/api/verify-email', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+
+        if (!email || !code) {
+            return res.status(400).json({ success: false, message: 'E-posta ve doğrulama kodu gereklidir.' });
+        }
+
+        const user = await db.collection("kullanicilar").findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+        }
+
+        if (user.isVerified) {
+            return res.json({ success: true, message: 'Hesabınız zaten doğrulanmış.' });
+        }
+
+        // Kodu kontrol et
+        if (user.verificationCode !== code.toUpperCase()) {
+            return res.status(400).json({ success: false, message: 'Geçersiz doğrulama kodu.' });
+        }
+
+        // Hesap doğrulandı!
+        await db.collection("kullanicilar").updateOne(
+            { _id: user._id },
+            { $set: { isVerified: true }, $unset: { verificationCode: "" } }
+        );
+
+        // Doğrulama sonrası otomatik giriş
+        req.session.user = { id: user._id, name: user.name, email: user.email, role: user.role };
+
+        res.json({ success: true, message: 'Hesabınız başarıyla doğrulandı ve giriş yapıldı!' });
+
+    } catch (err) {
+        console.error('E-posta doğrulama hatası:', err);
+        res.status(500).json({ success: false, message: 'Doğrulama sırasında sunucuda bir hata oluştu.' });
+    }
+});
 // ÖĞRENCİ İLANI EKLEME (CV YÜKLEME)
 app.post('/api/ogrenci-ilan', upload.single('cv'), async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'student') {

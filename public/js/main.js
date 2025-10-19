@@ -505,3 +505,66 @@ function renderMyOffers() {
             container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen giriş yaptığınızdan emin olun.</p>';
         });
 }
+// --- E-POSTA DOĞRULAMA MANTIĞI ---
+
+const registerForm = document.getElementById('register-form');
+const verifyForm = document.getElementById('verify-form');
+const verifyCard = document.getElementById('verify-card');
+const loginCard = document.querySelector('.form-page .card'); // Ana form kartı
+
+if (registerForm) {
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const userData = {
+            name: document.getElementById('reg-name').value,
+            email: document.getElementById('reg-email').value,
+            pass: document.getElementById('reg-pass').value,
+            role: document.getElementById('reg-role').value
+        };
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+            const result = await response.json();
+
+            alert(result.message);
+
+            if (result.success) {
+                // Kayıt başarılıysa doğrulama ekranına geç
+                document.getElementById('verification-email').value = userData.email;
+                loginCard.style.display = 'none';
+                verifyCard.style.display = 'block';
+            }
+        } catch (err) {
+            alert('Sunucuya bağlanırken bir hata oluştu.');
+        }
+    });
+}
+
+if (verifyForm) {
+    verifyForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('verification-email').value;
+        const code = document.getElementById('verify-code').value.toUpperCase();
+
+        try {
+            const response = await fetch('/api/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code })
+            });
+            const result = await response.json();
+            alert(result.message);
+
+            if (result.success) {
+                // Doğrulama başarılı ise anasayfaya yönlendir
+                window.location.href = '/index.html';
+            }
+        } catch (err) {
+            alert('Doğrulama sırasında bir hata oluştu.');
+        }
+    });
+}
+// NOT: Kodu tekrar gönderme (resend-code) mantığı, server tarafında yeni bir rota gerektirir. Şimdilik bu kısmı yoksayabiliriz.
