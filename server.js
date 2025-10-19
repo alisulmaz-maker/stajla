@@ -154,10 +154,10 @@ app.post('/api/register', async (req, res) => {
             from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
             subject: 'STAJLA Hesap Doğrulama Kodunuz',
             html: `
-                <p>Merhaba ${name},</p>
-                <p>STAJLA hesabınızı aktive etmek için aşağıdaki kodu kullanın:</p>
-                <h3 style="color: #FFD43B;">${verificationCode}</h3>
-                <p>Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen aktif edebilirsiniz. Kodunuz 1 saat geçerlidir.</p>
+                <p style="font-family: Arial, sans-serif;">Merhaba ${name},</p>
+                <p style="font-family: Arial, sans-serif;">STAJLA hesabınızı aktive etmek için aşağıdaki kodu kullanın:</p>
+                <h3 style="color: #FFD43B; font-family: Arial, sans-serif; font-size: 24px;">${verificationCode}</h3>
+                <p style="font-family: Arial, sans-serif;">Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen aktif edebilirsiniz.</p>
             `,
         };
         await sgMail.send(msg);
