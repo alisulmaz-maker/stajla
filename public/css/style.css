@@ -1,5 +1,5 @@
 /* =================================================================================== */
-/* STAJLA - style.css (NİHAİ HATASIZ VE ÇÖZÜMLENMİŞ VERSİYON) */
+/* STAJLA - style.css (NİHAİ HATASIZ VE TÜM ÇÖZÜMLERİ İÇEREN VERSİYON) */
 /* =================================================================================== */
 
 /* --- TEMEL SIFIRLAMA VE FONTLAR --- */
@@ -105,7 +105,7 @@ a:hover {
     padding: 8px 15px;
     margin-left: 10px;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: 1rem; /* KRİTİK: Butonun görünürlüğünü garanti eder */
 }
 #user-nav a[href="/giris.html"]:hover {
     background-color: #eab60a;
@@ -117,12 +117,12 @@ a:hover {
 }
 
 
-/* --- DROPDOWN VE AVATAR STİLİ (SON HAL) --- */
+/* --- DROPDOWN VE AVATAR STİLİ --- */
 #user-nav {
     display: flex;
     align-items: center;
     position: relative;
-    font-size: 0;
+    font-size: 0; /* Çakışan metinleri gizler */
     height: 100%;
 }
 
@@ -266,7 +266,7 @@ a:hover {
     font-weight: 500;
 }
 
-/* --- GENEL İÇERİK VE FOOTER --- */
+/* --- GENEL İÇERİK VE FORM STİLLERİ (KRİTİK ÇÖZÜM) --- */
 .homepage-section {
     padding: 64px 0;
     text-align: center;
@@ -278,9 +278,57 @@ a:hover {
     color: #212529;
     margin-bottom: 20px;
 }
-/* ... (Diğer kart, form ve CTA stilleri devam eder) ... */
 
-/* --- FOOTER --- */
+/* KRİTİK FORM DÜZELTMESİ */
+.form-page { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
+.form-page h2 { text-align: center; color: #333; margin-bottom: 30px; }
+
+/* Bu 3 kural formların yatay değil, dikey akmasını sağlar */
+.card form {
+    display: flex;
+    flex-direction: column;
+    gap: 0; /* Form elemanları arasında boşluk bırakılır */
+}
+
+.form-page label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-page input, .form-page textarea, .form-page select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+.form-page button[type="submit"] { background-color: #222; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; transition: background-color 0.2s; }
+.form-page button[type="submit"]:hover { background-color: #000; }
+
+/* 'Beni Hatırla' Butonu Düzeltmesi */
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Kutu ile yazı arasına boşluk */
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+.remember-me input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+.remember-me label {
+    margin: 0;
+    font-weight: normal;
+}
+
+
+/* --- FOOTER VE MOBİL UYUMLULUK --- */
 footer {
     background-color: #222;
     color: #ced4da;
@@ -301,67 +349,24 @@ footer a:hover {
     text-decoration: underline;
 }
 
-/* --- MOBİL UYUMLULUK (SON ÇÖZÜM) --- */
+/* --- MOBİL UYUMLULUK (ÇÖZÜM) --- */
 @media (max-width: 768px) {
     /* Masaüstü linklerini gizle */
-    .desktop-link {
-        display: none;
-    }
-
-    /* KRİTİK ÇÖZÜM: Mobil Navbar Hizalaması */
-    .navbar {
-        padding: 10px 15px;
-        justify-content: space-between;
-        height: 55px; /* Navbar yüksekliğini düşür */
-    }
-
-    .navbar .left {
-        display: flex;
-        align-items: center;
-    }
-
-    /* Hamburger Menüyü Göster */
-    #hamburger-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        cursor: pointer;
-        padding: 6px;
-        order: -1;
-        margin-right: 10px;
-    }
+    .desktop-link { display: none; }
+    .navbar { padding: 10px 15px; justify-content: space-between; height: 55px; }
+    .navbar .left { display: flex; align-items: center; }
+    #hamburger-menu { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 6px; order: -1; margin-right: 10px; }
     .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
+    .logo-text { display: none; }
+    .logo-img { height: 25px; margin-right: 0; }
 
-    /* Logo Metnini Gizle */
-    .logo-text {
-        display: none;
-    }
-
-    .logo-img {
-        height: 25px;
-        margin-right: 0;
-    }
-
-    /* Mobil Menü Konumu */
-    #mobile-nav {
-        position: fixed;
-        top: 55px; /* Navbar yüksekliğine göre ayarlandı */
-        left: -100%;
-        width: 80%;
-        max-width: 300px;
-        height: 100%;
-        background-color: #333;
-        padding: 20px;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-        transition: left 0.3s ease-in-out;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-    }
+    #mobile-nav { position: fixed; top: 55px; left: -100%; width: 80%; max-width: 300px; height: 100%; background-color: #333; padding: 20px; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); transition: left 0.3s ease-in-out; z-index: 1000; display: flex; flex-direction: column; }
     #mobile-nav.active { left: 0; }
     #mobile-nav a { color: white; padding: 10px 0; border-bottom: 1px solid #444; margin-bottom: 5px; font-size: 1.1rem; }
 
-    /* Arama Kutusu Mobil */
+    .hero-section { padding: 50px 0; }
+    .hero-section h1 { font-size: 2rem; }
+    .hero-section p { font-size: 1rem; }
     .search-box { flex-direction: column; border: 2px solid #FFD43B; border-radius: 8px; padding: 10px; gap: 0; }
     .search-box input, .search-box select, .search-box button { width: 100%; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 4px; }
     .search-box button { margin-bottom: 0; border: none; background-color: #FFD43B; }
