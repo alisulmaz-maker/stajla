@@ -289,6 +289,56 @@ a {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* --- YENİ EKLENECEK: BOŞ İLAN ALANI (EMPTY STATE) STİLİ --- */
+.cta-empty-state {
+    background-color: #ffffff;
+    border: 2px solid #FFD43B; /* Vurgulayıcı sarı sınır */
+    border-radius: 12px;
+    padding: 40px;
+    margin-top: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+.cta-empty-state h3 {
+    color: #212529;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+.cta-empty-state p {
+    color: #6c757d;
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap; /* Mobil uyumluluk için */
+}
+.cta-buttons a {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+/* Birincil Buton (Sarı) */
+.cta-primary {
+    background-color: #FFD43B;
+    color: #212529;
+}
+.cta-primary:hover {
+    background-color: #eab60a;
+}
+/* İkincil Buton (Gri/Beyaz) */
+.cta-secondary {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+.cta-secondary:hover {
+    background-color: #ced4da;
+}
 
 /* FOOTER */
 footer {
