@@ -58,7 +58,9 @@
                 <small style="display: block; color: #495057; font-weight: normal; margin-top: 5px;">
                     *Öğrenci: İlanlara başvurur. İşveren: İlan yayınlar, stajyer arar.
                 </small>
-                <select id="reg-role">
+                <select id="reg-role" required> <option value="">Seçim Yapın</option>
+                    <option value="student">Öğrenci (Staj Arıyorum)</option>
+                    <option value="employer">İşveren (Stajyer Arıyorum)</option>
                 </select>
             </label>
             <button type="submit">Kayıt Ol</button>
