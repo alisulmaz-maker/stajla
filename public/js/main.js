@@ -37,6 +37,7 @@ async function renderResultsOnHome() {
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                     : '<div class="card-profile-pic-placeholder"></div>';
 
+                // KRİTİK DÜZELTME: İlan HTML'i optimize edildi ve kopyalanan satırlar kaldırıldı
                 el.innerHTML = `
                     <div class="card-content"> 
                         <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
@@ -49,11 +50,11 @@ async function renderResultsOnHome() {
                             </div>
                         </a>
                         <div class="card-body">
-                            <p>${escapeHtml(s.dept || 'Üniversite/Bölüm Bilgisi')}</p>
-                            <p>${escapeHtml(s.dept || 'Üniversite/Bölüm Bilgisi')}</p>
-    <p>Bölüm: <strong>${escapeHtml(s.area)}</strong> - Şehir: <strong>${escapeHtml(s.city)}</strong></p>
+                            <p style="margin-top: 0;">Üniversite: <strong>${escapeHtml(s.dept || 'Belirtilmemiş')}</strong></p>
+                            <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+                            ${s.cvPath ? `<p><a href="${s.cvPath.replace(/\\/g, '/')}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
                             
-                            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                            <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
                                 <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
                             </div>
                         </div>
