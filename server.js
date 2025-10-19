@@ -53,6 +53,8 @@ async function uploadToCloudinary(filePath, resourceType, folderName) {
             folder: `stajla/${folderName}`,
             quality: "auto",
             fetch_format: "auto"
+            type: 'upload',
+            access_mode: 'public'
         });
         fs.unlinkSync(filePath); // Başarılı yükleme sonrası yerel dosyayı sil
         return result.secure_url;
