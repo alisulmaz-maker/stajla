@@ -9,7 +9,7 @@
 
 html, body {
     width: 100%;
-    overflow-x: hidden; /* YATAY TAŞMAYI KESİN OLARAK ENGELLER */
+    overflow-x: hidden;
 }
 
 body {
@@ -28,7 +28,7 @@ main {
 
 a {
     text-decoration: none;
-    color: #007bff; /* Link rengi */
+    color: #007bff;
 }
 a:hover {
     text-decoration: underline;
@@ -49,13 +49,13 @@ a:hover {
     display: flex;
     align-items: center;
     text-decoration: none !important;
-    color: white; /* Logo yazısının rengi */
+    color: white;
 }
 
 .logo-img {
-    height: 30px; /* Logo boyutu */
+    height: 30px;
     margin-right: 10px;
-    border-radius: 4px; /* Logoya hafif köşe */
+    border-radius: 4px;
 }
 
 .logo-text {
@@ -63,12 +63,20 @@ a:hover {
     font-weight: bold;
 }
 
+/* Nav Link DÜZELTMESİ: Çakışmayı çözmek için flex özellikleri eklendi */
+.nav-links {
+    display: flex;
+    align-items: center;
+}
+
 .nav-links a {
     color: white;
-    margin-left: 20px;
+    margin-left: 15px;
     padding: 8px 10px;
     border-radius: 4px;
     transition: background-color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-links a:hover {
@@ -82,38 +90,40 @@ a:hover {
     color: #212529;
     font-weight: bold;
     padding: 8px 15px;
+    margin-left: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 #user-nav a:hover {
     background-color: #eab60a;
 }
 
-/* Sayfa içeriğini ortalayan ve genişliği sınırlayan ana konteyner */
 .container {
-    max-width: 1100px; /* İçeriğin maksimum genişliği */
+    max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 24px;  /* Mobil cihazlar için yan boşluklar */
+    padding-left: 24px;
     padding-right: 24px;
 }
 
 /* --- HERO BÖLÜMÜ (ANA SAYFA) --- */
 .hero-section {
-    background-color: #222; /* Navbar ile uyumlu koyu arka plan */
+    background-color: #222;
     color: white;
-    padding: 80px 0;
+    padding: 60px 0; /* DÜZELTME: Siyah alanın yüksekliği ayarlandı */
     text-align: center;
 }
 
 .hero-section h1 {
-    font-size: 3rem; /* Büyük ve dikkat çekici başlık */
+    font-size: 3rem;
     margin-bottom: 15px;
     font-weight: 800;
 }
 
 .hero-section p {
     font-size: 1.25rem;
-    color: #ced4da; /* Açık gri alt metin */
+    color: #ced4da;
     max-width: 800px;
     margin: 0 auto;
 }
@@ -169,7 +179,6 @@ a:hover {
     font-size: 0.95rem;
     font-weight: 500;
 }
-
 
 /* --- GENEL BÖLÜM STİLLERİ --- */
 .homepage-section {
@@ -271,8 +280,7 @@ a:hover {
     background-color: #ced4da;
 }
 
-
-/* --- FORM SAYFALARI GENEL STİLİ --- */
+/* --- FORM SAYFALARI GENEL STİLİ VE DİĞERLERİ --- */
 .form-page {
     padding: 40px 24px;
     max-width: 1000px;
@@ -285,7 +293,6 @@ a:hover {
     margin-bottom: 30px;
 }
 
-/* Form stilleri (kart içine alınmış) */
 .card form {
     display: flex;
     flex-direction: column;
@@ -430,28 +437,21 @@ footer a:hover {
     /* Arama Kutusu */
     .search-box {
         flex-direction: column;
-        border: none;
-        padding: 0;
+        border: 2px solid #FFD43B; /* Mobil görünümde sınır kalsın */
+        border-radius: 8px;
+        padding: 10px; /* İç boşluk ekle */
+        gap: 0;
     }
+
     .search-box input, .search-box select, .search-box button {
         width: 100%;
         margin-bottom: 10px;
-        border: 1px solid #ced4da;
+        border: 1px solid #ced4da; /* Mobil inputlar sınır alsın */
+        border-radius: 4px;
     }
     .search-box button {
         margin-bottom: 0;
         border: none;
-        border-radius: 4px;
-    }
-
-    /* Genel Bölümler */
-    .homepage-section {
-        padding: 40px 0;
-    }
-    .section-title {
-        font-size: 1.8rem;
-    }
-    .section-description {
-        font-size: 1rem;
+        background-color: #FFD43B; /* Buton rengini mobil'de de vurgula */
     }
 }

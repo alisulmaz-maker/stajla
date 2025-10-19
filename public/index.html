@@ -48,12 +48,17 @@
     <section class="search-section">
         <div class="container">
             <div class="search-box">
-                <input type="text" id="search-query" placeholder="Pozisyon, yetenek veya firma ara...">
-                <select id="search-city">
-                    <option value="">Tüm Şehirler</option>
-                    <option>Adana</option><option>Adıyaman</option><option>Afyonkarahisar</option><option>Ağrı</option><option>Amasya</option><option>Ankara</option><option>Antalya</option><option>Artvin</option><option>Aydın</option><option>Balıkesir</option><option>Bilecik</option><option>Bingöl</option><option>Bitlis</option><option>Bolu</option><option>Burdur</option><option>Bursa</option><option>Çanakkale</option><option>Çankırı</option><option>Çorum</option><option>Denizli</option><option>Diyarbakır</option><option>Düzce</option><option>Edirne</option><option>Elazığ</option><option>Erzincan</option><option>Erzurum</option><option>Eskişehir</option><option>Gaziantep</option><option>Giresun</option><option>Gümüşhane</option><option>Hakkari</option><option>Hatay</option><option>Iğdır</option><option>Isparta</option><option>İstanbul</option><option>İzmir</option><option>Kahramanmaraş</option><option>Karabük</option><option>Karaman</option><option>Kars</option><option>Kastamonu</option><option>Kayseri</option><option>Kilis</option><option>Kırıkkale</option><option>Kırklareli</option><option>Kırşehir</option><option>Kocaeli</option><option>Konya</option><option>Kütahya</option><option>Malatya</option><option>Manisa</option><option>Mardin</option><option>Mersin</option><option>Muğla</option><option>Muş</option><option>Nevşehir</option><option>Niğde</option><option>Ordu</option><option>Osmaniye</option><option>Rize</option><option>Sakarya</option><option>Samsun</option><option>Şanlıurfa</option><option>Siirt</option><option>Sinop</option><option>Şırnak</option><option>Sivas</option><option>Tekirdağ</option><option>Tokat</option><option>Trabzon</option><option>Tunceli</option><option>Uşak</option><option>Van</option><option>Yalova</option><option>Yozgat</option><option>Zonguldak</option>
+                <input type="text" id="search-query" placeholder="Pozisyon, yetenek veya firma ara..." style="flex-grow: 2;">
+
+                <select id="search-area" style="flex-grow: 1;">
+                    <option value="">Alan seç</option>
                 </select>
-                <button id="search-btn">Ara</button>
+
+                <select id="search-city" style="flex-grow: 1;">
+                    <option value="">Şehir seç</option>
+                </select>
+
+                <button id="search-btn" style="flex-shrink: 0;">Ara</button>
             </div>
             <div class="trust-indicators">
                 <p>✓ Onaylanmış işverenler &nbsp;&nbsp;&nbsp; ✓ Hızlı başvuru süreci &nbsp;&nbsp;&nbsp; ✓ 7/24 Destek</p>
