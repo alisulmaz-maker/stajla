@@ -270,21 +270,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* --- Arama, Şikayet ve Başvuru İşlemleri (Önceki kodlardan) --- */
 document.body.addEventListener('click', async function(e) {
     // Arama butonu tıklandığında...
+    // Arama butonu tıklandığında...
     if (e.target.id === 'search-btn') {
-        const searchType = document.getElementById('search-type').value; // Bu input index.html'de yok, sorun yaratabilir.
+        // Artık searchType'a ihtiyacımız yok, Backend rolden alacak.
         const searchArea = document.getElementById('search-area').value;
         const searchCity = document.getElementById('search-city').value;
-
-        // KRİTİK DÜZELTME: query değerini de alıyoruz
         const searchQuery = document.getElementById('search-query').value;
 
-        // Varsayılan arama tipini (jobs) belirliyoruz
-        const type = 'jobs';
-
-        const query = `?query=${searchQuery}&type=${type}&area=${searchArea}&city=${searchCity}`;
+        // Backend rolden alacağı için sadece sorgu ve filtreleri gönderiyoruz.
+        const query = `?query=${searchQuery}&area=${searchArea}&city=${searchCity}`;
 
         const container = document.getElementById('results-container');
-        // Arama butonu sadece index.html'de olduğu için bu kodu çalıştırıyoruz
         if (window.location.pathname === '/index.html' || window.location.pathname === '/') {
             container.innerHTML = 'Aranıyor...';
             const noResultsPlaceholder = document.getElementById('no-results-placeholder');
@@ -296,16 +292,47 @@ document.body.addEventListener('click', async function(e) {
                 container.innerHTML = '';
 
                 if (results.length === 0) {
-                    noResultsPlaceholder.style.display = 'block'; // Boş durum mesajını göster
+                    noResultsPlaceholder.style.display = 'block';
                     return;
                 }
 
-                // Arama sonuçları listelenir
-                results.forEach(j => {
+                // Sonuçları rolüne göre doğru şekilde listeleme
+                const isStudent = (currentUser && currentUser.role === 'student');
+                const isEmployer = (currentUser && currentUser.role === 'employer');
+
+                results.forEach(item => {
                     const el = document.createElement('div');
                     el.className = 'card';
-                    const applyButtonHTML = (currentUser && currentUser.role === 'student') ? `<div class="card-actions"><button class="apply-btn" data-id="${j._id}">Başvur</button></div>` : '';
-                    el.innerHTML = `<div class="card-content"><h4>${escapeHtml(j.company)}</h4><p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p><p>${escapeHtml(j.sector)}</p><p>${escapeHtml(j.req)}</p><p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p><a href="#" class="report-link" data-id="${j._id}" data-type="employer">Bu ilanı şikayet et</a></div>${applyButtonHTML}`;
+
+                    if (isEmployer) {
+                        // İşveren öğrenci görüyor
+                        // Sizin ogrenci-ilanlari listeleme mantığınız buraya gelmeli
+                        const profilePicHtml = item.sahipInfo && item.sahipInfo.profilePicturePath
+                            ? `<div class="card-profile-pic" style="background-image: url('${item.sahipInfo.profilePicturePath}')"></div>`
+                            : '<div class="card-profile-pic-placeholder"></div>';
+
+                        el.innerHTML = `
+                            <a href="/ogrenci-profil.html?id=${item._id}" class="card-link-wrapper">
+                                <div class="card-header">
+                                    ${profilePicHtml}
+                                    <div class="card-info">
+                                        <h4>${escapeHtml(item.name)}</h4>
+                                        <p><strong>${escapeHtml(item.area)}</strong> — ${escapeHtml(item.city)}</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <div class="card-body">
+                                <p>${escapeHtml(item.dept || '')}</p>
+                                <p>${escapeHtml(item.desc)}</p>
+                                <a href="#" class="report-link" data-id="${item._id}" data-type="student">Bu ilanı şikayet et</a>
+                            </div>`;
+
+                    } else {
+                        // Öğrenci (veya Misafir) iş ilanı görüyor
+                        const applyButtonHTML = (currentUser && currentUser.role === 'student') ? `<div class="card-actions"><button class="apply-btn" data-id="${item._id}">Başvur</button></div>` : '';
+
+                        el.innerHTML = `<div class="card-content"><h4>${escapeHtml(item.company)}</h4><p><strong>${escapeHtml(item.area)}</strong> — ${escapeHtml(item.city)}</p><p>${escapeHtml(item.sector)}</p><p>${escapeHtml(item.req)}</p><p>İletişim: <strong>${escapeHtml(item.contact)}</strong></p><a href="#" class="report-link" data-id="${item._id}" data-type="employer">Bu ilanı şikayet et</a></div>${applyButtonHTML}`;
+                    }
                     container.appendChild(el);
                 });
 

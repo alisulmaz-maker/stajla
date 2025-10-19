@@ -67,6 +67,8 @@ a:hover {
 .nav-links {
     display: flex;
     align-items: center;
+    justify-content: flex-end; /* Tüm öğeleri sağa yaslar */
+    flex-grow: 1;
 }
 
 .nav-links a {
@@ -454,4 +456,33 @@ footer a:hover {
         border: none;
         background-color: #FFD43B; /* Buton rengini mobil'de de vurgula */
     }
+}
+/* --- NİHAİ NAVİGASYON DÜZELTMELERİ (ÇAKIŞMA GİDERME) --- */
+
+/* Giriş yapınca çıkan butonlar ve dropdown için sabit boyut veriyoruz */
+#user-nav {
+    display: flex;
+    align-items: center;
+    position: relative; /* Dropdown'ın doğru konumlanması için */
+}
+
+/* ÇAKMALA DÜZELTMESİ: Giriş yapınca beliren, birbirine giren eski linkleri gizle */
+.nav-links a[href="/profil.html"],
+.nav-links a[href="/is-tekliflerim.html"] {
+    display: none !important;
+}
+
+/* Çıkış Yap butonu için düzeltme */
+#logout-btn {
+    cursor: pointer;
+}
+
+/* Dropdown linklerinin buton gibi görünmesi için (Tekrar tanım) */
+.profile-dropdown .dropdown-content a {
+    white-space: nowrap;
+    padding: 12px 16px;
+    display: block;
+    background-color: #333;
+    margin: 0 !important; /* Önceki margin değerlerini sıfırla */
+    border-bottom: 1px solid #444;
 }

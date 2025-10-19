@@ -246,24 +246,58 @@ app.get('/api/ogrenci-ilanlari', async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
+// 10. Arama Rotası (ROL KONTROLÜ İLE GÜNCELLENDİ)
 app.get('/api/search', async (req, res) => {
+    // 1. Kullanıcının rolünü kontrol et
+    if (!req.session.user) {
+        // Giriş yapmamışsa, varsayılan olarak iş ilanlarını göstersin (Daha genel bir kitleye hitap eder)
+        req.session.user = { role: 'guest' };
+    }
+
+    // 2. Rolüne göre arama yapılacak koleksiyonu belirle
+    let collectionName;
+    if (req.session.user.role === 'student' || req.session.user.role === 'guest') {
+        // Öğrenci veya misafir, İşverenlerin ilanlarını arar
+        collectionName = 'isverenler';
+    } else if (req.session.user.role === 'employer') {
+        // İşveren, Öğrencilerin ilanlarını arar
+        collectionName = 'ogrenciler';
+    } else {
+        // Tanımlanmamış rol durumunda varsayılan
+        collectionName = 'isverenler';
+    }
+
     try {
-        const { type, area, city } = req.query;
-        const filterQuery = {};
-        if (area) filterQuery.area = area;
-        if (city) filterQuery.city = city;
+        const { query, city, area } = req.query;
+        let searchCriteria = {};
 
-        const collectionName = type === 'jobs' ? 'isverenler' : 'ogrenciler';
+        if (query) {
+            // Arama anahtar kelimesini hem öğrenci hem de işveren ilanlarında uygun alanlarda ara
+            searchCriteria.$or = [
+                // Öğrenci aranıyorsa (İşveren rolü)
+                { name: { $regex: query, $options: 'i' } },
+                { dept: { $regex: query, $options: 'i' } },
+                { desc: { $regex: query, $options: 'i' } },
+                // İş aranıyorsa (Öğrenci rolü)
+                { company: { $regex: query, $options: 'i' } },
+                { req: { $regex: query, $options: 'i' } }
+            ].filter(c => Object.keys(c).length > 0); // Boş objeleri temizle
+        }
 
-        const results = await db.collection(collectionName).aggregate([
-            { $match: filterQuery },
-            { $sort: { _id: -1 } },
-            { $lookup: { from: "kullanicilar", localField: "createdBy", foreignField: "_id", as: "sahipInfo" } },
-            { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } }
-        ]).toArray();
+        if (city && city !== 'Şehir seç' && city !== 'Tüm Şehirler') {
+            searchCriteria.city = city;
+        }
 
+        if (area && area !== 'Alan seç' && area !== 'Tüm Alanlar') {
+            searchCriteria.area = area;
+        }
+
+        const results = await db.collection(collectionName).find(searchCriteria).sort({ createdAt: -1 }).toArray();
         res.json(results);
-    } catch (err) { console.error('Arama sırasında hata:', err); res.status(500).json([]); }
+    } catch (err) {
+        console.error('Arama yapılırken hata:', err);
+        res.status(500).json([]);
+    }
 });
 
 // (Diğer rotalar: my-listings, delete-listing, report-listing, student-profile, apply, notifications, offers, password-reset rotaları, önceki mesajlarda olduğu gibi)
