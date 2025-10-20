@@ -125,7 +125,48 @@ app.post('/api/logout', (req, res) => {
         res.json({ success: true, message: 'Çıkış başarılı.' });
     });
 });
+// server.js - İŞ TEKLİFLERİNİ GETİRME ROTASI (ÖĞRENCİ İÇİN)
+app.get('/api/get-my-offers', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'student') {
+        // Hata vermeden boş dönmeli
+        return res.status(200).json([]);
+    }
 
+    try {
+        const userId = new ObjectId(req.session.user.id);
+
+        // 1. Kullanıcının aktif staj ilanlarını (profilini) bul
+        const studentListings = await db.collection("ogrenciler")
+            .find({ createdBy: userId })
+            .project({ _id: 1 }) // Sadece ID'leri çekmek yeterli
+            .toArray();
+
+        if (studentListings.length === 0) {
+            return res.json([]);
+        }
+
+        const listingIds = studentListings.map(l => l._id); // Öğrencinin tüm ilan ID'leri
+
+        // 2. Aggregation ile bu ilanlara gelen teklifleri ve işveren detaylarını birleştir
+        const offers = await db.collection("is_teklifleri").aggregate([
+            { $match: { studentListingId: { $in: listingIds } } }, // Sadece bu ilan ID'lerine gelenleri filtrele
+            { $sort: { createdAt: -1 } },
+            { $lookup: {
+                    from: 'isverenler',
+                    localField: 'jobListingId',
+                    foreignField: '_id',
+                    as: 'jobInfo' // Teklifin ait olduğu iş ilanı detayları
+                }},
+            { $unwind: { path: "$jobInfo", preserveNullAndEmptyArrays: true } } // İş ilanını objeye çevir
+        ]).toArray();
+
+        res.json(offers);
+    } catch (err) {
+        console.error('Teklifleri getirirken hata:', err);
+        // Hata durumunda boş bir dizi döndür ki frontend çökmesin
+        res.status(500).json({ message: 'Sunucuda teklif yükleme hatası oluştu.' });
+    }
+});s
 // KULLANICI KAYIT & GİRİŞ (Diğerleri)
 app.post('/api/register', async (req, res) => {
     try {

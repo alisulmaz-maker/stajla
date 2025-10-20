@@ -302,7 +302,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <a id="logout-btn" href="#">Çıkış Yap</a>
                     </div>
                 </div>`;
-
+            if (window.location.pathname.endsWith('/ogrenci-profil.html')) {
+                loadStudentProfileData();
             // ÇÖZÜM: ÇIKIŞ YAP DINLEYICISINI DOĞRU ZAMANDA VE YERE ATIYORUZ
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
@@ -310,6 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     e.preventDefault();
                     await fetch('/api/logout', { method: 'POST' });
                     window.location.href = '/index.html';
+
                 });
             }
         }
