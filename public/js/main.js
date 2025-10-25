@@ -416,6 +416,9 @@ function updateUIAfterLogin() {
 /* ---------------------------------------------------- */
 /* DOM YÜKLEME VE SAYFA BAĞLANTILARI */
 /* ---------------------------------------------------- */
+/* ---------------------------------------------------- */
+/* DOM YÜKLEME VE SAYFA BAĞLANTILARI */
+/* ---------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/api/current-user');
@@ -468,8 +471,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sayfa Bazlı Yüklemeler
         if (document.getElementById('results-container')) { renderResultsOnHome(); }
         if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
-        if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); } // Varsayımsal Fonk.
-        if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); } // Varsayımsal Fonk.
+        if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
+        if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
 
         // --- YENİ EKLENEN KISIM: GİRİŞ FORMU YÖNETİMİ ---
@@ -480,7 +483,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const email = document.getElementById('login-email').value;
                 const pass = document.getElementById('login-pass').value;
-                // Beni hatırla özelliği için checkbox değeri (backend'de şu an kullanılmıyor ama veri gönderilir)
                 const remember = document.getElementById('login-remember').checked;
                 const button = loginForm.querySelector('button[type="submit"]');
 
@@ -506,7 +508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                 } catch (error) {
-                    alert('Sunucuya bağlanırken veya bir hata oluştu.');
+                    alert('Sunucuya bağlanırken bir hata oluştu.');
                     console.error('Giriş Formu Hata:', error);
                 } finally {
                     button.disabled = false;
@@ -515,26 +517,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         // --- YENİ EKLENEN KISIM SONU ---
-
-    } catch (err) {
-        console.error('Kullanıcı durumu kontrol edilirken hata:', err);
-    }
-});
-
-        updateUIAfterLogin();
-
-        // İşveren ise Bildirim Sistemini Kur
-        if (currentUser && currentUser.role === 'employer') {
-            // setupNotifications() fonksiyonu yukarıda tanımlı
-            setupNotifications();
-        }
-
-        // Sayfa Bazlı Yüklemeler
-        if (document.getElementById('results-container')) { renderResultsOnHome(); }
-        if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
-        if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
-        if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
-        if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
 
     } catch (err) {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
