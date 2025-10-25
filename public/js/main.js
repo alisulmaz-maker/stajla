@@ -475,4 +475,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
     }
-});ni bir rota gerektirir. Şimdilik bu kısmı yoksayabiliriz.
+});
