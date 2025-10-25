@@ -166,7 +166,7 @@ app.get('/api/get-my-offers', async (req, res) => {
         // Hata durumunda boş bir dizi döndür ki frontend çökmesin
         res.status(500).json({ message: 'Sunucuda teklif yükleme hatası oluştu.' });
     }
-});s
+});
 // KULLANICI KAYIT & GİRİŞ (Diğerleri)
 app.post('/api/register', async (req, res) => {
     try {
