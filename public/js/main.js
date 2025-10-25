@@ -352,68 +352,11 @@ async function loadStudentProfileData() {
 /* DİĞER TEMEL FONKSİYONLAR */
 /* ---------------------------------------------------- */
 
-// (fetchMyListings, updateUIAfterLogin, Form Olay Dinleyicileri, Şifre Sıfırlama Mantığı aynı kalır)
 
-async function fetchMyListings() {
-    const studentContainer = document.getElementById('my-student-listings');
-    const employerContainer = document.getElementById('my-employer-listings');
-    if (!studentContainer || !employerContainer) return;
 
-    const handleContainerClick = async (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const id = e.target.dataset.id;
-            const type = e.target.dataset.type;
-            if (confirm('Bu ilanı kalıcı olarak silmek istediğinize emin misiniz?')) {
-                try {
-                    const response = await fetch('/api/delete-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
-                    const result = await response.json();
-                    alert(result.message);
-                    if (result.success) { e.target.closest('.card').remove(); }
-                } catch (err) { alert('İlan silinirken bir hata oluştu.'); }
-            }
-        }
-    };
-    studentContainer.addEventListener('click', handleContainerClick);
-    employerContainer.addEventListener('click', handleContainerClick);
 
-    studentContainer.innerHTML = "Yükleniyor...";
-    employerContainer.innerHTML = "Yükleniyor...";
-    try {
-        const response = await fetch('/api/my-listings');
-        if (!response.ok) throw new Error('Giriş yapmamış olabilirsiniz.');
-        const data = await response.json();
-        studentContainer.innerHTML = '';
-        if (data.student && data.student.length > 0) {
-            data.student.forEach(s => {
-                const el = document.createElement('div');
-                el.className = 'card';
-                el.innerHTML = `<div class="card-content"><h4>${escapeHtml(s.name)}</h4><p>${escapeHtml(s.area)}</p></div><div class="card-actions"><a href="/edit-listing.html?type=student&id=${s._id}" class="edit-btn">Düzenle</a><button class="delete-btn" data-id="${s._id}" data-type="student">Sil</button></div>`;
-                studentContainer.appendChild(el);
-            });
-        } else { studentContainer.innerHTML = '<p>Henüz oluşturduğunuz bir stajyer ilanı yok.</p>'; }
-        employerContainer.innerHTML = '';
-        if (data.employer && data.employer.length > 0) {
-            data.employer.forEach(j => {
-                const el = document.createElement('div');
-                el.className = 'card';
-                el.innerHTML = `<div class="card-content"><h4>${escapeHtml(j.company)}</h4><p>${escapeHtml(j.area)}</p></div><div class="card-actions"><a href="/edit-listing.html?type=employer&id=${j._id}" class="edit-btn">Düzenle</a><button class="delete-btn" data-id="${j._id}" data-type="employer">Sil</button></div>`;
-                employerContainer.appendChild(el);
-            });
-        } else { employerContainer.innerHTML = '<p>Henüz oluşturduğunuz bir işveren ilanı yok.</p>'; }
-    } catch (err) { const errorMessage = '<p>İlanlarınızı görmek için giriş yapmalısınız.</p>'; studentContainer.innerHTML = errorMessage; employerContainer.innerHTML = errorMessage; }
-}
 
-function updateUIAfterLogin() {
-    if (!currentUser) return;
-    const studentLinks = document.querySelectorAll('a[href="/ogrenci-ilan.html"]');
-    const employerLinks = document.querySelectorAll('a[href="/isveren-ilan.html"]');
-    if (currentUser.role === 'student') {
-        employerLinks.forEach(link => link.style.display = 'none');
-    } else if (currentUser.role === 'employer') {
-        studentLinks.forEach(link => link.style.display = 'none');
-    }
-}
-// ... (Tüm Form Olay Dinleyicileri buraya dahildir) ...
+
 
 /* ---------------------------------------------------- */
 /* DOM YÜKLEME VE SAYFA BAĞLANTILARI */
