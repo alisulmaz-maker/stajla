@@ -167,6 +167,76 @@ app.get('/api/get-my-offers', async (req, res) => {
         res.status(500).json({ message: 'Sunucuda teklif yükleme hatası oluştu.' });
     }
 });
+// server.js - İŞVEREN İÇİN BİLDİRİMLERİ GETİRME ROTASI (main.js'teki setupNotifications'ın çağırdığı)
+app.get('/api/notifications', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'employer') {
+        return res.status(403).json([]);
+    }
+
+    try {
+        const userId = new ObjectId(req.session.user.id);
+
+        // 1. İşverenin sahip olduğu, okunmamış başvuruları bul
+        const notifications = await db.collection("applications").aggregate([
+            { $match: { ownerId: userId, status: 'pending' } }, // İşverenin sahip olduğu, beklemede (pending) olanlar
+            { $sort: { createdAt: -1 } },
+            // 2. Başvuran öğrenci kullanıcı bilgilerini çek
+            { $lookup: {
+                    from: 'kullanicilar',
+                    localField: 'applicantId',
+                    foreignField: '_id',
+                    as: 'applicantInfo'
+                }},
+            // 3. Öğrencinin (başvuruda kullanılan) staj ilanının detaylarını çek
+            { $lookup: {
+                    from: 'ogrenciler',
+                    localField: 'studentListingId',
+                    foreignField: '_id',
+                    as: 'studentListingInfo'
+                }},
+            // Veri yapısını basitleştir
+            { $unwind: { path: "$applicantInfo", preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: "$studentListingInfo", preserveNullAndEmptyArrays: true } },
+            // Sadece gerekli alanları döndür
+            { $project: {
+                    _id: 1,
+                    createdAt: 1,
+                    applicantInfo: { name: 1, profilePicturePath: 1 },
+                    studentListingInfo: { area: 1, city: 1, _id: 1 }
+                }}
+        ]).toArray();
+
+        // NOT: Başvuru sayısı çok ise limit eklenebilir. Şu an limit yok.
+
+        res.json(notifications);
+    } catch (err) {
+        console.error('Bildirimleri getirirken hata:', err);
+        res.status(500).json([]);
+    }
+});
+
+// server.js - İŞVEREN İÇİN BİLDİRİMLERİ TEMİZLEME ROTASI
+app.post('/api/clear-notifications', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'employer') {
+        return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
+    }
+
+    try {
+        const userId = new ObjectId(req.session.user.id);
+
+        // İşverenin sahip olduğu tüm "pending" (beklemede) başvuruları "read" (okundu) olarak işaretle
+        await db.collection("applications").updateMany(
+            { ownerId: userId, status: 'pending' },
+            { $set: { status: 'read', readAt: new Date() } }
+        );
+
+        res.json({ success: true, message: 'Tüm bildirimler temizlendi.' });
+    } catch (err) {
+        console.error('Bildirimler temizlenirken hata:', err);
+        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+    }
+});
+
 // KULLANICI KAYIT & GİRİŞ (Diğerleri)
 app.post('/api/register', async (req, res) => {
     try {
