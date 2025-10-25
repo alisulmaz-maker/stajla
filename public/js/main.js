@@ -141,7 +141,9 @@ async function setupNotifications() {
 
     const navLinks = document.querySelector('.nav-links');
     if (!navLinks) return;
-
+    
+    const userNav = document.getElementById('user-nav');
+    if (!userNav) return;
     // Bildirim HTML'ini (Çan, Sayı) navigasyona ekleme
     const notificationHtml = `
         <div class="notifications">
