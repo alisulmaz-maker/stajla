@@ -140,7 +140,90 @@ a:hover {
 .profile-dropdown:hover {
     background-color: #333;
 }
+/* --- YENİ EKLENEN KRİTİK BİLDİRİM SİSTEMİ STİLLERİ --- */
 
+/* Bildirim ana kapsayıcısı */
+.notifications {
+    position: relative;
+    margin-left: 20px;
+    height: 100%; /* Navigasyon çubuğu yüksekliğini miras alsın */
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0 10px;
+    transition: background-color 0.2s;
+}
+
+.notifications:hover {
+    background-color: #333;
+}
+
+/* Çan ikonu stili */
+.notification-bell {
+    font-size: 1.5rem;
+    line-height: 1; /* Dikey hizalama için */
+    color: white;
+}
+
+/* Sayı sayacı (Kırmızı balon) */
+.notification-count {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #dc3545; /* Kırmızı */
+    color: white;
+    border-radius: 50%;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    display: flex; /* İçindeki sayıyı ortalamak için */
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #222; /* Navbar rengiyle uyumlu border */
+    z-index: 1001; /* Çan ve dropdown'dan üstte olsun */
+}
+
+/* Açılır Bildirim Menüsü */
+.notification-dropdown {
+    display: none; /* Başlangıçta gizli */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0;
+    width: 300px; /* Sabit genişlik */
+    background-color: #ffffff;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
+    z-index: 2000;
+    border-radius: 5px;
+    border-top: 3px solid #FFD43B;
+    overflow: hidden;
+    color: #212529; /* Yazı rengi siyah */
+}
+
+/* Bildirim Listesi Öğeleri */
+#notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    transition: background-color 0.1s;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-footer {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+}
 /* Avatar ve Baş Harf Kutusu */
 .profile-avatar-img, .profile-avatar {
     width: 35px;
