@@ -69,6 +69,91 @@ async function renderResultsOnHome() {
     }
 }
 
+async function setupNotifications() {
+    if (!currentUser || currentUser.role !== 'employer') return;
+
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    // Bildirim HTML'ini (Çan, Sayı) navigasyona ekleme
+    const notificationHtml = `
+        <div class="notifications">
+            <span class="notification-bell">🔔</span>
+            <span class="notification-count" id="notification-count" style="display: none;">0</span>
+            <div class="notification-dropdown" id="notification-dropdown">
+                <div id="notification-list"></div>
+                <div class="notification-footer">
+                    <button id="clear-notifications-btn" style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; cursor: pointer; border-radius: 4px;">Tümünü Temizle</button>
+                </div>
+            </div>
+        </div>`;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = notificationHtml;
+    navLinks.insertBefore(tempDiv.firstChild, document.getElementById('user-nav'));
+
+    const countElement = document.getElementById('notification-count');
+    const dropdownElement = document.getElementById('notification-dropdown');
+    const listElement = document.getElementById('notification-list');
+    const bellElement = document.querySelector('.notification-bell');
+    const clearBtn = document.getElementById('clear-notifications-btn');
+
+    bellElement.addEventListener('click', () => {
+        dropdownElement.style.display = dropdownElement.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Bildirimleri Çekme
+    const fetchNotifications = async () => {
+        try {
+            const response = await fetch('/api/notifications');
+            const notifications = await response.json();
+
+            if (notifications.length > 0) {
+                countElement.textContent = notifications.length;
+                countElement.style.display = 'flex';
+                listElement.innerHTML = ''; // Listeyi temizle
+
+                notifications.forEach(n => {
+                    const student = n.applicantInfo[0];
+                    const studentListing = n.studentListingInfo[0];
+                    const item = document.createElement('div');
+                    item.className = 'notification-item';
+                    item.innerHTML = `
+                        <p style="margin: 0; font-weight: bold;">
+                            ${escapeHtml(student.name)} yeni bir ilana başvurdu!
+                        </p>
+                        <p style="margin: 5px 0 0; font-size: 0.85rem;">
+                            İlan: ${escapeHtml(studentListing.area)} - ${escapeHtml(studentListing.city)}
+                        </p>
+                        <a href="/ogrenci-profil.html?id=${studentListing._id}" style="color: #FFD43B; text-decoration: underline; font-size: 0.85rem;">Profili Gör</a>
+                    `;
+                    listElement.appendChild(item);
+                });
+            } else {
+                countElement.style.display = 'none';
+                listElement.innerHTML = '<div class="notification-item">Yeni başvurunuz yok.</div>';
+            }
+        } catch (err) {
+            console.error('Bildirimler yüklenirken hata:', err);
+            countElement.style.display = 'none';
+        }
+    };
+    clearBtn.addEventListener('click', async () => {
+        if (confirm('Tüm bildirimleri temizlemek istediğinize emin misiniz?')) {
+            try {
+                const response = await fetch('/api/clear-notifications', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Bildirimler temizlendi.');
+                    fetchNotifications(); // Listeyi yeniden yükle
+                }
+            } catch (err) {
+                alert('Bildirimler temizlenirken hata oluştu.');
+            }
+        }
+    });
+    fetchNotifications();
+}
+
 async function loadStudentProfileData() {
     const container = document.getElementById('student-profile-container');
     const params = new URLSearchParams(window.location.search);
@@ -316,6 +401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+
         // Giriş yapmamışsa, index.html'deki Giriş/Kayıt butonu kalır.
 
         updateUIAfterLogin();
@@ -331,6 +417,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+    async function renderMyOffers() {
+        const container = document.getElementById('offers-container');
+        if (!container) return;
+
+        // ÖN KONTROL: Kullanıcı Öğrenci mi ve Oturum Kurulmuş mu?
+        if (!currentUser || currentUser.role !== 'student') {
+            container.innerHTML = '<p>Bu sayfayı görüntülemek için öğrenci olarak giriş yapmalısınız.</p>';
+            return;
+        }
+
+        container.innerHTML = 'Teklifleriniz yükleniyor...';
+
+        try {
+            const response = await fetch('/api/get-my-offers');
+            if (response.status === 403 || response.status === 401) {
+                throw new Error("Oturum yetkilendirmesi başarısız.");
+            }
+
+            const offers = await response.json();
+            container.innerHTML = '';
+
+            if (!offers || offers.length === 0) {
+                container.innerHTML = '<p>Şu anda size gönderilmiş yeni bir iş teklifi bulunmuyor.</p>';
+                return;
+            }
+
+            // Teklifler başarılı bir şekilde listelenir
+            offers.forEach(offer => {
+                const companyName = offer.jobInfo?.company || 'Bilinmeyen Şirket';
+                const jobArea = offer.jobInfo?.area || 'Bilinmeyen Pozisyon';
+                const offerDate = new Date(offer.createdAt).toLocaleDateString('tr-TR');
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                <h4><strong>${escapeHtml(companyName)}</strong> size bir teklif gönderdi!</h4>
+                <p>Pozisyon: ${escapeHtml(jobArea)}</p>
+                <p style="font-size: 0.9em; color: #6c757d; margin-top: 15px;">Gönderim Tarihi: ${offerDate}</p>
+                <a href="#" style="font-weight: bold; color: #28a745; margin-top: 10px; display: block;">Detayları Gör</a>
+            `;
+                container.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error('Teklifler yüklenirken API hatası:', err);
+            container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen teknik ekiple iletişime geçin.</p>';
+        }
+    }
 /* --- Arama, Şikayet ve Başvuru İşlemleri --- */
 document.body.addEventListener('click', async function(e) {
     if (e.target.id === 'search-btn') {
