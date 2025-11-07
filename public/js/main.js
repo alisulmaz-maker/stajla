@@ -198,7 +198,7 @@ async function setupNotifications() {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = notificationHtml;
     // user-nav'dan önce eklenir
-    navLinks.insertBefore(tempDiv.firstChild, document.getElementById('user-nav'));
+    navLinks.insertBefore(tempDiv.firstElementChild, document.getElementById('user-nav'));
 
     const countElement = document.getElementById('notification-count');
     const dropdownElement = document.getElementById('notification-dropdown');
