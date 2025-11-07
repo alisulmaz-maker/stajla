@@ -385,7 +385,65 @@ async function loadStudentProfileData() {
         container.innerHTML = '<h2>Öğrenci profili yüklenirken bir sorun oluştu.</h2>';
     }
 }
+/* ---------------------------------------------------- */
+/* İŞ TEKLİFLERİM SAYFASI YÜKLEYİCİSİ (YENİ EKLENDİ) */
+/* ---------------------------------------------------- */
+async function renderMyOffers() {
+    const container = document.getElementById('offers-container'); //
+    if (!container) return;
 
+    // Kullanıcının öğrenci olduğunu doğrula
+    if (!currentUser || currentUser.role !== 'student') {
+        container.innerHTML = '<p>Bu sayfayı görmek için öğrenci olarak giriş yapmış olmalısınız.</p>';
+        return;
+    }
+
+    try {
+        // Sunucudaki ilgili rotayı çağır
+        const response = await fetch('/api/get-my-offers');
+        if (!response.ok) {
+            throw new Error('Teklifler yüklenirken bir sunucu hatası oluştu.');
+        }
+
+        const offers = await response.json();
+
+        if (!offers || offers.length === 0) {
+            container.innerHTML = '<p style="text-align: center; font-size: 1.1rem;">Henüz size gönderilmiş bir iş teklifi bulunmuyor.</p>';
+            return;
+        }
+
+        container.innerHTML = ''; // "Yükleniyor..." metnini temizle
+
+        // Gelen teklifleri listele
+        offers.forEach(offer => {
+            const job = offer.jobInfo; // server.js bu bilgiyi 'jobInfo' olarak ekliyor
+            if (!job) return; // İş ilanı bilgisi gelmezse (silinmişse vb.) bu teklifi atla
+
+            const el = document.createElement('div');
+            el.className = 'card';
+            el.innerHTML = `
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-info">
+                            <h4>${escapeHtml(job.company)}</h4>
+                            <p><strong>${escapeHtml(job.area)}</strong> — ${escapeHtml(job.city)}</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin-top: 0;"><strong>Pozisyon:</strong> ${escapeHtml(job.req || 'Açıklama belirtilmemiş')}</p>
+                        <p><strong>Teklif Tarihi:</strong> ${new Date(offer.createdAt).toLocaleDateString('tr-TR')}</p>
+                        <p><strong>İletişim:</strong> ${escapeHtml(job.contact)}</p>
+                    </div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+
+    } catch (err) {
+        console.error('Teklifler yüklenirken hata:', err);
+        container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</p>';
+    }
+}
 
 /* ---------------------------------------------------- */
 /* DİĞER TEMEL FONKSİYONLAR */
