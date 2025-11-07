@@ -3,6 +3,7 @@
 // ===================================================================================
 
 let currentUser = null;
+let myStudentListing = null;
 
 /* --- YARDIMCI FONKSİYONLAR --- */
 function escapeHtml(text) {
@@ -11,8 +12,9 @@ function escapeHtml(text) {
     return text.replace(/[&<>"'`=/]/g, s => map[s]);
 }
 
+
 /* ---------------------------------------------------- */
-/* İLAN VE SONUÇ LİSTELEME FONKSİYONLARI */
+/* İLAN VE SONUÇ LİSTELEME FONKSİYONLARI (GÜNCELLENDİ) */
 /* ---------------------------------------------------- */
 
 async function renderResultsOnHome() {
@@ -24,18 +26,33 @@ async function renderResultsOnHome() {
     container.innerHTML = 'Yükleniyor...';
     noResultsPlaceholder.style.display = 'none';
 
+    // 1. KULLANICI ROLÜNE GÖRE DOĞRU API ROTASINI SEÇ
+    let apiEndpoint = '/api/ogrenci-ilanlari'; // Varsayılan (Ziyaretçi ve İşveren için)
+    let ilanTipi = 'student';
+
+    if (currentUser && currentUser.role === 'student') {
+        apiEndpoint = '/api/job-listings'; // Öğrenciyse işveren ilanlarını çek
+        ilanTipi = 'employer';
+    }
+
     try {
-        const response = await fetch('/api/ogrenci-ilanlari');
+        const response = await fetch(apiEndpoint);
         const ilanlar = await response.json();
         container.innerHTML = '';
 
         if (!ilanlar || ilanlar.length === 0) {
             noResultsPlaceholder.style.display = 'block';
-        } else {
-            ilanlar.forEach(s => {
-                const el = document.createElement('div');
-                el.className = 'card';
+            return;
+        }
 
+        // 2. ÇEKİLEN İLAN TİPİNE GÖRE DOĞRU KARTI OLUŞTUR
+        ilanlar.forEach(ilan => {
+            const el = document.createElement('div');
+            el.className = 'card';
+
+            if (ilanTipi === 'student') {
+                // Ziyaretçi/İşveren için Öğrenci Kartı HTML'i
+                const s = ilan;
                 const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                     : '<div class="card-profile-pic-placeholder"></div>';
@@ -55,18 +72,40 @@ async function renderResultsOnHome() {
                             <p style="margin-top: 0;">Üniversite: <strong>${escapeHtml(s.dept || 'Belirtilmemiş')}</strong></p>
                             <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
                             ${s.cvPath ? `<p><a href="${s.cvPath}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
-                            
-                            <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
-                                <a href="#" class="report-link" data-id="${s._id}" data-type="student">Bu ilanı şikayet et</a>
+                        </div>
+                    </div>`;
+            } else {
+                // Öğrenci için İşveren Kartı HTML'i
+                const j = ilan;
+                const profilePicHtml = j.sahipInfo && j.sahipInfo.profilePicturePath
+                    ? `<div class="card-profile-pic" style="background-image: url('${j.sahipInfo.profilePicturePath}')"></div>`
+                    : '<div class="card-profile-pic-placeholder"></div>';
+
+                el.innerHTML = `
+                    <div class="card-content">
+                        <div class="card-header">
+                            ${profilePicHtml}
+                            <div class="card-info">
+                                <h4>${escapeHtml(j.company)}</h4>
+                                <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
                             </div>
                         </div>
-                    </div>
-                `;
-                container.appendChild(el);
-            });
-        }
+                        <div class="card-body">
+                            <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
+                            <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
+                            <p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>
+                            
+                            <button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
+                                Hemen Başvur
+                            </button>
+                        </div>
+                    </div>`;
+            }
+            container.appendChild(el);
+        });
+
     } catch (err) {
-        console.error('Sonuçlar yüklenirken hata:', err);
+        console.error('Anasayfa sonuçları yüklenirken hata:', err);
         container.innerHTML = '<p>İlanlar yüklenirken bir sorun oluştu.</p>';
     }
 }
@@ -369,7 +408,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch('/api/current-user');
         currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
-
+// YENİ EKLENDİ: Kullanıcı öğrenciyse, başvuru yapabilmesi için onun staj ilanını hafızaya al
+        if (currentUser && currentUser.role === 'student') {
+            try {
+                const listingResponse = await fetch('/api/my-student-listing'); //
+                myStudentListing = await listingResponse.json();
+            } catch (e) {
+                console.error("Öğrenci ilanı çekilemedi:", e);
+                myStudentListing = null; // Hata olursa veya ilanı yoksa null kalsın
+            }
+        }
         // Navigasyon Dropdown/Avatar Güncelleme Mantığı
         if (currentUser && userNav) {
             const studentLinks = currentUser.role === 'student'
@@ -419,7 +467,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
+// --- YENİ EKLENEN KISIM: ANASAYFA BAŞVURU BUTONU TIKLAMASI ---
+        const resultsContainer = document.getElementById('results-container');
+        if (resultsContainer) {
+            resultsContainer.addEventListener('click', async (e) => {
+                // Tıklanan öğenin "Hemen Başvur" butonu olup olmadığını kontrol et
+                if (e.target.classList.contains('apply-btn')) {
 
+                    // 1. Kullanıcının giriş yapıp yapmadığını ve rolünü kontrol et
+                    if (!currentUser || currentUser.role !== 'student') {
+                        alert('Başvuru yapmak için öğrenci olarak giriş yapmalısınız.');
+                        return;
+                    }
+
+                    // 2. Öğrencinin "Staj Arıyorum" ilanı olup olmadığını kontrol et
+                    if (!myStudentListing || !myStudentListing._id) {
+                        alert('Başvuru yapabilmek için önce "Staj Arıyorum" ilanı oluşturmanız gerekmektedir.');
+                        window.location.href = '/ogrenci-ilan.html'; // Kullanıcıyı ilan oluşturmaya yönlendir
+                        return;
+                    }
+
+                    // 3. Başvuru işlemini onayla
+                    if (!confirm('Bu iş ilanına başvurmak istediğinize emin misiniz?')) {
+                        return;
+                    }
+
+                    const button = e.target;
+                    const listingId = button.dataset.listingId; // Tıklanan butonun data-listing-id'si
+                    const studentListingId = myStudentListing._id; // Hafızaya alınan öğrenci ilanının ID'si
+
+                    button.disabled = true;
+                    button.textContent = 'Başvuruluyor...';
+
+                    try {
+                        const response = await fetch('/api/apply', { //
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ listingId, studentListingId })
+                        });
+
+                        const result = await response.json();
+                        alert(result.message);
+
+                        if (response.ok) {
+                            button.textContent = 'Başvuruldu';
+                        } else {
+                            button.disabled = false;
+                            button.textContent = 'Hemen Başvur';
+                        }
+                    } catch (error) {
+                        alert('Başvuru sırasında bir hata oluştu.');
+                        button.disabled = false;
+                        button.textContent = 'Hemen Başvur';
+                    }
+                }
+            });
+        }
         // --- YENİ EKLENEN KISIM: GİRİŞ FORMU YÖNETİMİ ---
         const loginForm = document.getElementById('login-form');
         if (loginForm) {
@@ -462,7 +565,431 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         // --- YENİ EKLENEN KISIM SONU ---
+// --- YENİ EKLENEN KISIM: KAYIT FORMU YÖNETİMİ ---
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Formun sayfayı yenilemesini engelle
 
+                const name = document.getElementById('reg-name').value;
+                const email = document.getElementById('reg-email').value;
+                const pass = document.getElementById('reg-pass').value;
+                const role = document.getElementById('reg-role').value;
+                const button = registerForm.querySelector('button[type="submit"]');
+
+                if (!role) {
+                    alert('Lütfen bir hesap türü seçin (Öğrenci veya İşveren).');
+                    return;
+                }
+                if (pass.length < 6) {
+                    alert('Şifreniz en az 6 karakter olmalıdır.');
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = 'Kayıt Olunuyor...';
+
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, pass, role })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Başarılı kayıt (doğrulama kodu gönderildi)
+                        alert(result.message); // "Doğrulama kodu gönderildi" mesajı
+
+                        // Kayıt formunu gizle, doğrulama formunu göster
+                        document.getElementById('register-card').style.display = 'none';
+                        document.getElementById('verify-card').style.display = 'block';
+
+                        // E-postayı gizli bir alana yaz, böylece doğrulama formu kullanabilir
+                        document.getElementById('verification-email').value = email;
+                    } else {
+                        // Hata (örn: e-posta zaten kayıtlı)
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Sunucuya bağlanırken bir hata oluştu.');
+                    console.error('Kayıt Formu Hata:', error);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Kayıt Ol';
+                }
+            });
+        }
+
+        // --- YENİ EKLENEN KISIM: E-POSTA DOĞRULAMA FORMU YÖNETİMİ ---
+        const verifyForm = document.getElementById('verify-form');
+        if (verifyForm) {
+            verifyForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const code = document.getElementById('verify-code').value;
+                const email = document.getElementById('verification-email').value; // Kayıt formundan saklanan e-posta
+                const button = verifyForm.querySelector('button[type="submit"]');
+
+                if (!email) {
+                    alert('Doğrulama yapılacak e-posta adresi bulunamadı. Lütfen kayıt sayfasına geri dönün.');
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = 'Doğrulanıyor...';
+
+                try {
+                    const response = await fetch('/api/verify-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, code })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Başarılı doğrulama ve otomatik giriş
+                        alert(result.message);
+                        window.location.href = '/index.html'; // Kullanıcıyı anasayfaya yönlendir
+                    } else {
+                        // Hata (örn: yanlış kod)
+                        alert(result.message);
+                    }
+
+                } catch (error) {
+                    alert('Doğrulama sırasında sunucuda bir hata oluştu.');
+                    console.error('Doğrulama Formu Hata:', error);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Hesabı Aktive Et';
+                }
+            });
+        }
+        // --- YENİ EKLENEN KISIM: ÖĞRENCİ İLANI OLUŞTURMA FORMU ---
+        const studentForm = document.getElementById('student-form');
+        if (studentForm) {
+            studentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = studentForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'İlan Gönderiliyor...';
+
+                // Dosya (CV) olduğu için FormData kullanmalıyız
+                const formData = new FormData();
+                formData.append('name', document.getElementById('s-name').value);
+                formData.append('dept', document.getElementById('s-dept').value);
+                formData.append('city', document.getElementById('s-city').value);
+                formData.append('area', document.getElementById('s-area').value);
+                formData.append('desc', document.getElementById('s-desc').value);
+                formData.append('contact', document.getElementById('s-contact').value);
+
+                const cvFile = document.getElementById('s-cv').files[0];
+                if (cvFile) {
+                    formData.append('cv', cvFile); // Sunucu tarafı bunu 'cv' olarak bekliyor
+                }
+
+                try {
+                    const response = await fetch('/api/ogrenci-ilan', {
+                        method: 'POST',
+                        body: formData // Dosya gönderdiğimiz için JSON değil, FormData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (response.ok) {
+                        window.location.href = '/profil.html'; // Başarılıysa "İlanlarım" sayfasına yönlendir
+                    }
+                } catch (error) {
+                    alert('İlan gönderilirken bir hata oluştu.');
+                    console.error('Öğrenci İlan Formu Hata:', error);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'İlanımı Keşfe Aç';
+                }
+            });
+        }
+
+        // --- YENİ EKLENEN KISIM: İŞVEREN İLANI OLUŞTURMA FORMU ---
+        const jobForm = document.getElementById('job-form');
+        if (jobForm) {
+            jobForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = jobForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'İlan Yayınlanıyor...';
+
+                // Bu formda dosya yok, JSON olarak gönderebiliriz
+                const jobData = {
+                    company: document.getElementById('j-company').value,
+                    sector: document.getElementById('j-sector').value,
+                    city: document.getElementById('j-city').value,
+                    area: document.getElementById('j-area').value,
+                    req: document.getElementById('j-req').value,
+                    contact: document.getElementById('j-contact').value,
+                };
+
+                try {
+                    const response = await fetch('/api/isveren-ilan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(jobData)
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (response.ok) {
+                        window.location.href = '/profil.html'; // Başarılıysa "İlanlarım" sayfasına yönlendir
+                    }
+                } catch (error) {
+                    alert('İlan yayınlanırken bir hata oluştu.');
+                    console.error('İşveren İlan Formu Hata:', error);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'İlanı Yayınla ve Adayları Bekle';
+                }
+            });
+        }
+        // --- YENİ EKLENEN KISIM: PROFİL GÜNCELLEME FORMU ---
+        const editProfileForm = document.getElementById('edit-profile-form');
+        if (editProfileForm) {
+            // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
+            if (currentUser) {
+                document.getElementById('edit-name').value = currentUser.name || '';
+                if (currentUser.profilePicturePath) {
+                    document.getElementById('picture-preview').style.backgroundImage = `url('${currentUser.profilePicturePath}')`;
+                }
+            }
+
+            // Form gönderildiğinde
+            editProfileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = editProfileForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Güncelleniyor...';
+
+                // Profil resmi dosyası olduğu için FormData kullanıyoruz
+                const formData = new FormData();
+                formData.append('name', document.getElementById('edit-name').value);
+
+                const profilePictureFile = document.getElementById('edit-picture').files[0];
+                if (profilePictureFile) {
+                    formData.append('profilePicture', profilePictureFile); // Sunucu bunu 'profilePicture' olarak bekliyor
+                }
+
+                try {
+                    const response = await fetch('/api/update-profile', {
+                        method: 'POST',
+                        body: formData // Dosya içerdiği için FormData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (response.ok) {
+                        // Sayfayı yenileyerek güncel bilgilerin (örn: navbardaki avatar) görünmesini sağla
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    alert('Profil güncellenirken bir hata oluştu.');
+                    console.error('Profil Güncelleme Formu Hata:', error);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Profilimi Güncelle';
+                }
+            });
+        }
+// --- YENİ EKLENEN KISIM: ŞİFREMİ UNUTTUM FORMU ---
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = forgotPasswordForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Gönderiliyor...';
+
+                const email = document.getElementById('forgot-email').value;
+
+                try {
+                    const response = await fetch('/api/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+
+                    const result = await response.json();
+                    alert(result.message); // "E-posta adresinize sıfırlama linki gönderildi."
+
+                    if (response.ok) {
+                        button.textContent = 'Gönderildi';
+                    } else {
+                        button.disabled = false;
+                        button.textContent = 'Sıfırlama Linki Gönder';
+                    }
+                } catch (error) {
+                    alert('Sunucuyla iletişim kurulamadı.');
+                    button.disabled = false;
+                    button.textContent = 'Sıfırlama Linki Gönder';
+                }
+            });
+        }
+
+        // --- YENİ EKLENEN KISIM: YENİ ŞİFRE BELİRLEME FORMU ---
+        const resetPasswordForm = document.getElementById('reset-password-form');
+        if (resetPasswordForm) {
+            resetPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const pass1 = document.getElementById('reset-pass1').value;
+                const pass2 = document.getElementById('reset-pass2').value;
+
+                if (pass1 !== pass2) {
+                    alert('Girdiğiniz şifreler uyuşmuyor.');
+                    return;
+                }
+                if (pass1.length < 6) {
+                    alert('Yeni şifreniz en az 6 karakter olmalıdır.');
+                    return;
+                }
+
+                // URL'den 'token' ve 'email' parametrelerini al
+                const params = new URLSearchParams(window.location.search);
+                const token = params.get('token');
+                const email = params.get('email');
+
+                if (!token || !email) {
+                    alert('Geçersiz veya eksik sıfırlama linki. Lütfen e-postanızdaki linke tekrar tıklayın.');
+                    return;
+                }
+
+                const button = resetPasswordForm.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Şifre Güncelleniyor...';
+
+                try {
+                    const response = await fetch('/api/reset-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, token, newPassword: pass1 })
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (response.ok) {
+                        window.location.href = '/giris.html'; // Başarılıysa giriş sayfasına yönlendir
+                    } else {
+                        button.disabled = false;
+                        button.textContent = 'Şifreyi Güncelle';
+                    }
+                } catch (error) {
+                    alert('Şifre sıfırlanırken bir hata oluştu.');
+                    button.disabled = false;
+                    button.textContent = 'Şifreyi Güncelle';
+                }
+            });
+        }
+// --- YENİ EKLENEN KISIM: İLAN DÜZENLEME SAYFASI YÖNETİMİ (edit-listing.html) ---
+        if (window.location.pathname.endsWith('/edit-listing.html')) {
+            const params = new URLSearchParams(window.location.search);
+            const listingId = params.get('id');
+            const listingType = params.get('type');
+
+            const studentFormEdit = document.getElementById('student-form-edit'); //
+            const jobFormEdit = document.getElementById('job-form-edit'); //
+            const mainContent = document.querySelector('main.form-page');
+
+            // 1. Sayfa yüklendiğinde: Doğru formu göster ve verileri doldur
+            const loadListingData = async () => {
+                if (!listingId || !listingType) {
+                    mainContent.innerHTML = '<h2>Geçersiz ilan. Lütfen profil sayfanızdan tekrar deneyin.</h2>';
+                    return;
+                }
+
+                try {
+                    // Az önce server.js'e eklediğimiz rotadan verileri çek
+                    const response = await fetch(`/api/get-listing-details?id=${listingId}&type=${listingType}`);
+                    const result = await response.json();
+
+                    if (!result.success) { throw new Error(result.message); }
+
+                    const data = result.listing;
+
+                    // Gelen veriye göre doğru formu doldur ve göster
+                    if (listingType === 'student') {
+                        document.getElementById('s-name').value = data.name || '';
+                        document.getElementById('s-dept').value = data.dept || '';
+                        document.getElementById('s-desc').value = data.desc || '';
+                        document.getElementById('s-contact').value = data.contact || '';
+                        studentFormEdit.style.display = 'block'; //
+                    } else { // 'employer'
+                        document.getElementById('j-company').value = data.company || '';
+                        document.getElementById('j-sector').value = data.sector || '';
+                        document.getElementById('j-req').value = data.req || '';
+                        document.getElementById('j-contact').value = data.contact || '';
+                        jobFormEdit.style.display = 'block'; //
+                    }
+                } catch (err) {
+                    mainContent.innerHTML = `<h2>Hata: ${err.message}</h2><p>İlan yüklenemedi. Lütfen giriş yaptığınızdan ve bu ilanın size ait olduğundan emin olun.</p>`;
+                }
+            };
+
+            // 2. Formu gönderme (Student)
+            studentFormEdit.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const updatedData = {
+                    name: document.getElementById('s-name').value,
+                    dept: document.getElementById('s-dept').value,
+                    desc: document.getElementById('s-desc').value,
+                    contact: document.getElementById('s-contact').value,
+                };
+                await submitUpdate(listingId, 'student', updatedData, studentFormEdit);
+            });
+
+            // 3. Formu gönderme (Job)
+            jobFormEdit.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const updatedData = {
+                    company: document.getElementById('j-company').value,
+                    sector: document.getElementById('j-sector').value,
+                    req: document.getElementById('j-req').value,
+                    contact: document.getElementById('j-contact').value,
+                };
+                await submitUpdate(listingId, 'employer', updatedData, jobFormEdit);
+            });
+
+            // 4. Güncellemeyi sunucuya gönderen ortak fonksiyon
+            const submitUpdate = async (id, type, data, formElement) => {
+                const button = formElement.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Kaydediliyor...';
+
+                try {
+                    // Az önce server.js'e eklediğimiz rotaya verileri gönder
+                    const response = await fetch('/api/update-listing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id, type, data })
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                    if (result.success) {
+                        window.location.href = '/profil.html'; // Başarılıysa "İlanlarım" sayfasına dön
+                    }
+                } catch (err) {
+                    alert('Güncelleme sırasında bir hata oluştu.');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Değişiklikleri Kaydet';
+                }
+            };
+
+            // Sayfa ilk yüklendiğinde verileri çekme fonksiyonunu çalıştır
+            loadListingData();
+        }
     } catch (err) {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
     }

@@ -415,7 +415,18 @@ app.get('/api/ogrenci-ilanlari', async (req, res) => {
         res.json(ilanlar);
     } catch (err) { res.status(500).json([]); }
 });
-
+// YENİ EKLENEN ROTA: ANASAYFA İÇİN İŞVEREN İLANLARINI LİSTELEME
+app.get('/api/job-listings', async (req, res) => {
+    try {
+        const ilanlar = await db.collection("isverenler").aggregate([
+            { $sort: { createdAt: -1 } }, // Önce createdAt'e göre sırala (yeni tarihli olanlar)
+            { $limit: 8 },
+            { $lookup: { from: "kullanicilar", localField: "createdBy", foreignField: "_id", as: "sahipInfo" } },
+            { $unwind: { path: "$sahipInfo", preserveNullAndEmptyArrays: true } }
+        ]).toArray();
+        res.json(ilanlar);
+    } catch (err) { res.status(500).json([]); }
+});
 // ROL BAZLI ARAMA
 app.get('/api/search', async (req, res) => {
     if (!req.session.user) { req.session.user = { role: 'guest' }; }
@@ -511,7 +522,57 @@ app.post('/api/delete-listing', async (req, res) => {
         res.json({ success: true, message: 'İlan başarıyla silindi.' });
     } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
 });
+// YENİ EKLENEN ROTA: DÜZENLENECEK İLANIN DETAYLARINI GETİRME
+app.get('/api/get-listing-details', async (req, res) => {
+    if (!req.session.user) { return res.status(401).json({ success: false, message: 'Giriş yapmalısınız.' }); }
 
+    const { id, type } = req.query; // URL'den ?id=...&type=... olarak gelir
+    const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler';
+    const userId = new ObjectId(req.session.user.id);
+
+    try {
+        const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) });
+
+        if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
+
+        // Güvenlik: Kullanıcı sadece kendi ilanını düzenleyebilir
+        if (listing.createdBy.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: 'Bu ilanı düzenleme yetkiniz yok.' });
+        }
+
+        res.json({ success: true, listing }); // İlanın mevcut verilerini JSON olarak döndür
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'İlan yüklenirken hata oluştu.' });
+    }
+});
+
+// YENİ EKLENEN ROTA: İLANI GÜNCELLEME
+app.post('/api/update-listing', async (req, res) => {
+    if (!req.session.user) { return res.status(401).json({ success: false, message: 'Giriş yapmalısınız.' }); }
+
+    const { id, type, data } = req.body; // main.js'den güncel veriler 'data' objesi içinde gelecek
+    const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler';
+    const userId = new ObjectId(req.session.user.id);
+
+    try {
+        const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) });
+
+        if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
+
+        // Güvenlik: Kullanıcı sadece kendi ilanını güncelleyebilir
+        if (listing.createdBy.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: 'Bu ilanı güncelleme yetkiniz yok.' });
+        }
+
+        // Veritabanında güncelleme yap
+        await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $set: data });
+
+        res.json({ success: true, message: 'İlan başarıyla güncellendi!' });
+    } catch (err) {
+        console.error("İlan güncelleme hatası:", err);
+        res.status(500).json({ success: false, message: 'Güncelleme sırasında bir hata oluştu.' });
+    }
+});
 app.get('/api/my-student-listing', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'student') { return res.json(null); }
     try { const listing = await db.collection("ogrenciler").findOne({ createdBy: new ObjectId(req.session.user.id) }); res.json(listing); } catch (err) { res.json(null); }
@@ -531,7 +592,66 @@ app.post('/api/apply', async (req, res) => {
         res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
     } catch (err) { console.error('Başvuru sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
 });
+// YENİ EKLENEN ROTA: İŞVERENDEN ÖĞRENCİYE İŞ TEKLİFİ GÖNDERME
+app.post('/api/send-offer', async (req, res) => {
+    // 1. Sadece işverenlerin bu rotayı kullanabildiğinden emin ol
+    if (!req.session.user || req.session.user.role !== 'employer') {
+        return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
+    }
 
+    try {
+        const { studentId, jobListingId } = req.body; // main.js'den 'studentId' olarak geliyor (aslında studentListingId)
+        const employerId = new ObjectId(req.session.user.id);
+
+        // 2. Gelen ID'leri doğrula
+        if (!studentId || !jobListingId) {
+            return res.status(400).json({ success: false, message: 'Eksik bilgi: Öğrenci veya iş ilanı ID\'si bulunamadı.' });
+        }
+
+        const studentListingIdObj = new ObjectId(studentId);
+        const jobListingIdObj = new ObjectId(jobListingId);
+
+        // 3. Teklif edilen iş ilanının bu işverene ait olduğunu doğrula
+        const jobListing = await db.collection("isverenler").findOne({ _id: jobListingIdObj, createdBy: employerId });
+        if (!jobListing) {
+            return res.status(403).json({ success: false, message: 'Bu iş ilanı size ait değil veya bulunamadı.' });
+        }
+
+        // 4. Teklif gönderilen öğrenci ilanının mevcut olduğunu doğrula
+        const studentListing = await db.collection("ogrenciler").findOne({ _id: studentListingIdObj });
+        if (!studentListing) {
+            return res.status(404).json({ success: false, message: 'Teklif gönderilmek istenen öğrenci ilanı bulunamadı.' });
+        }
+
+        // 5. Bu teklifin daha önce gönderilip gönderilmediğini kontrol et
+        const existingOffer = await db.collection("is_teklifleri").findOne({
+            studentListingId: studentListingIdObj,
+            jobListingId: jobListingIdObj
+        });
+
+        if (existingOffer) {
+            return res.status(400).json({ success: false, message: 'Bu öğrenciye bu ilan için zaten bir teklif göndermişsiniz.' });
+        }
+
+        // 6. Teklifi 'is_teklifleri' koleksiyonuna kaydet
+        const newOffer = {
+            studentListingId: studentListingIdObj,      // Öğrencinin ilan ID'si
+            jobListingId: jobListingIdObj,          // İşverenin ilan ID'si
+            employerId: employerId,                 // Teklifi gönderen işverenin KULLANICI ID'si
+            studentOwnerId: studentListing.createdBy, // Teklifi alan öğrencinin KULLANCI ID'si
+            status: 'pending',
+            createdAt: new Date()
+        };
+
+        await db.collection("is_teklifleri").insertOne(newOffer);
+
+        res.json({ success: true, message: 'Teklif başarıyla gönderildi!' });
+
+    } catch (err) {
+        console.error('Teklif gönderme hatası:', err);
+        res.status(500).json({ success: false, message: 'Teklif gönderilirken sunucuda bir hata oluştu.' });
+    }
+});
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
 app.get('/api/student-profile/:id', async (req, res) => {
     try {
