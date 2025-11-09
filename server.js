@@ -725,7 +725,7 @@ app.get('/api/articles', async (req, res) => {
     try {
         // 'articles' adında yeni bir koleksiyondan verileri çekeceğiz
         const articles = await db.collection("articles").find({})
-            .project({ title: 1, slug: 1, description: 1 }) // Sadece bu alanları al
+
             .sort({ order: 1 }) // order diye bir alana göre sıralayalım (yeni)
             .toArray();
         res.json(articles);
