@@ -53,181 +53,39 @@
 <script src="/js/main.js"></script>
 
 <script>
-    // Güvenlik için Yardımcı Fonksiyon
-    function escapeHtml(text) {
-        if (typeof text !== 'string') return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '/': '&#47;', '=': '&#61;' };
-        return text.replace(/[&<>"'`=/]/g, s => map[s]);
-    }
-
-    // --- MAKALE İÇERİKLERİ (10 Adet Eksiksiz ve Doğru Bilgi) ---
-    const articles = {
-        cv_hazirlama: {
-            title: 'Staj Kapılarını Açan CV: Yeni Mezunlar İçin Rehber',
-            content: `
-                <p><strong>Giriş:</strong> CV’niz potansiyelinizin özetidir. Tecrübe az olsa bile projelerinizi ve öğrenme isteğinizi vurgulayarak fark yaratabilirsiniz. İşte sizi rakiplerinizden ayıracak 5 adım:</p>
-                <hr>
-                <h3>1. Adım: Özgeçmişinizi Kişiselleştirin ve Öne Çıkarın</h3>
-                <p>Kendinizi tecrübelerinizle değil, alanınızdaki hedeflerinizle tanımlayın. Başvurulan ilanda geçen anahtar kelimeleri (Agile, SQL vb.) özetinize serpiştirin.</p>
-                <h3>2. Adım: Eğitim Bölümünü Güçlendirin</h3>
-                <p>Alakalı olduğunuz dersleri, bitirme projelerinizi ve kazandığınız bursları mutlaka belirtin. Yüksek not ortalaması (GPA > 3.00) bir artıdır.</p>
-                <h3>3. Adım: Deneyim Boşluğunu Projelerle Doldurun</h3>
-                <p>Eğer profesyonel tecrübeniz yoksa bu alanı "Proje ve Gönüllü Çalışmalar" olarak adlandırın. Yaptığınız işleri sayısallaştırın. (Örn: "Katılım oranını %30 artırdım.")</p>
-                <h3>4. Adım: Teknik Yetkinlikleri Ayrı Bir Bölümde Vurgulayın</h3>
-                <p>Programlama dilleri (Python), tasarım araçları (Figma) ve dil seviyeniz (Akıcı) gibi yetkinlikleri kategorize ederek netleştirin. Bu, ilk taranan bölümdür.</p>
-                <h3>5. Adım: Biçim ve Tasarım (Okunabilirlik Önceliği)</h3>
-                <p>CV'niz asla bir sayfayı geçmemelidir. Sade, temiz bir şablon kullanın ve dosyayı daima profesyonel bir isimle PDF formatında kaydedin.</p>
-            `
-        },
-        mulakat_sirlari: {
-            title: 'Mülakat Sırları: Sık Sorulan 7 Zor Soru ve Cevapları',
-            content: `
-                <h3>Tuzak Sorulara Hazırlık</h3>
-                <p>Mülakatlarda sadece teknik bilginiz değil, stres altındaki tavrınız da ölçülür. Her cevabınızı pozitif bir sonuçla sonlandırın.</p>
-                <hr>
-
-                <h4>Örnek Soru 1: Zayıf yönleriniz nelerdir?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Zayıf yönünüzü bir geliştirme alanı olarak sunun. Örneğin: "Detaylara çok odaklanıyorum, bu bazen zaman yönetimimi etkiliyor. Bunu aşmak için görevleri küçük parçalara bölerek ilerliyorum."</p>
-
-                <h4>Örnek Soru 2: Neden bizim şirketimizi seçtiniz?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Şirketi araştırdığınızı ve misyonlarının sizin kariyer hedeflerinizle örtüştüğünü gösterin. Şirketinizi tanıdığınızı kanıtlayın.</p>
-
-                <h4>Örnek Soru 3: Beş yıl sonra kendinizi nerede görüyorsunuz?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Şirkette kalıcı olma isteğinizi ve kariyer yolunuzun bu staj pozisyonuyla başladığını belirtin. Hedeflerinizin şirketin büyüme hedefleriyle uyumlu olduğunu vurgulayın.</p>
-
-                <h4>Örnek Soru 4: En büyük başarınız nedir ve bu başarının anahtarı neydi?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Liderlik, takım çalışması veya problem çözme becerilerinizi gösteren bir örnek verin (STAR metodu). Başarıdaki payınızı netleştirin.</p>
-
-                <h4>Örnek Soru 5: Baskı altında nasıl çalışırsınız?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Sakin kalıp durumu analiz ettiğinizi anlatın. Örnek: "Baskı altında öncelikle görevleri önceliklendirir, kısa bir plan yapar ve bu plana sadık kalırım."</p>
-
-                <h4>Örnek Soru 6: Ekip çalışmasında anlaşamadığınız biriyle nasıl başa çıkarsınız?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Çatışmadan kaçınmayıp, durumu profesyonelce çözmeye odaklandığınızı gösterin. Örnek: "Açık iletişim kurarak sorunun kişisel değil, iş odaklı olduğunu anlarım."</p>
-
-                <h4>Örnek Soru 7: Bize sormak istediğiniz bir soru var mı?</h4>
-                <p><strong>Doğru Yaklaşım:</strong> Asla "Hayır" demeyin. Şirketin kültürü, stajyer beklentileri veya gelecekteki projeleri hakkında 2-3 akıllıca soru sorun.</p>
-            `
-        },
-        portfolyo: {
-            title: 'Staj Başvurularında Portfolyo Neden Önemli? (Örnek Projeler)',
-            content: `
-                <h3>Koddan Tasarıma: Portfolyonun Gücü</h3>
-                <p>Teorik bilgi yeterli değildir; işverenler, hayata geçirdiğiniz projeleri görmek ister. Portfolyo, yeteneklerinizi kanıtlamanın en etkili yoludur.</p>
-                <hr>
-                <h4>Neler Eklenmeli?</h4>
-                <p>Bitirme projeleri, okul ödevlerinin en iyi örnekleri, kişisel yazılım projeleri (GitHub linkleri), tasarım çalışmaları (Behance) veya fotoğraf/video prodüksiyonları.</p>
-                <h4>İpucu:</h4>
-                <p>Her projenin altında, projenin amacını, sizin rolünüzü ve kullandığınız teknolojileri (CSS, Python, AutoCAD) kısaca açıklayın.</p>
-            `
-        },
-        linkedin: {
-            title: 'LinkedIn Profili: Stajyerler İçin Görünür Olma Taktikleri',
-            content: `
-                <h3>Pasif Beklemeyin, Erişilebilir Olun!</h3>
-                <p>LinkedIn, stajyer arayan İK'cıların ilk durağıdır. Profilinizin tam ve profesyonel olması şarttır.</p>
-                <hr>
-                <ol>
-                    <li><strong>Profesyonel Başlık:</strong> Sadece 'Öğrenci' yazmayın. 'Bilgisayar Müh. Öğrencisi | Veri Analizi ve Python Becerileri' gibi anahtar kelimeler kullanın.</li>
-                    <li><strong>Özet Bölümü:</strong> Hedeflerinizi, tutkularınızı ve stajda ne aradığınızı anlatan kısa bir özgeçmiş yazın.</li>
-                    <li><strong>Bağlantılar:</strong> Okul arkadaşlarınız, öğretim görevlileriniz ve staj yapmak istediğiniz şirketlerin çalışanlarıyla bağlantı kurun.</li>
-                </ol>
-            `
-        },
-        network: {
-            title: 'Staj Yoluyla Network Oluşturmanın 3 Altın Kuralı',
-            content: `
-                <h3>Kalıcı Bağlantılar Kurmak</h3>
-                <p>Network, gelecekteki iş fırsatlarınızın temelini oluşturur. Sadece yöneticinizle değil, departmanınızdaki herkesle iyi iletişim kurun.</p>
-                <hr>
-                <ol>
-                    <li><strong>Mentorluk İlişkisi:</strong> Size yol gösterebilecek birini bulun ve düzenli olarak görüşme talep edin.</li>
-                    <li><strong>Soru Sorma Sanatı:</strong> Bilmediğiniz konuları sormaktan çekinmeyin, ancak öncesinde mutlaka kendi araştırmanızı yapın.</li>
-                    <li><strong>Değer Katın:</strong> Sadece bir şeyler istemek yerine, bilgi ve yeteneğinizle ekibe nasıl yardımcı olabileceğinizi gösterin.</li>
-                </ol>
-            `
-        },
-        uzaktan_staj: {
-            title: 'Uzaktan Stajın Verimli Olması İçin 5 Araç ve Metot',
-            content: `
-                <h3>Evden Çalışma Disiplini</h3>
-                <p>Uzaktan staj, öz disiplin gerektirir. Kendinize sabit bir çalışma alanı yaratın ve günlük rutinlerinizi koruyun.</p>
-                <hr>
-                <ul>
-                    <li><strong>Görev Takibi:</strong> Trello veya Asana gibi araçlarla günlük görevlerinizi görselleştirin.</li>
-                    <li><strong>İletişim:</strong> Slack veya Teams üzerinden anlık geri bildirim alın ve gereksiz e-postalardan kaçının.</li>
-                    <li><strong>Zaman Yönetimi:</strong> Pomodoro tekniği gibi yöntemlerle odak sürenizi artırın.</li>
-                    <li><strong>Sanal Katılım:</strong> Online toplantılara kamera açık ve aktif katılım sağlayın.</li>
-                </ul>
-            `
-        },
-        maas_haklar: {
-            title: 'Stajyer Maaşları ve Hakları: Yasal Durumlar Nelerdir?',
-            content: `
-                <h3>Yasal Çerçeve ve Maddi Haklar</h3>
-                <p>Türkiye'de zorunlu staj yapan öğrencilerin, net asgari ücretin en az %30'u oranında maaş alma hakkı bulunmaktadır. İş kazası ve meslek hastalığı sigortası, zorunlu stajlarda okul tarafından karşılanır.</p>
-                <hr>
-                <h4>Önemli Notlar:</h4>
-                <p>Maaş, yasal bir zorunluluktur (gönüllü stajlar hariç). Bu konuyu işe başlamadan önce İK ile netleştirin ve haklarınızdan feragat etmeyin.</p>
-            `
-        },
-        buro_etik: {
-            title: 'Hukuk ve İdari Stajyerler İçin Büro Dili ve Etik Kurallar',
-            content: `
-                <h3>Kurumsal Hayatın İncelikleri</h3>
-                <p>Ofis ortamında gizlilik, saygı ve profesyonel yazışma dili kritiktir. Dedikodudan uzak durun ve size emanet edilen tüm bilgileri sır olarak saklayın.</p>
-                <hr>
-                <ol>
-                    <li><strong>Gizlilik:</strong> Hukuki/Müşteri verilerini asla paylaşmayın.</li>
-                    <li><strong>Yazılı İletişim:</strong> E-postalarda daima resmi, açık ve net bir dil kullanın.</li>
-                    <li><strong>Kıyafet Kuralı:</strong> Şirket kültürüne uygun giyinin ve her zaman hazırlıklı olun.</li>
-                </ol>
-            `
-        },
-        yazilim_dilleri: {
-            title: 'Popüler Yazılım Dilleri: Hangi Dili Öğrenmeli ve Neden?',
-            content: `
-                <h3>Sektörün En Çok Aradığı Diller</h3>
-                <p>Staj başvurularında öne çıkmak için sektördeki talebi takip edin:</p>
-                <hr>
-                <ul>
-                    <li><strong>Python:</strong> Yapay Zeka, Veri Bilimi ve otomasyon projelerinde temel dil.</li>
-                    <li><strong>JavaScript (ve React/Node.js):</strong> Web ve mobil uygulama geliştirmede vazgeçilmez.</li>
-                    <li><strong>C# / Java:</strong> Büyük ölçekli kurumsal (enterprise) ve bankacılık projelerinde hala ana dillerdir.</li>
-                </ul>
-                <p>Hangi dili seçerseniz seçin, temel yazılım prensiplerini anlamak en önemlisidir.</p>
-            `
-        },
-        tam_zamanli: {
-            title: 'Stajınızın Tam Zamanlı İşe Dönüşmesi İçin 4 Taktik',
-            content: `
-                <h3>Stajyerlikten Çalışanlığa Geçiş</h3>
-                <ol>
-                    <li><strong>İnisiyatif Alın:</strong> Sadece verilen görevi değil, ekibinize değer katacak gönüllü görevleri de üstlenin.</li>
-                    <li><strong>Geri Bildirim Talep Edin:</strong> Staj bitmeden yöneticinizden düzenli olarak performansınız hakkında geri bildirim isteyin ve kendinizi geliştirin.</li>
-                    <li><strong>Çözüm Odaklı Olun:</strong> Sorunları dile getirmek yerine, potansiyel çözümlerle birlikte sunun.</li>
-                    <li><strong>Kültüre Uyum:</strong> Şirket kültürüne hızla adapte olduğunuzu ve ekibin bir parçası olduğunuzu gösterin.</li>
-                </ol>
-            `
-        }
-    };
-
-    // --- MAKALE YÜKLEME MANTIĞI ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const articleId = params.get('id');
+    document.addEventListener('DOMContentLoaded', async () => {
         const makaleMetniDiv = document.getElementById('makale-metni');
         const makaleBaslikH1 = document.getElementById('makale-baslik');
         const pageTitle = document.getElementById('page-title');
 
-        const article = articles[articleId];
+        try {
+            // 1. URL'den makalenin 'slug'ını al (örn: ?id=cv_hazirlama)
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('id');
 
-        if (article) {
+            if (!slug) {
+                throw new Error('Makale ID\'si bulunamadı.');
+            }
+
+            // 2. Sunucudan o makalenin detayını çek (server.js'e eklediğimiz rota)
+            const response = await fetch(`/api/article/${slug}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+
+            const article = result.article;
+
+            // 3. İçeriği sayfaya yerleştir
             makaleBaslikH1.textContent = article.title;
             pageTitle.textContent = article.title + ' - STAJLA';
-            makaleMetniDiv.innerHTML = article.content;
-        } else {
+            makaleMetniDiv.innerHTML = article.content; // 'content' alanı HTML olarak geliyor
+
+        } catch (err) {
+            console.error('Makale yüklenirken hata:', err);
             makaleBaslikH1.textContent = 'Makale Bulunamadı';
-            makaleMetniDiv.innerHTML = '<p>Aradığınız makale bulunamadı veya yanlış bir adreste bulunuyor.</p>';
+            makaleMetniDiv.innerHTML = `<p>Aradığınız makale bulunamadı veya bir hata oluştu: ${err.message}</p>`;
         }
     });
 </script>

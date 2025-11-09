@@ -718,7 +718,38 @@ app.post('/api/reset-password', async (req, res) => {
         res.json({ success: true, message: 'Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.' });
     } catch (err) { console.error('Şifre sıfırlama hatası:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
+// --- YENİ EKLENEN ROTALAR: DİNAMİK BLOG/KARİYER REHBERİ ---
 
+// Rota 1: Tüm makalelerin listesini getir (blog.html için)
+app.get('/api/articles', async (req, res) => {
+    try {
+        // 'articles' adında yeni bir koleksiyondan verileri çekeceğiz
+        const articles = await db.collection("articles").find({})
+            .project({ title: 1, slug: 1, description: 1 }) // Sadece bu alanları al
+            .sort({ order: 1 }) // order diye bir alana göre sıralayalım (yeni)
+            .toArray();
+        res.json(articles);
+    } catch (err) {
+        console.error('Makaleler çekilirken hata:', err);
+        res.status(500).json([]);
+    }
+});
+
+// Rota 2: Tek bir makalenin detayını getir (makale-detay.html için)
+app.get('/api/article/:slug', async (req, res) => {
+    try {
+        const { slug } = req.params; // URL'den 'cv_hazirlama' gibi slug'ı al
+        const article = await db.collection("articles").findOne({ slug: slug });
+
+        if (!article) {
+            return res.status(404).json({ success: false, message: 'Makale bulunamadı.' });
+        }
+        res.json({ success: true, article });
+    } catch (err) {
+        console.error('Makale detayı çekilirken hata:', err);
+        res.status(500).json({ success: false, message: 'Sunucu hatası oluştu.' });
+    }
+});
 // --- 7. VERİTABANI BAĞLANTISI VE SUNUCU BAŞLATMA ---
 async function connectToDb() {
     try {

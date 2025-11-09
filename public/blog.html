@@ -58,66 +58,7 @@
     <h2 class="section-title">STAJLA Kariyer Rehberi</h2>
     <p class="section-description">Kariyerine bir adım önde başlaman için hazırladığımız ipuçları, mülakat tüyoları ve CV hazırlama rehberleri.</p>
 
-    <div class="card-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;">
-        <div class="blog-card card">
-            <h3>1. Staj Kapılarını Açan CV: Yeni Mezunlar İçin Rehber</h3>
-            <p>Tecrübe az olsa bile potansiyelinizi nasıl öne çıkarırsınız? Projelerinizi, gönüllü çalışmalarınızı ve teknik yetkinliklerinizi vurgulamanın 5 kritik adımını öğrenin.</p>
-            <a href="/makale-detay.html?id=cv_hazirlama" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>2. Mülakat Sırları: Sık Sorulan 7 Zor Soru ve Cevapları</h3>
-            <p>"Neden bu şirketi seçtiniz?" gibi tuzak sorulara nasıl hazırlanırsınız? Özgüveninizi artıracak cevap stratejilerini keşfedin.</p>
-            <a href="/makale-detay.html?id=mulakat_sirlari" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>3. Stajda Başvuruda Portfolyo Neden Önemli? (Örnek Projeler)</h3>
-            <p>GitHub veya Behance hesabınızda hangi projeler yer almalı? İşverenlerin dikkatini çekecek bir portfolyo oluşturma rehberi.</p>
-            <a href="/makale-detay.html?id=portfolyo" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>4. LinkedIn Profili: Stajyerler İçin Görünür Olma Taktikleri</h3>
-            <p>İşverenlerin sizi bulmasını sağlamak için LinkedIn profilinizi nasıl optimize etmelisiniz? Doğru anahtar kelimeler ve bağlantı kurma stratejileri.</p>
-            <a href="/makale-detay.html?id=linkedin" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>5. Staj Yoluyla Network Oluşturmanın 3 Altın Kuralı</h3>
-            <p>İş hayatına attığınız bu ilk adımda kalıcı ve güçlü bağlantılar kurarak gelecekteki iş fırsatlarınızın temelini atın.</p>
-            <a href="/makale-detay.html?id=network" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>6. Uzaktan Stajın Verimli Olması İçin 5 Araç ve Metot</h3>
-            <p>Evden çalışırken disiplini nasıl korursunuz? İletişim, görev takibi ve raporlama için en iyi dijital araçları inceleyin.</p>
-            <a href="/makale-detay.html?id=uzaktan_staj" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>7. Stajyer Maaşları ve Hakları: Yasal Durumlar Nelerdir?</h3>
-            <p>Zorunlu staj, gönüllü staj ve asgari ücretin %30'u kuralı hakkında bilmeniz gereken tüm yasal bilgileri bu makalede bulabilirsiniz.</p>
-            <a href="/makale-detay.html?id=maas_haklar" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>8. Hukuk ve İdari Stajyerler İçin Büro Dili ve Etik Kurallar</h3>
-            <p>Ofis ortamında profesyonel iletişim kurmanın, gizliliğe uymanın ve yöneticilerle etkili çalışmanın incelikleri.</p>
-            <a href="/makale-detay.html?id=buro_etik" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>9. Popüler Yazılım Dilleri: Hangi Dili Öğrenmeli ve Neden?</h3>
-            <p>Python, JavaScript, Java... Hangi dilin sektörünüzde daha çok talep gördüğünü öğrenin ve staj başvurularınızda öne çıkın.</p>
-            <a href="/makale-detay.html?id=yazilim_dilleri" class="read-more">Devamını Oku...</a>
-        </div>
-
-        <div class="blog-card card">
-            <h3>10. Stajınızın Tam Zamanlı İşe Dönüşmesi İçin 4 Taktik</h3>
-            <p>Bir stajyer olarak kendinizi nasıl kanıtlarsınız? Sadece verilen görevi yapmak yerine inisiyatif almanın önemi.</p>
-            <a href="/makale-detay.html?id=tam_zamanli" class="read-more">Devamını Oku...</a>
-        </div>
+    <div class="card-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;" id="blog-list-container">
     </div>
 </main>
 
@@ -129,6 +70,41 @@
         <a href="mailto:stajladestek@gmail.com">İletişim</a>
     </p>
 </footer>
+<script>
+    // Blog listesini dinamik olarak yükle
+    document.addEventListener('DOMContentLoaded', async () => {
+        const container = document.getElementById('blog-list-container');
+        container.innerHTML = '<p>Makaleler yükleniyor...</p>';
+
+        try {
+            // 1. Sunucudan makale listesini çek (server.js'e eklediğimiz rota)
+            const response = await fetch('/api/articles');
+            const articles = await response.json();
+
+            if (!articles || articles.length === 0) {
+                container.innerHTML = '<p>Gösterilecek makale bulunamadı.</p>';
+                return;
+            }
+
+            container.innerHTML = ''; // "Yükleniyor" yazısını temizle
+
+            // 2. Gelen her makale için bir kart oluştur
+            articles.forEach(article => {
+                const card = document.createElement('div');
+                card.className = 'blog-card card';
+                card.innerHTML = `
+                    <h3>${article.title}</h3>
+                    <p>${article.description}</p>
+                    <a href="/makale-detay.html?id=${article.slug}" class="read-more">Devamını Oku...</a>
+                `;
+                container.appendChild(card);
+            });
+        } catch (err) {
+            console.error('Blog listesi yüklenirken hata:', err);
+            container.innerHTML = '<p>Makaleler yüklenirken bir hata oluştu.</p>';
+        }
+    });
+</script>
 
 <script src="/js/main.js"></script>
 </body>
