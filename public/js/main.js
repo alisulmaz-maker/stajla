@@ -4,7 +4,49 @@
 
 let currentUser = null;
 let myStudentListing = null;
+// --- YENİ EKLENEN KISIM: ARAMA KUTUSU LİSTELERİ ---
 
+const allCities = [
+    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+    "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+    "Diyarbakır", "Düzce", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane",
+    "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli",
+    "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş",
+    "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ",
+    "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt",
+    "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis",
+    "Osmaniye"
+];
+
+const allAreas = {
+    "Bilişim & Yazılım": [
+        "Bilgisayar Mühendisliği", "Yazılım Mühendisliği", "Yapay Zeka Mühendisliği", "Yönetim Bilişim Sistemleri (YBS)", "Bilgi Sistemleri Mühendisliği"
+    ],
+    "Mühendislik & Teknik Bilimler": [
+        "Makine Mühendisliği", "Elektrik-Elektronik Mühendisliği", "Endüstri Mühendisliği", "İnşaat Mühendisliği", "Kimya Mühendisliği",
+        "Malzeme Bilimi ve Mühendisliği", "Çevre Mühendisliği", "Gıda Mühendisliği", "Orman Mühendisliği", "Orman Endüstri Mühendisliği",
+        "Ziraat Mühendisliği", "Jeoloji Mühendisliği", "Harita Mühendisliği"
+    ],
+    "Mimarlık & Tasarım": [
+        "Mimarlık", "İç Mimarlık ve Çevre Tasarımı", "Şehir ve Bölge Planlama", "Görsel İletişim Tasarımı", "Grafik Tasarımı", "Endüstriyel Tasarım"
+    ],
+    "İşletme, Ekonomi & İdari Bilimler": [
+        "İşletme", "İktisat (Ekonomi)", "Uluslararası İlişkiler", "Uluslararası Ticaret ve Lojistik", "Maliye", "Bankacılık ve Finans", "Hukuk", "Ekonometri"
+    ],
+    "Sosyal & Beşeri Bilimler": [
+        "Psikoloji", "Sosyoloji", "Sosyal Hizmet", "Felsefe", "Tarih", "Edebiyat (Türk Dili ve Edebiyatı vb.)", "Çeviribilim"
+    ],
+    "İletişim, Medya & Pazarlama": [
+        "Halkla İlişkiler ve Tanıtım", "Reklamcılık", "Gazetecilik", "Radyo, Televizyon ve Sinema", "Yeni Medya ve İletişim"
+    ],
+    "Sağlık Bilimleri": [
+        "Tıp", "Diş Hekimliği", "Eczacılık", "Hemşirelik", "Fizyoterapi ve Rehabilitasyon", "Beslenme ve Diyetetik", "Veterinerlik"
+    ],
+    "Önlisans (2 Yıllık Programlar)": [
+        "Bilgisayar Programcılığı (Önlisans)", "Elektrik/Elektronik Teknolojisi (Önlisans)", "Muhasebe ve Vergi Uygulamaları (Önlisans)",
+        "İnsan Kaynakları Yönetimi (Önlisans)", "Tıbbi Sekreterlik ve Dökümantasyon (Önlisans)", "İşletme Yönetimi (Önlisans)", "Önlisans Programları (Genel)"
+    ]
+};
 /* --- YARDIMCI FONKSİYONLAR --- */
 function escapeHtml(text) {
     if (typeof text !== 'string') return '';
@@ -444,7 +486,44 @@ async function renderMyOffers() {
         container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</p>';
     }
 }
+// --- YENİ EKLENEN KISIM: ARAMA KUTULARINI DOLDURAN FONKSİYON ---
+function populateSearchSelects() {
+    const areaSelect = document.getElementById('search-area'); //
+    const citySelect = document.getElementById('search-city'); //
 
+    // Sadece anasayfada çalış (bu ID'ler sadece orada var)
+    if (!areaSelect || !citySelect) {
+        return;
+    }
+
+    // 1. Şehirleri Doldur
+    allCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+    });
+
+    // 2. Alanları Doldur (Gruplu olarak)
+    for (const groupName in allAreas) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = groupName;
+
+        allAreas[groupName].forEach(area => {
+            const option = document.createElement('option');
+            option.value = area;
+            option.textContent = area;
+            optgroup.appendChild(option);
+        });
+        areaSelect.appendChild(optgroup);
+    }
+
+    // Diğer / Tüm Alanlar seçeneğini en sona ekle
+    const otherOption = document.createElement('option');
+    otherOption.value = "Tümü";
+    otherOption.textContent = "Diğer / Tüm Alanlar";
+    areaSelect.appendChild(otherOption);
+}
 /* ---------------------------------------------------- */
 /* DİĞER TEMEL FONKSİYONLAR */
 /* ---------------------------------------------------- */
@@ -525,6 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
+        populateSearchSelects(); // ARAMA KUTULARINI DOLDUR
 // --- YENİ EKLENEN KISIM: ANASAYFA BAŞVURU BUTONU TIKLAMASI ---
         const resultsContainer = document.getElementById('results-container');
         if (resultsContainer) {
