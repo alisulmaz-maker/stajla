@@ -116,7 +116,28 @@ app.get('/makale-detay.html', (req, res) => { res.sendFile(path.join(__dirname, 
 
 // KONTROL: Kullanıcı oturumunu döndürür
 app.get('/api/current-user', (req, res) => { if (req.session.user) { res.json(req.session.user); } else { res.json(null); } });
+// YENİ EKLENDİ (Geliştirme 7): Profil düzenleme sayfası için detaylı kullanıcı verisi
+app.get('/api/current-user-details', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ success: false, message: 'Giriş yapılmadı.' });
+    }
+    try {
+        const userId = new ObjectId(req.session.user.id);
+        // 'kullanicilar' koleksiyonundan tüm veriyi çek (şifre hariç)
+        const userDetails = await db.collection("kullanicilar").findOne(
+            { _id: userId },
+            { projection: { password: 0, verificationCode: 0, resetToken: 0, tokenExpiration: 0 } } // Güvenlik: Hassas verileri hariç tut
+        );
 
+        if (!userDetails) {
+            return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+        }
+        res.json(userDetails); // 'name', 'email', 'role', 'companyBio', 'companyWebsite' vb. tüm bilgileri döndür
+    } catch (err) {
+        console.error('Detaylı kullanıcı verisi çekilirken hata:', err);
+        res.status(500).json({ success: false, message: 'Sunucu hatası.' });
+    }
+});
 // ÇIKIŞ YAP
 app.post('/api/logout', (req, res) => {
     req.session.destroy(err => {
@@ -378,29 +399,56 @@ app.post('/api/isveren-ilan', async (req, res) => {
 });
 
 // PROFİL GÜNCELLEME (RESİM YÜKLEME)
+// PROFİL GÜNCELLEME (Geliştirme 7: Rol tabanlı olarak güncellendi)
 app.post('/api/update-profile', upload.single('profilePicture'), async (req, res) => {
     if (!req.session.user) {
         if (req.file) { fs.unlinkSync(req.file.path); }
         return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' });
     }
-    try {
-        const { name } = req.body;
-        const updateData = {};
-        if (name) { updateData.name = name; }
-        if (req.file) {
-            updateData.profilePicturePath = await uploadToCloudinary(req.file.path, 'image', 'avatars');
-        }
-        if (Object.keys(updateData).length === 0) { return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' }); }
 
+    try {
+        const { name, companyWebsite, companyBio } = req.body;
+        const updateData = {};
         const userId = new ObjectId(req.session.user.id);
+        const userRole = req.session.user.role;
+
+        // 1. Temel Bilgi: İsim (Hem öğrenci hem işveren için 'name' alanı)
+        if (name) {
+            updateData.name = name;
+        }
+
+        // 2. Dosya Yükleme (Avatar veya Logo)
+        if (req.file) {
+            const resourceType = userRole === 'employer' ? 'image' : 'image'; // İkisi de image
+            const folder = userRole === 'employer' ? 'company_logos' : 'avatars';
+            updateData.profilePicturePath = await uploadToCloudinary(req.file.path, resourceType, folder);
+        }
+
+        // 3. Sadece İşverene Ait Alanlar
+        if (userRole === 'employer') {
+            if (companyWebsite) { updateData.companyWebsite = companyWebsite; }
+            if (companyBio) { updateData.companyBio = companyBio; }
+        }
+
+        // 4. Güncellenecek bir şey yoksa
+        if (Object.keys(updateData).length === 0) {
+            return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' });
+        }
+
+        // 5. Veritabanını Güncelle
         await db.collection("kullanicilar").updateOne({ _id: userId }, { $set: updateData });
 
+        // 6. Oturum (Session) Bilgilerini Güncelle
+        // (Burası çok önemli, navbar'daki ismin/resmin anında değişmesini sağlar)
         if (updateData.name) { req.session.user.name = updateData.name; }
         if (updateData.profilePicturePath) { req.session.user.profilePicturePath = updateData.profilePicturePath; }
 
         res.json({ success: true, message: 'Profiliniz başarıyla güncellendi!', user: req.session.user });
 
-    } catch (err) { console.error('Profil güncelleme sırasında hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
+    } catch (err) {
+        console.error('Profil güncelleme sırasında hata:', err);
+        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+    }
 });
 
 // ANASAYFA İLAN LİSTELEME

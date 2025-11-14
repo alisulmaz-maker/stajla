@@ -995,54 +995,98 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // --- YENİ EKLENEN KISIM: PROFİL GÜNCELLEME FORMU ---
-        const editProfileForm = document.getElementById('edit-profile-form');
-        if (editProfileForm) {
-            // Sayfa yüklendiğinde mevcut kullanıcı bilgilerini forma doldur
-            if (currentUser) {
-                document.getElementById('edit-name').value = currentUser.name || '';
+// --- GÜNCELLENEN KISIM: PROFİL GÜNCELLEME (Geliştirme 7: Rol Tabanlı) ---
+
+        // Önce iki formu da seçelim
+        const studentEditForm = document.getElementById('student-edit-form');
+        const employerEditForm = document.getElementById('employer-edit-form');
+
+        // Eğer bu formlardan biri sayfada varsa (yani profil-duzenle.html sayfasındaysak)
+        if (studentEditForm && employerEditForm) {
+
+            // 1. Sayfa yüklendiğinde: Kullanıcı rolüne göre doğru formu göster
+            if (!currentUser) {
+                document.querySelector('main.form-page').innerHTML = '<h2>Bu sayfayı görmek için giriş yapmalısınız.</h2>';
+            } else if (currentUser.role === 'student') {
+                // --- Öğrenciyse ---
+                studentEditForm.style.display = 'block'; // Öğrenci formunu göster
+
+                // Mevcut verileri doldur
+                document.getElementById('s-edit-name').value = currentUser.name || '';
                 if (currentUser.profilePicturePath) {
-                    document.getElementById('picture-preview').style.backgroundImage = `url('${currentUser.profilePicturePath}')`;
+                    document.getElementById('student-picture-preview').style.backgroundImage = `url('${currentUser.profilePicturePath}')`;
                 }
+
+            } else if (currentUser.role === 'employer') {
+                // --- İşverense ---
+                employerEditForm.style.display = 'block'; // İşveren formunu göster
+
+                // Mevcut verileri (sunucudan çekerek) doldurmamız lazım
+                // (Çünkü 'bio' ve 'website' bilgisi 'currentUser' objemizde yok)
+                fetch('/api/current-user-details') // BU YENİ ROTAYI BİR SONRAKİ ADIMDA EKLEYECEĞİZ
+                    .then(res => res.json())
+                    .then(userData => {
+                        document.getElementById('e-edit-name').value = userData.name || '';
+                        document.getElementById('e-edit-website').value = userData.companyWebsite || '';
+                        document.getElementById('e-edit-bio').value = userData.companyBio || '';
+                        if (userData.profilePicturePath) {
+                            document.getElementById('employer-picture-preview').style.backgroundImage = `url('${userData.profilePicturePath}')`;
+                        }
+                    });
             }
 
-            // Form gönderildiğinde
-            editProfileForm.addEventListener('submit', async (e) => {
+            // 2. Form Gönderme İşlemi (Öğrenci)
+            studentEditForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const button = editProfileForm.querySelector('button[type="submit"]');
+                const formData = new FormData();
+                formData.append('name', document.getElementById('s-edit-name').value);
+
+                const file = document.getElementById('s-edit-picture').files[0];
+                if (file) { formData.append('profilePicture', file); }
+
+                await submitProfileUpdate(formData, studentEditForm);
+            });
+
+            // 3. Form Gönderme İşlemi (İşveren)
+            employerEditForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('name', document.getElementById('e-edit-name').value);
+                formData.append('companyWebsite', document.getElementById('e-edit-website').value);
+                formData.append('companyBio', document.getElementById('e-edit-bio').value);
+
+                const file = document.getElementById('e-edit-picture').files[0];
+                if (file) { formData.append('profilePicture', file); }
+
+                await submitProfileUpdate(formData, employerEditForm);
+            });
+
+            // 4. Ortak Gönderme Fonksiyonu
+            const submitProfileUpdate = async (formData, formElement) => {
+                const button = formElement.querySelector('button[type="submit"]');
                 button.disabled = true;
                 button.textContent = 'Güncelleniyor...';
 
-                // Profil resmi dosyası olduğu için FormData kullanıyoruz
-                const formData = new FormData();
-                formData.append('name', document.getElementById('edit-name').value);
-
-                const profilePictureFile = document.getElementById('edit-picture').files[0];
-                if (profilePictureFile) {
-                    formData.append('profilePicture', profilePictureFile); // Sunucu bunu 'profilePicture' olarak bekliyor
-                }
-
                 try {
-                    const response = await fetch('/api/update-profile', {
+                    const response = await fetch('/api/update-profile', { //
                         method: 'POST',
-                        body: formData // Dosya içerdiği için FormData
+                        body: formData // FormData (dosya içerir)
                     });
 
                     const result = await response.json();
                     alert(result.message);
 
                     if (response.ok) {
-                        // Sayfayı yenileyerek güncel bilgilerin (örn: navbardaki avatar) görünmesini sağla
-                        window.location.reload();
+                        window.location.reload(); // Sayfayı yenile ki navbar vs. güncellensin
                     }
                 } catch (error) {
                     alert('Profil güncellenirken bir hata oluştu.');
                     console.error('Profil Güncelleme Formu Hata:', error);
                 } finally {
                     button.disabled = false;
-                    button.textContent = 'Profilimi Güncelle';
+                    button.textContent = button.textContent.includes('Öğrenci') ? 'Öğrenci Profilimi Güncelle' : 'Şirket Profilimi Güncelle';
                 }
-            });
+            };
         }
 // --- YENİ EKLENEN KISIM: ŞİFREMİ UNUTTUM FORMU ---
         const forgotPasswordForm = document.getElementById('forgot-password-form');
