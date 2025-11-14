@@ -487,24 +487,27 @@ async function renderMyOffers() {
     }
 }
 // --- YENİ EKLENEN KISIM: ARAMA KUTULARINI DOLDURAN FONKSİYON ---
-function populateSearchSelects() {
-    const areaSelect = document.getElementById('search-area'); //
-    const citySelect = document.getElementById('search-city'); //
+// --- GÜNCELLENEN KISIM: Listeleri dolduran fonksiyonlar ---
 
-    // Sadece anasayfada çalış (bu ID'ler sadece orada var)
-    if (!areaSelect || !citySelect) {
-        return;
-    }
+// Bu fonksiyon, ID'si verilen herhangi bir <select>'i şehir listesiyle doldurur
+function populateCities(selectId) {
+    const citySelect = document.getElementById(selectId);
+    if (!citySelect) return; // ID'li element yoksa atla
 
-    // 1. Şehirleri Doldur
-    allCities.forEach(city => {
+    allCities.sort().forEach(city => { // Şehirleri A-Z sıralayalım
         const option = document.createElement('option');
         option.value = city;
         option.textContent = city;
         citySelect.appendChild(option);
     });
+}
 
-    // 2. Alanları Doldur (Gruplu olarak)
+// Bu fonksiyon, ID'si verilen herhangi bir <select>'i alan listesiyle doldurur
+function populateAreas(selectId) {
+    const areaSelect = document.getElementById(selectId);
+    if (!areaSelect) return; // ID'li element yoksa atla
+
+    // Gruplu olarak (Mühendislik, Bilişim vb.) doldur
     for (const groupName in allAreas) {
         const optgroup = document.createElement('optgroup');
         optgroup.label = groupName;
@@ -518,11 +521,13 @@ function populateSearchSelects() {
         areaSelect.appendChild(optgroup);
     }
 
-    // Diğer / Tüm Alanlar seçeneğini en sona ekle
-    const otherOption = document.createElement('option');
-    otherOption.value = "Tümü";
-    otherOption.textContent = "Diğer / Tüm Alanlar";
-    areaSelect.appendChild(otherOption);
+    // "Diğer" seçeneğini anasayfadaki 'search-area' dışındakilere eklemeyelim
+    if (selectId === 'search-area') {
+        const otherOption = document.createElement('option');
+        otherOption.value = "Tümü";
+        otherOption.textContent = "Diğer / Tüm Alanlar";
+        areaSelect.appendChild(otherOption);
+    }
 }
 /* ---------------------------------------------------- */
 /* DİĞER TEMEL FONKSİYONLAR */
@@ -604,7 +609,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
-        populateSearchSelects(); // ARAMA KUTULARINI DOLDUR
+        // --- YENİ EKLENEN KISIM: TÜM LİSTELERİ DOLDUR ---
+        // 1. Anasayfa (index.html) listeleri
+        populateCities('search-city');
+        populateAreas('search-area');
+
+        // 2. Öğrenci İlan (ogrenci-ilan.html) listeleri
+        populateCities('s-city'); //
+        populateAreas('s-area');  //
+
+        // 3. İşveren İlan (isveren-ilan.html) listeleri
+        populateCities('j-city'); //
+        populateAreas('j-area');  //
         // --- YENİ EKLENEN KISIM: ANASAYFA ARAMA BUTONU YÖNETİMİ ---
         const searchButton = document.getElementById('search-btn'); //
         if (searchButton) {
