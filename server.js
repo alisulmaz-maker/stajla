@@ -112,6 +112,7 @@ app.get('/gizlilik.html', (req, res) => { res.sendFile(path.join(__dirname, 'pub
 app.get('/kullanim-sartlari.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'kullanim-sartlari.html')); });
 app.get('/blog.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'blog.html')); });
 app.get('/makale-detay.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'makale-detay.html')); });
+app.get('/sirket-profili.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'sirket-profili.html')); });
 // --- 6. API ROTALARI (MLP Stabilizasyonu) ---
 
 // KONTROL: Kullanıcı oturumunu döndürür
@@ -135,6 +136,54 @@ app.get('/api/current-user-details', async (req, res) => {
         res.json(userDetails); // 'name', 'email', 'role', 'companyBio', 'companyWebsite' vb. tüm bilgileri döndür
     } catch (err) {
         console.error('Detaylı kullanıcı verisi çekilirken hata:', err);
+        res.status(500).json({ success: false, message: 'Sunucu hatası.' });
+    }
+});
+// YENİ EKLENDİ (Geliştirme 7): Herkese Açık Şirket Profil Sayfası Verisi
+app.get('/api/company-profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: 'Geçersiz Şirket ID\'si.' });
+        }
+
+        const companyId = new ObjectId(userId);
+
+        // 1. Şirket (Kullanıcı) Bilgilerini Çek
+        // Aggregation kullanarak $lookup için veriyi tek bir diziye alıyoruz
+        const companyDataArray = await db.collection("kullanicilar").aggregate([
+            { $match: { _id: companyId, role: 'employer' } }, // Sadece işverenleri bul
+            { $project: { // Sadece herkese açık olması gereken bilgileri al
+                    name: 1,
+                    profilePicturePath: 1,
+                    companyWebsite: 1,
+                    companyBio: 1,
+                    createdAt: 1
+                }
+            },
+            { $limit: 1 } // Sadece 1 sonuç
+        ]).toArray();
+
+        if (companyDataArray.length === 0) {
+            return res.status(404).json({ success: false, message: 'Şirket profili bulunamadı.' });
+        }
+
+        const companyInfo = companyDataArray[0];
+
+        // 2. Bu Şirkete Ait Tüm Aktif İş İlanlarını Çek
+        const companyListings = await db.collection("isverenler").find({ createdBy: companyId })
+            .sort({ createdAt: -1 }) // En yeni ilanlar üste gelsin
+            .toArray();
+
+        // 3. İki bilgiyi birleştirip yolla
+        res.json({
+            success: true,
+            profile: companyInfo,
+            listings: companyListings
+        });
+
+    } catch (err) {
+        console.error('Şirket profili çekilirken hata:', err);
         res.status(500).json({ success: false, message: 'Sunucu hatası.' });
     }
 });
