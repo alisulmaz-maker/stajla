@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şirket Profili - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/img/logo.png">
+    <style>
+        .profile-pic-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 20px auto;
+            border: 4px solid #FFD43B;
+            background-color: #f0f0f0;
+        }
+        .company-bio {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            text-align: left;
+            padding: 15px;
+            background-color: #fdfdfd;
+            border-left: 4px solid #FFD43B;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
+    </nav>
+</header>
+<div id="mobile-nav">
+    <a href="/index.html">Anasayfa</a>
+    <a href="/isveren-ilan.html">İşveren İlan</a>
+    <a href="/ogrenci-ilan.html">Öğrenci İlan</a>
+    <a href="/iletisim.html">İletişim</a>
+</div>
+
+<main class="form-page" style="max-width: 900px; padding-top: 60px;">
+
+    <div id="company-profile-header" class="card" style="text-align: center;">
+        <h2 id="company-name" style="font-size: 2.5rem;">Yükleniyor...</h2>
+        <div id="company-logo" class="profile-pic-large"></div>
+        <p id="company-website" style="font-size: 1.1rem;"></p>
+        <div id="company-bio" class="company-bio" style="display: none;"></div>
+    </div>
+
+    <h3 id="listings-title" class="section-title" style="margin-top: 40px; display: none;">Şirketin Aktif Staj İlanları</h3>
+    <div id="company-listings-container" class="card-grid" style="grid-template-columns: 1fr 1fr;">
+    </div>
+
+</main>
+
+<footer>
+    <p>
+        © 2025 STAJLA |
+        <a href="/gizlilik.html">Gizlilik Politikası</a> |
+        <a href="/kullanim-sartlari.html">Kullanım Şartları</a> |
+        <a href="mailto:stajladestek@gmail.com">İletişim</a>
+    </p>
+</footer>
+
+<script src="/js/main.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const profileHeader = document.getElementById('company-profile-header');
+        const companyName = document.getElementById('company-name');
+        const companyLogo = document.getElementById('company-logo');
+        const companyWebsite = document.getElementById('company-website');
+        const companyBio = document.getElementById('company-bio');
+        const listingsTitle = document.getElementById('listings-title');
+        const listingsContainer = document.getElementById('company-listings-container');
+
+        // URL'den şirket ID'sini al (örn: ?id=... )
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('id');
+
+        if (!userId) {
+            profileHeader.innerHTML = '<h2>Geçersiz veya eksik şirket ID\'si.</h2>';
+            return;
+        }
+
+        // Sunucudan (server.js) profil verisini çek
+        fetch(`/api/company-profile/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+
+                // 1. Profil Bilgilerini Doldur
+                const profile = data.profile;
+                companyName.textContent = profile.name || 'Şirket Adı Belirtilmemiş';
+
+                if (profile.profilePicturePath) {
+                    companyLogo.style.backgroundImage = `url('${profile.profilePicturePath}')`;
+                }
+                if (profile.companyWebsite) {
+                    companyWebsite.innerHTML = `<a href="${profile.companyWebsite}" target="_blank" rel="noopener noreferrer">${profile.companyWebsite}</a>`;
+                } else {
+                    companyWebsite.textContent = 'Web sitesi belirtilmemiş.';
+                }
+                if (profile.companyBio) {
+                    companyBio.textContent = profile.companyBio;
+                    companyBio.style.display = 'block';
+                }
+
+                // 2. İlanları Doldur
+                const listings = data.listings;
+                if (listings && listings.length > 0) {
+                    listingsTitle.style.display = 'block';
+
+                    listings.forEach(j => {
+                        const el = document.createElement('div');
+                        el.className = 'card';
+                        // Anasayfadaki işveren kartı tasarımının aynısı
+                        el.innerHTML = `
+                        <div class="card-content">
+                            <div class="card-header"><div class="card-info">
+                                <h4>${escapeHtml(j.company)}</h4>
+                                <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
+                            </div></div>
+                            <div class="card-body">
+                                <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
+                                <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
+                                ${currentUser && currentUser.role === 'student' ?
+                            `<button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
+                                        Hemen Başvur
+                                    </button>` :
+                            `<p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>`
+                        }
+                            </div>
+                        </div>`;
+                        listingsContainer.appendChild(el);
+                    });
+                } else {
+                    listingsTitle.style.display = 'block';
+                    listingsTitle.textContent = 'Şu anda bu şirkete ait aktif bir staj ilanı bulunmamaktadır.';
+                }
+            })
+            .catch(err => {
+                console.error('Profil yüklenirken hata:', err);
+                profileHeader.innerHTML = `<h2>Hata: ${err.message}</h2>`;
+            });
+    });
+</script>
+
+</body>
+</html>

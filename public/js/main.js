@@ -128,7 +128,7 @@ async function renderResultsOnHome() {
                         <div class="card-header">
                             ${profilePicHtml}
                             <div class="card-info">
-                                <h4>${escapeHtml(j.company)}</h4>
+                               <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;" title="${escapeHtml(j.company)} şirket profiline git"><h4>${escapeHtml(j.company)}</h4></a>
                                 <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
                             </div>
                         </div>
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             el.innerHTML = `
                                 <div class="card-content">
                                     <div class="card-header"><div class="card-info">
-                                        <h4>${escapeHtml(j.company)}</h4>
+                                        <<a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;" title="${escapeHtml(j.company)} şirket profiline git"><h4>${escapeHtml(j.company)}</h4></a>
                                         <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
                                     </div></div>
                                     <div class="card-body">
