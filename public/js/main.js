@@ -605,6 +605,94 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
         populateSearchSelects(); // ARAMA KUTULARINI DOLDUR
+        // --- YENİ EKLENEN KISIM: ANASAYFA ARAMA BUTONU YÖNETİMİ ---
+        const searchButton = document.getElementById('search-btn'); //
+        if (searchButton) {
+            searchButton.addEventListener('click', async () => {
+                const query = document.getElementById('search-query').value;
+                const area = document.getElementById('search-area').value;
+                const city = document.getElementById('search-city').value;
+
+                // Arama sonuçlarını göstereceğimiz ana bölüm
+                const container = document.getElementById('results-container'); //
+                const noResultsPlaceholder = document.getElementById('no-results-placeholder'); //
+                const sectionTitle = document.querySelector('.homepage-section .section-title'); // "Son Eklenenler" başlığı
+
+                if (!container || !noResultsPlaceholder || !sectionTitle) return;
+
+                // Arama başlıyor, ekranı temizle
+                sectionTitle.textContent = 'Arama Sonuçları'; // Başlığı değiştir
+                container.innerHTML = '<i>Aranıyor...</i>';
+                noResultsPlaceholder.style.display = 'none';
+
+                try {
+                    // 1. Sunucudaki /api/search rotasına isteği gönder
+                    const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&area=${encodeURIComponent(area)}&city=${encodeURIComponent(city)}`);
+                    const results = await response.json();
+                    container.innerHTML = ''; // "Aranıyor..." yazısını temizle
+
+                    if (!results || results.length === 0) {
+                        noResultsPlaceholder.style.display = 'block';
+                        noResultsPlaceholder.querySelector('h3').textContent = '😥 Aradığınız Kriterlere Uygun İlan Bulunamadı.';
+                        noResultsPlaceholder.querySelector('p').textContent = 'Farklı anahtar kelimeler veya filtreler deneyin.';
+                        return;
+                    }
+
+                    // 2. /api/search rotası, kullanıcı rolüne göre (öğrenciyse işveren, işverense öğrenci)
+                    // doğru ilanları zaten getirir. Biz sadece gelen veriyi ekrana basacağız.
+                    // Gelen verinin öğrenci mi işveren mi olduğunu anlamak için 'company' alanı var mı diye kontrol edelim.
+                    const ilanTipi = results[0].company ? 'employer' : 'student';
+
+                    results.forEach(ilan => {
+                        const el = document.createElement('div');
+                        el.className = 'card';
+
+                        if (ilanTipi === 'student') {
+                            const s = ilan;
+                            // Not: Arama sonucu 'sahipInfo' içermeyebilir, basit kart yapalım.
+                            el.innerHTML = `
+                                <div class="card-content">
+                                    <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
+                                        <div class="card-header"><div class="card-info">
+                                            <h4>${escapeHtml(s.name)}</h4>
+                                            <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
+                                        </div></div>
+                                    </a>
+                                    <div class="card-body">
+                                        <p style="margin-top: 0;">Üniversite: <strong>${escapeHtml(s.dept || 'Belirtilmemiş')}</strong></p>
+                                        ${s.cvPath ? `<p><a href="${s.cvPath}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
+                                    </div>
+                                </div>`;
+                        } else {
+                            const j = ilan;
+                            el.innerHTML = `
+                                <div class="card-content">
+                                    <div class="card-header"><div class="card-info">
+                                        <h4>${escapeHtml(j.company)}</h4>
+                                        <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
+                                    </div></div>
+                                    <div class="card-body">
+                                        <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
+                                        <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
+                                        ${currentUser && currentUser.role === 'student' ? // Sadece öğrenciyse Başvur butonu göster
+                                `<button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
+                                                Hemen Başvur
+                                            </button>` :
+                                `<p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>` // Değilse iletişim göster
+                            }
+                                    </div>
+                                </div>`;
+                        }
+                        container.appendChild(el);
+                    });
+
+                } catch (err) {
+                    console.error('Arama yapılırken hata:', err);
+                    sectionTitle.textContent = 'Bir Hata Oluştu';
+                    container.innerHTML = '<p>Arama sonuçları getirilirken bir sorun yaşandı.</p>';
+                }
+            });
+        }
 // --- YENİ EKLENEN KISIM: ANASAYFA BAŞVURU BUTONU TIKLAMASI ---
         const resultsContainer = document.getElementById('results-container');
         if (resultsContainer) {
