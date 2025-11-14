@@ -606,7 +606,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sayfa Bazlı Yüklemeler
         if (document.getElementById('results-container')) { renderResultsOnHome(); }
         if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
-        if (window.location.pathname.endsWith('/profil-duzenle.html')) { initializeProfileEditPage(); }
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
         // --- YENİ EKLENEN KISIM: TÜM LİSTELERİ DOLDUR ---
