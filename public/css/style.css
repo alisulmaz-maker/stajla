@@ -498,3 +498,30 @@ footer a:hover {
     margin-left: 0 !important; /* Diğer margin çakışmalarını sıfırla */
     margin-right: 0 !important;
 }
+/* --- YENİ EKLENEN KISIM: Blog Sayfalandırma Stilleri --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 0;
+}
+.pagination a {
+    color: #222;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.2s, color 0.2s;
+}
+.pagination a:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+/* Aktif olan sayfa numarasının stili */
+.pagination a.active {
+    background-color: #FFD43B; /* Ana sarı renk */
+    border-color: #FFD43B;
+    color: #222;
+}

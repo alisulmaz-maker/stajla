@@ -60,6 +60,8 @@
 
     <div class="card-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;" id="blog-list-container">
     </div>
+    <div id="pagination-controls" style="text-align: center; margin-top: 30px;">
+    </div>
 </main>
 
 <footer>
@@ -71,15 +73,22 @@
     </p>
 </footer>
 <script>
-    // Blog listesini dinamik olarak yükle
+    // Blog listesini dinamik olarak yükle (SAYFALANDIRMA EKLENDİ)
     document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('blog-list-container');
+        const paginationControls = document.getElementById('pagination-controls');
         container.innerHTML = '<p>Makaleler yükleniyor...</p>';
 
         try {
-            // 1. Sunucudan makale listesini çek (server.js'e eklediğimiz rota)
-            const response = await fetch('/api/articles');
-            const articles = await response.json();
+            // 1. URL'den sayfa numarasını al (?page=X), yoksa 1 yap
+            const params = new URLSearchParams(window.location.search);
+            let currentPage = parseInt(params.get('page')) || 1;
+
+            // 2. Sunucudan o sayfaya ait makaleleri çek
+            const response = await fetch(`/api/articles?page=${currentPage}`);
+            const data = await response.json(); // data = { articles, totalPages, currentPage }
+
+            const articles = data.articles;
 
             if (!articles || articles.length === 0) {
                 container.innerHTML = '<p>Gösterilecek makale bulunamadı.</p>';
@@ -88,7 +97,7 @@
 
             container.innerHTML = ''; // "Yükleniyor" yazısını temizle
 
-            // 2. Gelen her makale için bir kart oluştur
+            // 3. Gelen makaleleri ekrana bas (Bu kısım aynı)
             articles.forEach(article => {
                 const card = document.createElement('div');
                 card.className = 'blog-card card';
@@ -99,13 +108,27 @@
                 `;
                 container.appendChild(card);
             });
+
+            // 4. YENİ EKLENEN KISIM: Sayfa numarası butonlarını oluştur
+            paginationControls.innerHTML = ''; // Butonları temizle
+            for (let i = 1; i <= data.totalPages; i++) {
+                const link = document.createElement('a');
+                link.href = `/blog.html?page=${i}`;
+                link.textContent = i;
+
+                // Mevcut sayfadaysak 'active' stili ekle
+                if (i === data.currentPage) {
+                    link.className = 'active';
+                }
+                paginationControls.appendChild(link);
+            }
+
         } catch (err) {
             console.error('Blog listesi yüklenirken hata:', err);
             container.innerHTML = '<p>Makaleler yüklenirken bir hata oluştu.</p>';
         }
     });
 </script>
-
 <script src="/js/main.js"></script>
 </body>
 </html>

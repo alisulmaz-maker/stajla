@@ -721,17 +721,32 @@ app.post('/api/reset-password', async (req, res) => {
 // --- YENİ EKLENEN ROTALAR: DİNAMİK BLOG/KARİYER REHBERİ ---
 
 // Rota 1: Tüm makalelerin listesini getir (blog.html için)
+// Rota 1: Tüm makalelerin listesini getir (SAYFALANDIRMA EKLENDİ)
 app.get('/api/articles', async (req, res) => {
     try {
-        // 'articles' adında yeni bir koleksiyondan verileri çekeceğiz
-        const articles = await db.collection("articles").find({})
+        const page = parseInt(req.query.page) || 1; // URL'den ?page=X değerini al, yoksa 1 kabul et
+        const articlesPerPage = 8; // Sayfa başına 8 makale göster (2'li sütun için ideal)
+        const skip = (page - 1) * articlesPerPage;
 
-            .sort({ order: 1 }) // order diye bir alana göre sıralayalım (yeni)
+        // Veritabanından toplam makale sayısını da almamız gerekiyor
+        const totalArticles = await db.collection("articles").countDocuments({});
+
+        // Sorguyu güncelliyoruz: .skip() ve .limit() eklendi
+        const articles = await db.collection("articles").find({})
+            .sort({ order: 1 }) // Sıralama kalsın
+            .skip(skip) // Önceki sayfaları atla
+            .limit(articlesPerPage) // Sadece 8 tane al
             .toArray();
-        res.json(articles);
+
+        // Sunucu cevabını güncelliyoruz: Artık toplam sayfa sayısını da yolluyoruz
+        res.json({
+            articles: articles,
+            totalPages: Math.ceil(totalArticles / articlesPerPage),
+            currentPage: page
+        });
     } catch (err) {
         console.error('Makaleler çekilirken hata:', err);
-        res.status(500).json([]);
+        res.status(500).json({ articles: [], totalPages: 0, currentPage: 1 });
     }
 });
 
