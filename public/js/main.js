@@ -90,29 +90,31 @@ async function renderResultsOnHome() {
         ilanlar.forEach(ilan => {
             const el = document.createElement('div');
             el.className = 'card';
-
+            
+            // --- KALP BUTONU MANTIĞI ---
             // Favori Durumunu Kontrol Et
-            const isSaved = mySavedIds.includes(ilan._id);
+            const isSaved = typeof mySavedIds !== 'undefined' && mySavedIds.includes(ilan._id);
             const heartClass = isSaved ? 'saved' : '';
-            const heartIcon = isSaved ? 'fas' : 'far'; // fas: dolu, far: boş (FontAwesome)
+            const heartIcon = isSaved ? 'fas' : 'far'; // fas: dolu, far: boş
 
-            // Kalp Butonu HTML'i
+            // Kalp Butonu HTML'i (Sadece giriş yapmışsa göster)
             const saveBtnHtml = currentUser ? 
-                `<button class="save-btn ${heartClass}" data-id="${ilan._id}" onclick="toggleSave(this, '${ilan._id}')">
+                `<button class="save-btn ${heartClass}" data-id="${ilan._id}" onclick="toggleSave(this, '${ilan._id}')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: ${isSaved ? '#e74c3c' : '#ccc'}; z-index: 10;">
                     <i class="${heartIcon} fa-heart"></i>
                 </button>` : '';
+            // ---------------------------
 
             if (ilanTipi === 'student') {
                 const s = ilan;
                 const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                     : '<div class="card-profile-pic-placeholder"></div>';
-
+                
                 el.innerHTML = `
-                    <div class="card-content">
-                        <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
+                    <div class="card-content" style="position: relative;">
+                        ${saveBtnHtml} <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
                             <div class="card-header">
-                                ${saveBtnHtml} ${profilePicHtml}
+                                ${profilePicHtml}
                                 <div class="card-info">
                                     <h4>${escapeHtml(s.name)}</h4>
                                     <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
@@ -132,9 +134,9 @@ async function renderResultsOnHome() {
                     : '<div class="card-profile-pic-placeholder"></div>';
 
                 el.innerHTML = `
-                    <div class="card-content">
-                        <div class="card-header">
-                            ${saveBtnHtml} ${profilePicHtml}
+                    <div class="card-content" style="position: relative;">
+                        ${saveBtnHtml} <div class="card-header">
+                            ${profilePicHtml}
                             <div class="card-info">
                             <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;"><h4>${escapeHtml(j.company)}</h4></a>
                                 <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
