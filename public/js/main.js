@@ -321,6 +321,9 @@ async function setupNotifications() {
 /* ÖĞRENCİ PROFİL VE İŞ TEKLİF MANTIKLARI */
 /* ---------------------------------------------------- */
 
+/* ---------------------------------------------------- */
+/* ÖĞRENCİ PROFİL YÜKLEME (DÜZELTİLMİŞ VERSİYON) */
+/* ---------------------------------------------------- */
 async function loadStudentProfileData() {
     const container = document.getElementById('student-profile-container');
     const params = new URLSearchParams(window.location.search);
@@ -333,9 +336,8 @@ async function loadStudentProfileData() {
 
     try {
         const response = await fetch(`/api/student-profile/${listingId}`);
-        if (!response.ok) {
-            throw new Error('Profil bulunamadı veya bir sunucu hatası oluştu.');
-        }
+        if (!response.ok) throw new Error('Profil bulunamadı.');
+        
         const { profileInfo: s } = await response.json();
 
         const canOffer = currentUser && currentUser.role === 'employer';
@@ -347,7 +349,8 @@ async function loadStudentProfileData() {
             ? `<div class="profile-pic-large" style="background-image: url('${s.profilePicturePath}')"></div>`
             : '<div class="profile-pic-placeholder-large"></div>';
 
-            let socialLinksHtml = '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: flex-start; align-items: center;">';
+        // Linkleri hazırlıyoruz
+        let socialLinksHtml = '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; align-items: center;">';
         
         if (s.cvPath) {
             socialLinksHtml += `<a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; text-decoration: none;">📄 CV Görüntüle</a>`;
@@ -362,7 +365,8 @@ async function loadStudentProfileData() {
             socialLinksHtml += `<a href="${s.portfolio}" target="_blank" title="Portfolyo / Web Sitesi" style="font-size: 2rem; text-decoration: none;">🎨</a>`;
         }
         socialLinksHtml += '</div>';
-        
+
+        // İŞTE DÜZELTİLEN KISIM BURASI: ${socialLinksHtml} ARTIK HTML İÇİNDE
         container.innerHTML = `
             <div class="card" style="text-align: center;">
                 ${profilePicHtml}
@@ -374,12 +378,14 @@ async function loadStudentProfileData() {
                 <p style="text-align: left;">${escapeHtml(s.desc || 'Kısa tanıtım metni bulunmamaktadır.')}</p>
                 <hr style="margin: 15px 0;">
                 <p style="text-align: left;"><strong>İletişim Bilgisi:</strong> ${escapeHtml(s.contact)}</p>
-                ${s.cvPath ? `<p style="margin-top: 20px;"><a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; display: inline-block;">CV Görüntüle</a></p>` : ''}
+                
+                ${socialLinksHtml} 
+                
                 ${offerBtnHtml}
             </div>
         `;
 
-        // Modal ve buton mantığı (ogrenci-profil.html'deki modal HTML'e bağlıdır)
+        // --- (Modal/Teklif Mantığı Aynı) ---
         if (canOffer) {
             const offerBtn = document.getElementById('offer-job-btn');
             const modal = document.getElementById('offer-modal');
@@ -389,12 +395,10 @@ async function loadStudentProfileData() {
 
             offerBtn.addEventListener('click', async () => {
                 listingsContainer.innerHTML = '<i>İlanlarınız yükleniyor...</i>';
-
                 const response = await fetch('/api/my-listings');
                 const data = await response.json();
-
+                listingsContainer.innerHTML = '';
                 if (data.employer && data.employer.length > 0) {
-                    listingsContainer.innerHTML = '';
                     data.employer.forEach(listing => {
                         const listingEl = document.createElement('div');
                         listingEl.className = 'listing-offer-item';
@@ -402,38 +406,28 @@ async function loadStudentProfileData() {
                         listingsContainer.appendChild(listingEl);
                     });
                 } else {
-                    listingsContainer.innerHTML = '<p>Bu adaya teklif gönderebileceğiniz aktif bir iş ilanınız bulunmuyor. Lütfen önce bir ilan oluşturun.</p>';
+                    listingsContainer.innerHTML = '<p>Aktif iş ilanınız bulunmuyor.</p>';
                 }
                 modal.style.display = 'flex';
             });
 
             closeModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-            modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.display = 'none'; } });
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-            // Teklif Gönderimini Başlatma
             listingsContainer.addEventListener('click', async (e) => {
                 if (e.target.tagName === 'BUTTON' && e.target.dataset.listingId) {
                     const jobListingId = e.target.dataset.listingId;
-                    e.target.textContent = 'Gönderiliyor...';
-                    e.target.disabled = true;
-
+                    e.target.textContent = 'Gönderiliyor...'; e.target.disabled = true;
                     try {
                         const response = await fetch('/api/send-offer', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ studentId, jobListingId })
                         });
                         const result = await response.json();
                         alert(result.message);
-                        if(result.success) {
-                            modal.style.display = 'none';
-                        }
-                    } catch(err) {
-                        alert('Teklif gönderilirken sunucu hatası oluştu.');
-                    } finally {
-                        e.target.textContent = 'Teklif Gönder';
-                        e.target.disabled = false;
-                    }
+                        if(result.success) modal.style.display = 'none';
+                    } catch(err) { alert('Hata oluştu.'); } 
+                    finally { e.target.textContent = 'Teklif Gönder'; e.target.disabled = false; }
                 }
             });
         }

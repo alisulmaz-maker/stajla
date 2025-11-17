@@ -756,36 +756,7 @@ app.post('/api/send-offer', async (req, res) => {
     }
 });
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
-app.get('/api/student-profile/:id', async (req, res) => {
-    try {
-        const ilanId = new ObjectId(req.params.id);
-        const studentListing = await db.collection("ogrenciler").findOne({ _id: ilanId });
 
-        if (!studentListing) {
-            return res.status(404).json({ success: false, message: 'Öğrenci ilanı bulunamadı.' });
-        }
-
-        const user = await db.collection("kullanicilar").findOne({ _id: studentListing.createdBy });
-
-        const profileInfo = {
-            name: studentListing.name,
-            dept: studentListing.dept,
-            city: studentListing.city,
-            area: studentListing.area,
-            desc: studentListing.desc,
-            contact: studentListing.contact,
-            cvPath: studentListing.cvPath,
-            profilePicturePath: user ? user.profilePicturePath : null,
-            listingId: studentListing._id
-        };
-
-        res.json({ success: true, profileInfo });
-
-    } catch (err) {
-        console.error('Öğrenci profili getirilirken hata:', err);
-        res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
-    }
-});
 
 // Şifre Sıfırlama Rotaları
 app.post('/api/forgot-password', async (req, res) => {
