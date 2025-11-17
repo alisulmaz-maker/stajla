@@ -347,6 +347,22 @@ async function loadStudentProfileData() {
             ? `<div class="profile-pic-large" style="background-image: url('${s.profilePicturePath}')"></div>`
             : '<div class="profile-pic-placeholder-large"></div>';
 
+            let socialLinksHtml = '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: flex-start; align-items: center;">';
+        
+        if (s.cvPath) {
+            socialLinksHtml += `<a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; text-decoration: none;">📄 CV Görüntüle</a>`;
+        }
+        if (s.linkedin) {
+            socialLinksHtml += `<a href="${s.linkedin}" target="_blank" title="LinkedIn Profili" style="font-size: 2rem; text-decoration: none;">🔵</a>`;
+        }
+        if (s.github) {
+            socialLinksHtml += `<a href="${s.github}" target="_blank" title="GitHub Profili" style="font-size: 2rem; text-decoration: none;">💻</a>`;
+        }
+        if (s.portfolio) {
+            socialLinksHtml += `<a href="${s.portfolio}" target="_blank" title="Portfolyo / Web Sitesi" style="font-size: 2rem; text-decoration: none;">🎨</a>`;
+        }
+        socialLinksHtml += '</div>';
+        
         container.innerHTML = `
             <div class="card" style="text-align: center;">
                 ${profilePicHtml}
@@ -994,59 +1010,62 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-// --- GÜNCELLENEN KISIM: PROFİL GÜNCELLEME (Geliştirme 7: Rol Tabanlı) ---
-
-        // Önce iki formu da seçelim
+// --- GÜNCELLENEN KISIM: PROFİL GÜNCELLEME (Geliştirme 8: Sosyal Medya Destekli) ---
+        
         const studentEditForm = document.getElementById('student-edit-form');
         const employerEditForm = document.getElementById('employer-edit-form');
 
-        // Eğer bu formlardan biri sayfada varsa (yani profil-duzenle.html sayfasındaysak)
         if (studentEditForm && employerEditForm) {
-
-            // 1. Sayfa yüklendiğinde: Kullanıcı rolüne göre doğru formu göster
+            
+            // 1. Sayfa Yüklendiğinde: Verileri Doldur
             if (!currentUser) {
                 document.querySelector('main.form-page').innerHTML = '<h2>Bu sayfayı görmek için giriş yapmalısınız.</h2>';
-            } else if (currentUser.role === 'student') {
-                // --- Öğrenciyse ---
-                studentEditForm.style.display = 'block'; // Öğrenci formunu göster
-
-                // Mevcut verileri doldur
-                document.getElementById('s-edit-name').value = currentUser.name || '';
-                if (currentUser.profilePicturePath) {
-                    document.getElementById('student-picture-preview').style.backgroundImage = `url('${currentUser.profilePicturePath}')`;
-                }
-
-            } else if (currentUser.role === 'employer') {
-                // --- İşverense ---
-                employerEditForm.style.display = 'block'; // İşveren formunu göster
-
-                // Mevcut verileri (sunucudan çekerek) doldurmamız lazım
-                // (Çünkü 'bio' ve 'website' bilgisi 'currentUser' objemizde yok)
-                fetch('/api/current-user-details') // BU YENİ ROTAYI BİR SONRAKİ ADIMDA EKLEYECEĞİZ
+            } else {
+                // Hem Öğrenci hem İşveren için detaylı veriyi çekiyoruz
+                fetch('/api/current-user-details')
                     .then(res => res.json())
                     .then(userData => {
-                        document.getElementById('e-edit-name').value = userData.name || '';
-                        document.getElementById('e-edit-website').value = userData.companyWebsite || '';
-                        document.getElementById('e-edit-bio').value = userData.companyBio || '';
-                        if (userData.profilePicturePath) {
-                            document.getElementById('employer-picture-preview').style.backgroundImage = `url('${userData.profilePicturePath}')`;
+                        if (currentUser.role === 'student') {
+                            // --- Öğrenci Formunu Doldur ---
+                            studentEditForm.style.display = 'block';
+                            document.getElementById('s-edit-name').value = userData.name || '';
+                            document.getElementById('s-edit-linkedin').value = userData.linkedin || ''; // YENİ
+                            document.getElementById('s-edit-github').value = userData.github || '';     // YENİ
+                            document.getElementById('s-edit-portfolio').value = userData.portfolio || ''; // YENİ
+                            
+                            if (userData.profilePicturePath) {
+                                document.getElementById('student-picture-preview').style.backgroundImage = `url('${userData.profilePicturePath}')`;
+                            }
+                        } else if (currentUser.role === 'employer') {
+                            // --- İşveren Formunu Doldur ---
+                            employerEditForm.style.display = 'block';
+                            document.getElementById('e-edit-name').value = userData.name || '';
+                            document.getElementById('e-edit-website').value = userData.companyWebsite || '';
+                            document.getElementById('e-edit-bio').value = userData.companyBio || '';
+                            
+                            if (userData.profilePicturePath) {
+                                document.getElementById('employer-picture-preview').style.backgroundImage = `url('${userData.profilePicturePath}')`;
+                            }
                         }
                     });
             }
 
-            // 2. Form Gönderme İşlemi (Öğrenci)
+            // 2. Öğrenci Formu Gönderme (YENİ ALANLAR EKLENDİ)
             studentEditForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData();
                 formData.append('name', document.getElementById('s-edit-name').value);
-
+                formData.append('linkedin', document.getElementById('s-edit-linkedin').value); // YENİ
+                formData.append('github', document.getElementById('s-edit-github').value);     // YENİ
+                formData.append('portfolio', document.getElementById('s-edit-portfolio').value); // YENİ
+                
                 const file = document.getElementById('s-edit-picture').files[0];
                 if (file) { formData.append('profilePicture', file); }
 
                 await submitProfileUpdate(formData, studentEditForm);
             });
 
-            // 3. Form Gönderme İşlemi (İşveren)
+            // 3. İşveren Formu Gönderme (Aynı kaldı)
             employerEditForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData();
@@ -1067,23 +1086,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 button.textContent = 'Güncelleniyor...';
 
                 try {
-                    const response = await fetch('/api/update-profile', { //
+                    const response = await fetch('/api/update-profile', {
                         method: 'POST',
-                        body: formData // FormData (dosya içerir)
+                        body: formData
                     });
-
                     const result = await response.json();
                     alert(result.message);
-
-                    if (response.ok) {
-                        window.location.reload(); // Sayfayı yenile ki navbar vs. güncellensin
-                    }
+                    if (response.ok) window.location.reload();
                 } catch (error) {
-                    alert('Profil güncellenirken bir hata oluştu.');
-                    console.error('Profil Güncelleme Formu Hata:', error);
+                    alert('Hata oluştu.');
                 } finally {
                     button.disabled = false;
-                    button.textContent = button.textContent.includes('Öğrenci') ? 'Öğrenci Profilimi Güncelle' : 'Şirket Profilimi Güncelle';
+                    button.textContent = 'Bilgileri Güncelle';
                 }
             };
         }
