@@ -97,11 +97,12 @@ async function renderResultsOnHome() {
             const heartClass = isSaved ? 'saved' : '';
             const heartIcon = isSaved ? 'fas' : 'far'; // fas: dolu, far: boş
 
-            // Kalp Butonu HTML'i (Sadece giriş yapmışsa göster)
-            const saveBtnHtml = currentUser ? 
+            
+           // Kalp Butonu HTML'i (Test için herkese göster)
+            const saveBtnHtml = 
                 `<button class="save-btn ${heartClass}" data-id="${ilan._id}" onclick="toggleSave(this, '${ilan._id}')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: ${isSaved ? '#e74c3c' : '#ccc'}; z-index: 10;">
                     <i class="${heartIcon} fa-heart"></i>
-                </button>` : '';
+                </button>`;
             // ---------------------------
 
             if (ilanTipi === 'student') {
