@@ -851,7 +851,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     </div></div>
                                     <div class="card-body">
                                         <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
-                                        <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
+                                        <p>
+    ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}... 
+    <a href="/ilan-detay.html?id=${j._id}&type=employer" style="color: #FFD43B; font-weight: bold; font-size: 0.9rem;">Devamını Oku</a>
+</p>
                                         ${currentUser && currentUser.role === 'student' ? // Sadece öğrenciyse Başvur butonu göster
                                 `<button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
                                                 Hemen Başvur

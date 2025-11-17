@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İlan Detayı - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
+    </nav>
+</header>
+
+<main class="form-page" style="max-width: 800px; padding-top: 60px;">
+    <div id="listing-detail-container" class="card" style="padding: 40px;">
+        <h2 id="detail-title" style="margin-bottom: 10px;">Yükleniyor...</h2>
+        
+        <div id="detail-meta" style="margin-bottom: 30px; color: #666;">
+            <span id="detail-company" style="font-weight: bold; color: #222;"></span> &bull; 
+            <span id="detail-location"></span> &bull; 
+            <span id="detail-type" style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;"></span>
+        </div>
+
+        <hr>
+
+        <div style="margin: 30px 0;">
+            <h4 style="margin-bottom: 10px;">İlan Açıklaması ve Nitelikler</h4>
+            <p id="detail-desc" style="line-height: 1.8; white-space: pre-wrap;"></p>
+        </div>
+
+        <hr>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <p style="margin-bottom: 15px;"><strong>İletişim / Başvuru Linki:</strong> <span id="detail-contact"></span></p>
+            <button id="detail-apply-btn" class="cta-primary" style="padding: 15px 40px; font-size: 1.1rem; border: none; cursor: pointer; font-weight: bold;">Hemen Başvur</button>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p>© 2025 STAJLA</p>
+</footer>
+
+<script src="/js/main.js"></script>
+<script>
+    // İlan Detayını Çeken Script
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const type = params.get('type'); // 'student' veya 'employer'
+
+        if(!id || !type) return;
+
+        try {
+            // Mevcut 'get-listing-details' rotamızı kullanabiliriz!
+            const response = await fetch(`/api/get-listing-details?id=${id}&type=${type}`);
+            const res = await response.json();
+
+            if(res.success) {
+                const data = res.listing;
+                
+                // Başlık (Öğrenciyse Adı, İşverense Şirket Adı değil, POZİSYON adı olması lazım ama bizde pozisyon başlığı yok, o yüzden Area kullanacağız)
+                const title = type === 'student' ? data.name : (data.area || 'Pozisyon Belirtilmemiş');
+                
+                document.getElementById('detail-title').textContent = title;
+                document.getElementById('detail-company').textContent = type === 'student' ? data.dept : data.company;
+                document.getElementById('detail-location').textContent = data.city;
+                
+                const badgeEl = document.getElementById('detail-type');
+                if(data.stajTuru) {
+                    badgeEl.textContent = data.stajTuru;
+                    if(data.stajTuru.includes('Ücretsiz')) badgeEl.style.backgroundColor = '#6c757d';
+                } else {
+                    badgeEl.style.display = 'none';
+                }
+
+                // Açıklama (req veya desc)
+                document.getElementById('detail-desc').textContent = type === 'student' ? data.desc : data.req;
+
+                // İletişim (Eğer link ise link yap)
+                const contact = data.contact;
+                const contactEl = document.getElementById('detail-contact');
+                if(contact.startsWith('http')) {
+                    contactEl.innerHTML = `<a href="${contact}" target="_blank">${contact}</a>`;
+                } else {
+                    contactEl.textContent = contact;
+                }
+
+                // Başvur Butonu İşlevi
+                const btn = document.getElementById('detail-apply-btn');
+                if(type === 'student') {
+                    btn.textContent = 'Bu Öğrenciye Ulaş';
+                    btn.onclick = () => window.location.href = `mailto:${contact}`;
+                } else {
+                    // İşveren ilanıysa
+                    if(currentUser && currentUser.role === 'student') {
+                         btn.setAttribute('data-listing-id', data._id);
+                         btn.classList.add('apply-btn'); // main.js'deki başvuru mantığını tetikler
+                    } else {
+                        btn.style.display = 'none'; // Öğrenci değilse başvuramasın
+                    }
+                }
+
+            }
+        } catch(e) {
+            console.error(e);
+            document.getElementById('listing-detail-container').innerHTML = '<p>İlan bulunamadı.</p>';
+        }
+    });
+</script>
+</body>
+</html>

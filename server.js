@@ -104,6 +104,7 @@ app.get('/ogrenci-ilan.html', (req, res) => { res.sendFile(path.join(__dirname, 
 app.get('/isveren-ilan.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'isveren-ilan.html')); });
 app.get('/ogrenci-profil.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'ogrenci-profil.html')); });
 app.get('/edit-listing.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'edit-listing.html')); });
+app.get('/ilan-detay.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'ilan-detay.html')); });
 app.get('/is-tekliflerim.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'is-tekliflerim.html')); });
 app.get('/iletisim.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'iletisim.html')); });
 app.get('/forgot-password.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'forgot-password.html')); });
