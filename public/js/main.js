@@ -111,13 +111,17 @@ async function renderResultsOnHome() {
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
                     : '<div class="card-profile-pic-placeholder"></div>';
                 
+// Staj türüne göre renk belirle
+const badgeColor = ilan.stajTuru && ilan.stajTuru.includes('Ücretsiz') ? '#6c757d' : '#28a745'; // Ücretsizse Gri, Ücretliyse Yeşil
+const badgeHtml = ilan.stajTuru ? `<span style="background-color: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: inline-block;">${escapeHtml(ilan.stajTuru)}</span>` : '';
+
                 el.innerHTML = `
                     <div class="card-content" style="position: relative;">
                         ${saveBtnHtml} <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
                             <div class="card-header">
                                 ${profilePicHtml}
                                 <div class="card-info">
-                                    <h4>${escapeHtml(s.name)}</h4>
+                                   ${badgeHtml} <h4>${escapeHtml(s.name)}</h4>
                                     <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
                                 </div>
                             </div>
@@ -557,7 +561,7 @@ async function renderMyOffers() {
                 <div class="card-content">
                     <div class="card-header">
                         <div class="card-info">
-                            <h4>${escapeHtml(job.company)}</h4>
+                            ${badgeHtml} <a href="..."><h4>${escapeHtml(j.company)}</h4></a>
                             <p><strong>${escapeHtml(job.area)}</strong> — ${escapeHtml(job.city)}</p>
                         </div>
                     </div>
@@ -1084,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formData.append('city', document.getElementById('s-city').value);
                 formData.append('area', document.getElementById('s-area').value);
                 formData.append('desc', document.getElementById('s-desc').value);
+                formData.append('stajTuru', document.getElementById('s-type').value);
                 formData.append('contact', document.getElementById('s-contact').value);
 
                 const cvFile = document.getElementById('s-cv').files[0];
@@ -1129,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     city: document.getElementById('j-city').value,
                     area: document.getElementById('j-area').value,
                     req: document.getElementById('j-req').value,
+                    stajTuru: document.getElementById('j-type').value,
                     contact: document.getElementById('j-contact').value,
                 };
 
