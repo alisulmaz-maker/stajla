@@ -1458,6 +1458,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
     }
+    const hamburger = document.getElementById('hamburger-menu');
+const mobileNav = document.getElementById('mobile-nav');
+
+if (hamburger && mobileNav) {
+    hamburger.addEventListener('click', () => {
+        mobileNav.classList.toggle('active'); // Menüyü aç/kapat
+    });
+
+    // Menüdeki bir linke tıklanırsa menüyü kapat (Kullanıcı deneyimi için)
+    mobileNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileNav.classList.remove('active');
+        });
+    });
+
+    // Menü dışına tıklanırsa kapat
+    document.addEventListener('click', (e) => {
+        if (!hamburger.contains(e.target) && !mobileNav.contains(e.target) && mobileNav.classList.contains('active')) {
+            mobileNav.classList.remove('active');
+        }
+    });
+}
 });
 // --- YENİ: Favori Ekle/Çıkar Fonksiyonu ---
 async function toggleSave(btn, listingId) {
@@ -1496,28 +1518,7 @@ async function toggleSave(btn, listingId) {
                 icon.classList.remove('fas');
             }
         }
-            const hamburger = document.getElementById('hamburger-menu');
-    const mobileNav = document.getElementById('mobile-nav');
 
-    if (hamburger && mobileNav) {
-        hamburger.addEventListener('click', () => {
-            mobileNav.classList.toggle('active'); // Menüyü aç/kapat
-        });
-
-        // Menüdeki bir linke tıklanırsa menüyü kapat (Kullanıcı deneyimi için)
-        mobileNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileNav.classList.remove('active');
-            });
-        });
-
-        // Menü dışına tıklanırsa kapat
-        document.addEventListener('click', (e) => {
-            if (!hamburger.contains(e.target) && !mobileNav.contains(e.target) && mobileNav.classList.contains('active')) {
-                mobileNav.classList.remove('active');
-            }
-        });
-    }
     } catch (err) {
         console.error(err);
     }

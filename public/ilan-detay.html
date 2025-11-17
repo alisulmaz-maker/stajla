@@ -7,12 +7,13 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Detay Sayfasına Özel Modern Stil */
+        /* Detay Sayfasına Özel Stil */
         .detail-layout {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 30px;
             margin-top: 20px;
+            align-items: start; /* Kartların yukarı hizalanmasını sağlar */
         }
         .sidebar-card {
             background: white;
@@ -20,7 +21,8 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             text-align: center;
-            height: fit-content;
+            position: sticky; /* Masaüstünde aşağı kayarken sabit kalsın */
+            top: 80px; 
         }
         .main-card {
             background: white;
@@ -28,6 +30,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             text-align: left;
+            min-height: 400px; /* İçerik azsa bile kart çok küçülmesin */
         }
         .profile-pic-xl {
             width: 150px;
@@ -39,20 +42,26 @@
             border: 5px solid #FFD43B;
             background-color: #f0f0f0;
         }
-        .social-icons a {
-            font-size: 1.8rem;
-            margin: 0 10px;
-            text-decoration: none;
-            transition: transform 0.2s;
-            display: inline-block;
-        }
-        .social-icons a:hover { transform: scale(1.2); }
         
-        .info-row { margin-bottom: 15px; font-size: 1.05rem; }
-        .info-row i { width: 25px; color: #FFD43B; text-align: center; margin-right: 10px; }
+        .info-row { margin-bottom: 15px; font-size: 1.05rem; display: flex; align-items: center; }
+        .info-row i { width: 25px; color: #FFD43B; text-align: center; margin-right: 10px; font-size: 1.2rem; }
         
-        @media (max-width: 768px) {
-            .detail-layout { grid-template-columns: 1fr; }
+        /* MOBİL UYUMLULUK (Responsive) */
+        @media (max-width: 900px) {
+            .detail-layout { 
+                grid-template-columns: 1fr; /* Tek sütuna düş */
+                gap: 20px;
+            }
+            .sidebar-card {
+                position: static; /* Mobilde sabitlemeyi kaldır */
+                padding: 20px;
+            }
+            .main-card {
+                padding: 20px; /* Mobilde iç boşluğu azalt */
+            }
+            .form-page {
+                padding-top: 20px !important; /* Mobilde üst boşluğu azalt */
+            }
         }
     </style>
 </head>
