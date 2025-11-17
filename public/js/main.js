@@ -879,7 +879,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         container.appendChild(el);
                     });
+// --- YENİ EKLENEN KISIM: MOBİL HAMBURGER MENÜ ---
+    const hamburger = document.getElementById('hamburger-menu');
+    const mobileNav = document.getElementById('mobile-nav');
 
+    if (hamburger && mobileNav) {
+        hamburger.addEventListener('click', () => {
+            mobileNav.classList.toggle('active'); // Menüyü aç/kapat
+        });
+
+        // Menüdeki bir linke tıklanırsa menüyü kapat (Kullanıcı deneyimi için)
+        mobileNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+            });
+        });
+
+        // Menü dışına tıklanırsa kapat
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !mobileNav.contains(e.target) && mobileNav.classList.contains('active')) {
+                mobileNav.classList.remove('active');
+            }
+        });
+    }
                 } catch (err) {
                     console.error('Arama yapılırken hata:', err);
                     sectionTitle.textContent = 'Bir Hata Oluştu';

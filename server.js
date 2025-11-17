@@ -735,12 +735,25 @@ app.get('/api/public-listing-details', async (req, res) => {
 
         const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler';
         
-        // Sadece ilanı bul, sahiplik kontrolü YAPMA
         const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) });
-
         if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
 
-        res.json({ success: true, listing }); 
+        // İlan sahibinin ek bilgilerini (Fotoğraf, Linkler) çek
+        const user = await db.collection("kullanicilar").findOne(
+            { _id: listing.createdBy },
+            { projection: { profilePicturePath: 1, linkedin: 1, github: 1, portfolio: 1, name: 1 } }
+        );
+
+        // İlan verisiyle kullanıcı verisini birleştir
+        const result = {
+            ...listing,
+            profilePicturePath: user ? user.profilePicturePath : null,
+            linkedin: user ? user.linkedin : null,
+            github: user ? user.github : null,
+            portfolio: user ? user.portfolio : null
+        };
+
+        res.json({ success: true, listing: result }); 
     } catch (err) {
         console.error('İlan detayı hatası:', err);
         res.status(500).json({ success: false, message: 'Sunucu hatası.' });

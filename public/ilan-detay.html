@@ -6,6 +6,55 @@
     <title>İlan Detayı - STAJLA</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Detay Sayfasına Özel Modern Stil */
+        .detail-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .sidebar-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            height: fit-content;
+        }
+        .main-card {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .profile-pic-xl {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 20px auto;
+            border: 5px solid #FFD43B;
+            background-color: #f0f0f0;
+        }
+        .social-icons a {
+            font-size: 1.8rem;
+            margin: 0 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .social-icons a:hover { transform: scale(1.2); }
+        
+        .info-row { margin-bottom: 15px; font-size: 1.05rem; }
+        .info-row i { width: 25px; color: #FFD43B; text-align: center; margin-right: 10px; }
+        
+        @media (max-width: 768px) {
+            .detail-layout { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 <header class="navbar">
@@ -22,101 +71,139 @@
     </nav>
 </header>
 
-<main class="form-page" style="max-width: 800px; padding-top: 60px;">
-    <div id="listing-detail-container" class="card" style="padding: 40px;">
-        <h2 id="detail-title" style="margin-bottom: 10px;">Yükleniyor...</h2>
+<main class="form-page" style="max-width: 1100px;">
+    <div id="loading-msg" style="text-align: center;"><h3>Yükleniyor...</h3></div>
+    
+    <div id="content-area" class="detail-layout" style="display: none;">
         
-        <div id="detail-meta" style="margin-bottom: 30px; color: #666;">
-            <span id="detail-company" style="font-weight: bold; color: #222;"></span> &bull; 
-            <span id="detail-location"></span> &bull; 
-            <span id="detail-type" style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;"></span>
-        </div>
+        <aside class="sidebar-card">
+            <div id="detail-img" class="profile-pic-xl"></div>
+            <h2 id="detail-name" style="margin-bottom: 5px;"></h2>
+            <p id="detail-title-sub" style="color: #666; margin-bottom: 20px;"></p>
+            
+            <div id="student-actions" style="display: none;">
+                <div class="social-icons" id="social-links" style="margin-bottom: 20px;">
+                    </div>
+                <a id="cv-btn" href="#" target="_blank" class="cta-primary" style="display: block; width: 100%; text-align: center; margin-bottom: 10px;">
+                    <i class="fas fa-file-pdf"></i> CV Görüntüle
+                </a>
+            </div>
+            
+            <button id="main-action-btn" class="cta-primary" style="width: 100%; margin-top: 10px; background-color: #222; color: #FFD43B;">İletişime Geç</button>
+        </aside>
 
-        <hr>
+        <section class="main-card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                <h3 style="font-size: 1.8rem; margin: 0;">İlan Detayları</h3>
+                <span id="detail-badge" style="background-color: #28a745; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;"></span>
+            </div>
+            
+            <div class="info-row"><i class="fas fa-university"></i> <strong id="label-1">Bölüm:</strong> <span id="val-1"></span></div>
+            <div class="info-row"><i class="fas fa-map-marker-alt"></i> <strong>Konum:</strong> <span id="val-location"></span></div>
+            <div class="info-row"><i class="fas fa-briefcase"></i> <strong>Alan/Sektör:</strong> <span id="val-area"></span></div>
 
-        <div style="margin: 30px 0;">
-            <h4 style="margin-bottom: 10px;">İlan Açıklaması ve Nitelikler</h4>
-            <p id="detail-desc" style="line-height: 1.8; white-space: pre-wrap;"></p>
-        </div>
+            <hr style="margin: 30px 0; border-top: 1px solid #eee;">
 
-        <hr>
+            <h4>Hakkında / Açıklama</h4>
+            <p id="detail-desc" style="line-height: 1.8; color: #444; white-space: pre-wrap; margin-top: 15px;"></p>
 
-        <div style="margin-top: 30px; text-align: center;">
-            <p style="margin-bottom: 15px;"><strong>İletişim / Başvuru Linki:</strong> <span id="detail-contact"></span></p>
-            <button id="detail-apply-btn" class="cta-primary" style="padding: 15px 40px; font-size: 1.1rem; border: none; cursor: pointer; font-weight: bold;">Hemen Başvur</button>
-        </div>
+            <div id="contact-box" style="background: #f9f9f9; padding: 20px; border-left: 4px solid #FFD43B; margin-top: 40px;">
+                <strong>İletişim:</strong> <span id="val-contact"></span>
+            </div>
+        </section>
     </div>
 </main>
 
-<footer>
-    <p>© 2025 STAJLA</p>
-</footer>
+<footer><p>© 2025 STAJLA</p></footer>
 
 <script src="/js/main.js"></script>
 <script>
-    // İlan Detayını Çeken Script
     document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
-        const type = params.get('type'); // 'student' veya 'employer'
+        const type = params.get('type'); 
 
         if(!id || !type) return;
 
         try {
-            // Mevcut 'get-listing-details' rotamızı kullanabiliriz!
-            // YENİ ROTA KULLANILIYOR:
-const response = await fetch(`/api/public-listing-details?id=${id}&type=${type}`);
+            const response = await fetch(`/api/public-listing-details?id=${id}&type=${type}`);
             const res = await response.json();
 
             if(res.success) {
                 const data = res.listing;
-                
-                // Başlık (Öğrenciyse Adı, İşverense Şirket Adı değil, POZİSYON adı olması lazım ama bizde pozisyon başlığı yok, o yüzden Area kullanacağız)
-                const title = type === 'student' ? data.name : (data.area || 'Pozisyon Belirtilmemiş');
-                
-                document.getElementById('detail-title').textContent = title;
-                document.getElementById('detail-company').textContent = type === 'student' ? data.dept : data.company;
-                document.getElementById('detail-location').textContent = data.city;
-                
-                const badgeEl = document.getElementById('detail-type');
-                if(data.stajTuru) {
-                    badgeEl.textContent = data.stajTuru;
-                    if(data.stajTuru.includes('Ücretsiz')) badgeEl.style.backgroundColor = '#6c757d';
+                document.getElementById('loading-msg').style.display = 'none';
+                document.getElementById('content-area').style.display = 'grid'; // Göster
+
+                // --- ORTAK ALANLAR ---
+                // Profil Resmi
+                const imgDiv = document.getElementById('detail-img');
+                if (data.profilePicturePath) {
+                    imgDiv.style.backgroundImage = `url('${data.profilePicturePath}')`;
                 } else {
-                    badgeEl.style.display = 'none';
+                    // Placeholder (Baş harf veya ikon)
+                    imgDiv.style.display = 'flex'; imgDiv.style.alignItems = 'center'; imgDiv.style.justifyContent = 'center';
+                    imgDiv.innerHTML = `<span style="font-size: 3rem; color: #ccc;">${(data.name || data.company || '?').charAt(0)}</span>`;
                 }
 
-                // Açıklama (req veya desc)
+                // İsim ve Başlık
+                document.getElementById('detail-name').textContent = type === 'student' ? data.name : data.company;
+                document.getElementById('detail-title-sub').textContent = type === 'student' ? 'Öğrenci / Stajyer Adayı' : 'İşveren / Şirket';
+
+                document.getElementById('val-location').textContent = data.city;
+                document.getElementById('val-area').textContent = type === 'student' ? data.area : data.sector;
+                document.getElementById('val-contact').textContent = data.contact;
+
+                // Rozet (Staj Türü)
+                const badge = document.getElementById('detail-badge');
+                if (data.stajTuru) {
+                    badge.textContent = data.stajTuru;
+                    if(data.stajTuru.includes('Ücretsiz')) badge.style.backgroundColor = '#6c757d';
+                } else { badge.style.display = 'none'; }
+
+                // Açıklama
                 document.getElementById('detail-desc').textContent = type === 'student' ? data.desc : data.req;
 
-                // İletişim (Eğer link ise link yap)
-                const contact = data.contact;
-                const contactEl = document.getElementById('detail-contact');
-                if(contact.startsWith('http')) {
-                    contactEl.innerHTML = `<a href="${contact}" target="_blank">${contact}</a>`;
-                } else {
-                    contactEl.textContent = contact;
-                }
+                // --- TİPE ÖZEL ALANLAR ---
+                if (type === 'student') {
+                    document.getElementById('label-1').textContent = 'Bölüm/Okul:';
+                    document.getElementById('val-1').textContent = data.dept;
 
-                // Başvur Butonu İşlevi
-                const btn = document.getElementById('detail-apply-btn');
-                if(type === 'student') {
-                    btn.textContent = 'Bu Öğrenciye Ulaş';
-                    btn.onclick = () => window.location.href = `mailto:${contact}`;
+                    // CV ve Sosyal Linkler (GELİŞTİRME BURADA)
+                    document.getElementById('student-actions').style.display = 'block';
+                    const socialBox = document.getElementById('social-links');
+                    
+                    if (data.linkedin) socialBox.innerHTML += `<a href="${data.linkedin}" target="_blank" style="color: #0077b5;"><i class="fab fa-linkedin"></i></a>`;
+                    if (data.github) socialBox.innerHTML += `<a href="${data.github}" target="_blank" style="color: #333;"><i class="fab fa-github"></i></a>`;
+                    if (data.portfolio) socialBox.innerHTML += `<a href="${data.portfolio}" target="_blank" style="color: #ea4c89;"><i class="fas fa-globe"></i></a>`;
+
+                    const cvBtn = document.getElementById('cv-btn');
+                    if (data.cvPath) { cvBtn.href = data.cvPath; } else { cvBtn.style.display = 'none'; }
+                    
+                    document.getElementById('main-action-btn').textContent = "Bu Adaya Ulaş";
+                    document.getElementById('main-action-btn').onclick = () => window.location.href = `mailto:${data.contact}`;
+
                 } else {
-                    // İşveren ilanıysa
-                    if(currentUser && currentUser.role === 'student') {
-                         btn.setAttribute('data-listing-id', data._id);
-                         btn.classList.add('apply-btn'); // main.js'deki başvuru mantığını tetikler
-                    } else {
-                        btn.style.display = 'none'; // Öğrenci değilse başvuramasın
+                    // İşveren
+                    document.getElementById('label-1').textContent = 'Aranan Pozisyon:';
+                    document.getElementById('val-1').textContent = data.area;
+                    
+                    const applyBtn = document.getElementById('main-action-btn');
+                    applyBtn.textContent = "Hemen Başvur";
+                    applyBtn.style.backgroundColor = "#FFD43B";
+                    applyBtn.style.color = "#222";
+
+                    // Başvuru mantığı (main.js'deki currentUser kontrolü burada da olmalı ama basit tutuyoruz)
+                    if (currentUser && currentUser.role === 'student') {
+                        applyBtn.onclick = async () => {
+                           // Basit başvuru yönlendirmesi veya main.js fonksiyonunu tetikleme
+                           alert('Başvuru yapmak için Anasayfadaki butonu kullanmanız önerilir.');
+                        };
                     }
                 }
 
             }
         } catch(e) {
-            console.error(e);
-            document.getElementById('listing-detail-container').innerHTML = '<p>İlan bulunamadı.</p>';
+            document.getElementById('loading-msg').innerHTML = '<p>İlan yüklenirken hata oluştu.</p>';
         }
     });
 </script>
