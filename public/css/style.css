@@ -555,3 +555,32 @@ footer a:hover {
 .save-btn.saved i {
     font-weight: 900; /* FontAwesome dolu kalp stili */
 }
+/* --- MOBİL MENÜ KAYMA SORUNU ÇÖZÜMÜ (Sabit Header) --- */
+
+/* 1. Menü çubuğunu (Navbar) ekrana sabitle */
+.navbar {
+    position: fixed; /* Sayfa kaydırılsa bile hep üstte kalsın */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1100; /* Mobil menünün (1000) üstünde dursun */
+}
+
+/* 2. İçeriği aşağı it (Sabit navbar içeriği kapatmasın diye) */
+body {
+    padding-top: 60px; /* Navbar yüksekliği kadar boşluk */
+}
+
+/* 3. Mobilde yükseklik ve boşluk ayarı */
+@media (max-width: 768px) {
+    body {
+        padding-top: 55px; /* Mobilde navbar biraz daha ince */
+    }
+    
+    #mobile-nav {
+        /* Menünün boyunu ekranın kalanına tam oturt */
+        height: calc(100% - 55px); 
+        /* Menü çok uzunsa içinde kaydırma çubuğu olsun */
+        overflow-y: auto; 
+    }
+}
