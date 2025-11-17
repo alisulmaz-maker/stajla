@@ -678,6 +678,30 @@ app.get('/api/my-saved-ids', async (req, res) => {
         res.json([]);
     }
 });
+// YENİ EKLENDİ: Kaydedilen İlanların DETAYLARINI Getir (Profil sayfası için)
+app.get('/api/my-saved-listings-details', async (req, res) => {
+    if (!req.session.user) { return res.json({ success: false }); }
+    
+    try {
+        const user = await db.collection("kullanicilar").findOne({ _id: new ObjectId(req.session.user.id) });
+        const savedIds = user.savedListings || [];
+
+        if (savedIds.length === 0) { return res.json([]); }
+
+        // Hem öğrenci hem işveren ilanlarında bu ID'leri ara
+        // (Kullanıcı hem iş hem stajyer ilanı kaydetmiş olabilir)
+        const savedJobs = await db.collection("isverenler").find({ _id: { $in: savedIds } }).sort({ createdAt: -1 }).toArray();
+        const savedStudents = await db.collection("ogrenciler").find({ _id: { $in: savedIds } }).sort({ createdAt: -1 }).toArray();
+
+        // Hepsini tek bir listede birleştir
+        const allSaved = [...savedJobs, ...savedStudents];
+        
+        res.json(allSaved);
+    } catch (err) {
+        console.error('Favoriler çekilirken hata:', err);
+        res.status(500).json([]);
+    }
+});
 
 // YENİ EKLENEN ROTA: DÜZENLENECEK İLANIN DETAYLARINI GETİRME
 app.get('/api/get-listing-details', async (req, res) => {

@@ -220,7 +220,60 @@ function updateUIAfterLogin() {
         studentLinks.forEach(link => link.style.display = 'none');
     }
 }
+// --- YENİ: Favori İlanları Listeleme Fonksiyonu ---
+async function fetchSavedListings() {
+    const container = document.getElementById('saved-listings-container');
+    if (!container) return; // Bu sayfada değilsek çalışma
 
+    try {
+        const response = await fetch('/api/my-saved-listings-details');
+        const listings = await response.json();
+
+        container.innerHTML = '';
+
+        if (!listings || listings.length === 0) {
+            container.innerHTML = '<p>Henüz favorilere eklediğiniz bir ilan yok.</p>';
+            return;
+        }
+
+        listings.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'card';
+            
+            // İlanın tipini anlamaya çalışalım (company varsa işverendir)
+            const title = item.company ? item.company : item.name;
+            const subTitle = item.area + ' — ' + item.city;
+            const link = item.company 
+                ? `/sirket-profili.html?id=${item.createdBy}` // İşverense şirket profili
+                : `/ogrenci-profil.html?id=${item._id}`;      // Öğrenciyse öğrenci profili
+
+            // Kalp butonu (Tıklayınca favoriden çıkar)
+            const removeBtnHtml = `
+                <button class="save-btn saved" data-id="${item._id}" onclick="toggleSave(this, '${item._id}'); this.closest('.card').remove();" title="Favorilerden Çıkar">
+                    <i class="fas fa-heart"></i>
+                </button>`;
+
+            el.innerHTML = `
+                <div class="card-content">
+                    <div class="card-header">
+                        ${removeBtnHtml}
+                        <div class="card-info">
+                            <a href="${link}" style="color: inherit; text-decoration: none;"><h4>${escapeHtml(title)}</h4></a>
+                            <p>${escapeHtml(subTitle)}</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                         <p style="font-size: 0.9rem; color: #666;">Favorilere eklendi</p>
+                    </div>
+                </div>`;
+            container.appendChild(el);
+        });
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p>Favoriler yüklenirken hata oluştu.</p>';
+    }
+}
 
 /* ---------------------------------------------------- */
 /* İŞVEREN BİLDİRİM SİSTEMİ MANTIKLARI */
@@ -696,7 +749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Sayfa Bazlı Yüklemeler
         if (document.getElementById('results-container')) { renderResultsOnHome(); }
-        if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); }
+        if (window.location.pathname.endsWith('/profil.html')) { fetchMyListings(); fetchSavedListings(); }
         if (window.location.pathname.endsWith('/is-tekliflerim.html')) { renderMyOffers(); }
         if (window.location.pathname.endsWith('/ogrenci-profil.html')) { loadStudentProfileData(); }
         // --- YENİ EKLENEN KISIM: TÜM LİSTELERİ DOLDUR ---
