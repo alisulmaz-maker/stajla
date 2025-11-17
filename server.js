@@ -727,7 +727,25 @@ app.get('/api/get-listing-details', async (req, res) => {
         res.status(500).json({ success: false, message: 'İlan yüklenirken hata oluştu.' });
     }
 });
+// YENİ EKLENEN: HERKESE AÇIK İLAN DETAYI (ilan-detay.html için)
+app.get('/api/public-listing-details', async (req, res) => {
+    try {
+        const { id, type } = req.query;
+        if (!id || !type) return res.status(400).json({ success: false, message: 'Eksik bilgi.' });
 
+        const collectionName = type === 'student' ? 'ogrenciler' : 'isverenler';
+        
+        // Sadece ilanı bul, sahiplik kontrolü YAPMA
+        const listing = await db.collection(collectionName).findOne({ _id: new ObjectId(id) });
+
+        if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
+
+        res.json({ success: true, listing }); 
+    } catch (err) {
+        console.error('İlan detayı hatası:', err);
+        res.status(500).json({ success: false, message: 'Sunucu hatası.' });
+    }
+});
 // YENİ EKLENEN ROTA: İLANI GÜNCELLEME
 app.post('/api/update-listing', async (req, res) => {
     if (!req.session.user) { return res.status(401).json({ success: false, message: 'Giriş yapmalısınız.' }); }

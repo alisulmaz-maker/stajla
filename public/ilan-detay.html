@@ -64,7 +64,8 @@
 
         try {
             // Mevcut 'get-listing-details' rotamızı kullanabiliriz!
-            const response = await fetch(`/api/get-listing-details?id=${id}&type=${type}`);
+            // YENİ ROTA KULLANILIYOR:
+const response = await fetch(`/api/public-listing-details?id=${id}&type=${type}`);
             const res = await response.json();
 
             if(res.success) {
