@@ -91,7 +91,7 @@ async function renderResultsOnHome() {
             const el = document.createElement('div');
             el.className = 'card';
             
-            // --- KALP BUTONU MANTIĞI ---
+            // --- 1. KALP BUTONU MANTIĞI ---
             const isSaved = typeof mySavedIds !== 'undefined' && mySavedIds.includes(ilan._id);
             const heartClass = isSaved ? 'saved' : '';
             const heartIcon = isSaved ? 'fas' : 'far';
@@ -101,11 +101,12 @@ async function renderResultsOnHome() {
                     <i class="${heartIcon} fa-heart"></i>
                 </button>` : '';
             
-            // --- STAJ TÜRÜ ETİKETİ ---
+            // --- 2. STAJ TÜRÜ ETİKETİ ---
             const badgeColor = ilan.stajTuru && ilan.stajTuru.includes('Ücretsiz') ? '#6c757d' : '#28a745';
             const badgeHtml = ilan.stajTuru ? `<span style="background-color: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; display: inline-block;">${escapeHtml(ilan.stajTuru)}</span>` : '';
 
             if (ilanTipi === 'student') {
+                // --- ÖĞRENCİ KARTI ---
                 const s = ilan;
                 const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
@@ -126,11 +127,17 @@ async function renderResultsOnHome() {
                         </a>
                         <div class="card-body">
                             <p style="margin-top: 0;">Üniversite: <strong>${escapeHtml(s.dept || 'Belirtilmemiş')}</strong></p>
-                            <p>İletişim: <strong>${escapeHtml(s.contact)}</strong></p>
+                            
+                            <p>
+                                ${escapeHtml((s.desc || '').substring(0, 75))}...
+                                <a href="/ilan-detay.html?id=${s._id}&type=student" style="color: #FFD43B; font-weight: bold; font-size: 0.9rem; text-decoration: underline;">Devamını Oku</a>
+                            </p>
+
                             ${s.cvPath ? `<p><a href="${s.cvPath}" target="_blank" class="cv-link">CV Görüntüle</a></p>` : ''}
                         </div>
                     </div>`;
             } else {
+                // --- İŞVEREN KARTI ---
                 const j = ilan;
                 const profilePicHtml = j.sahipInfo && j.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${j.sahipInfo.profilePicturePath}')"></div>`
@@ -142,13 +149,19 @@ async function renderResultsOnHome() {
                         <div class="card-header">
                             ${profilePicHtml}
                             <div class="card-info">
-                                ${badgeHtml} <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;"><h4>${escapeHtml(j.company)}</h4></a>
+                                ${badgeHtml}
+                                <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;"><h4>${escapeHtml(j.company)}</h4></a>
                                 <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
                             </div>
                         </div>
                         <div class="card-body">
                             <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
-                            <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
+                            
+                            <p>
+                                Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...
+                                <a href="/ilan-detay.html?id=${j._id}&type=employer" style="color: #FFD43B; font-weight: bold; font-size: 0.9rem; text-decoration: underline;">Devamını Oku</a>
+                            </p>
+
                             ${currentUser && currentUser.role === 'student' ?
                                 `<button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
                                     Hemen Başvur
