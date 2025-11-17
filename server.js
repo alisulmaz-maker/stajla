@@ -561,7 +561,7 @@ app.get('/api/search', async (req, res) => {
     } catch (err) { console.error('Arama yapılırken hata:', err); res.status(500).json([]); }
 });
 
-// PROFİL DETAYINI GETİRME (ogrenci-profil.html'nin kullandığı rota)
+// PROFİL DETAYINI GETİRME (GÜNCELLENDİ: Sosyal Medya Linkleri Eklendi)
 app.get('/api/student-profile/:id', async (req, res) => {
     try {
         const ilanId = new ObjectId(req.params.id);
@@ -583,9 +583,10 @@ app.get('/api/student-profile/:id', async (req, res) => {
             cvPath: studentListing.cvPath,
             profilePicturePath: user ? user.profilePicturePath : null,
             listingId: studentListing._id,
+            // --- EKLENEN KISIM ---
             linkedin: user ? user.linkedin : null,
-        github: user ? user.github : null,
-        portfolio: user ? user.portfolio : null
+            github: user ? user.github : null,
+            portfolio: user ? user.portfolio : null
         };
 
         res.json({ success: true, profileInfo });
