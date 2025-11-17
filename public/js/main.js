@@ -547,7 +547,67 @@ function populateAreas(selectId) {
 /* DİĞER TEMEL FONKSİYONLAR */
 /* ---------------------------------------------------- */
 
+// --- YENİ EKLENEN KISIM: ADMIN PANELİ FONKSİYONLARI ---
+async function setupAdminPanel() {
+    // 1. İstatistikleri Yükle
+    try {
+        const statsRes = await fetch('/api/admin/stats');
+        if (statsRes.ok) {
+            const data = await statsRes.json();
+            if (data.success) {
+                document.getElementById('stat-users').textContent = data.stats.users;
+                document.getElementById('stat-students').textContent = data.stats.students;
+                document.getElementById('stat-jobs').textContent = data.stats.jobs;
+                document.getElementById('stat-articles').textContent = data.stats.articles;
+            }
+        } else {
+            // Eğer sunucu "403 Yetkisiz" derse anasayfaya at
+            window.location.href = '/index.html';
+        }
+    } catch (e) {
+        console.error("Admin verisi çekilemedi", e);
+    }
 
+    // 2. Blog Ekleme Formu Yönetimi
+    const blogForm = document.getElementById('admin-blog-form');
+    if (blogForm) {
+        blogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = blogForm.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Yayınlanıyor...';
+
+            const formData = {
+                title: document.getElementById('blog-title').value,
+                description: document.getElementById('blog-desc').value,
+                slug: document.getElementById('blog-slug').value,
+                content: document.getElementById('blog-content').value
+            };
+
+            try {
+                const response = await fetch('/api/admin/add-blog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                alert(result.message);
+
+                if (result.success) {
+                    blogForm.reset(); // Formu temizle
+                    // İstatistik sayısını hemen 1 artır (görsel güncelleme)
+                    const countEl = document.getElementById('stat-articles');
+                    countEl.textContent = parseInt(countEl.textContent) + 1;
+                }
+            } catch (err) {
+                alert('Blog eklenirken hata oluştu.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Yazıyı Yayınla';
+            }
+        });
+    }
+}
 
 
 
@@ -634,6 +694,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. İşveren İlan (isveren-ilan.html) listeleri
         populateCities('j-city'); //
         populateAreas('j-area');  //
+
+        if (window.location.pathname === '/admin') { setupAdminPanel(); }
         // --- YENİ EKLENEN KISIM: ANASAYFA ARAMA BUTONU YÖNETİMİ ---
         const searchButton = document.getElementById('search-btn'); //
         if (searchButton) {

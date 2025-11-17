@@ -756,7 +756,72 @@ app.post('/api/send-offer', async (req, res) => {
     }
 });
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
+// --- YENİ EKLENEN: ADMIN PANELİ VE GÜVENLİK ---
 
+// 1. Admin Sayfasına Giriş Rotası (Güvenlik Kontrolü)
+app.get('/admin', (req, res) => {
+    // Sadece giriş yapmış VE e-postası 'alisulmaz@gmail.com' olan kişi girebilir
+    // (Eğer farklı bir mail ile yönetecekseniz burayı değiştirebilirsiniz)
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.redirect('/index.html'); // Yetkisiz kişiyi anasayfaya at
+    }
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// 2. Admin İstatistikleri API'sı
+app.get('/api/admin/stats', async (req, res) => {
+    // API için de güvenlik kontrolü şart
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false, message: 'Yetkisiz erişim.' });
+    }
+
+    try {
+        const totalUsers = await db.collection("kullanicilar").countDocuments({});
+        const totalStudents = await db.collection("ogrenciler").countDocuments({});
+        const totalJobs = await db.collection("isverenler").countDocuments({});
+        const totalArticles = await db.collection("articles").countDocuments({});
+
+        res.json({
+            success: true,
+            stats: {
+                users: totalUsers,
+                students: totalStudents,
+                jobs: totalJobs,
+                articles: totalArticles
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// 3. Blog Yazısı Ekleme API'sı
+app.post('/api/admin/add-blog', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false, message: 'Yetkisiz erişim.' });
+    }
+
+    try {
+        const { title, description, slug, content } = req.body;
+        
+        // Sıra numarası (order) için en son eklenen makaleyi bulup +1 ekleyelim
+        const lastArticle = await db.collection("articles").find().sort({ order: -1 }).limit(1).toArray();
+        const nextOrder = (lastArticle.length > 0 && lastArticle[0].order) ? lastArticle[0].order + 1 : 1;
+
+        await db.collection("articles").insertOne({
+            order: nextOrder,
+            slug: slug, // URL'de görünecek kısım (örn: staj-tuyolari)
+            title: title,
+            description: description,
+            content: content // HTML içerik
+        });
+
+        res.json({ success: true, message: 'Blog yazısı başarıyla yayınlandı!' });
+    } catch (err) {
+        console.error("Blog ekleme hatası:", err);
+        res.status(500).json({ success: false, message: 'Bir hata oluştu.' });
+    }
+});
 
 // Şifre Sıfırlama Rotaları
 app.post('/api/forgot-password', async (req, res) => {
