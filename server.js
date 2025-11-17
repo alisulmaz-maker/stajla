@@ -447,62 +447,58 @@ app.post('/api/isveren-ilan', async (req, res) => {
     } catch (err) { console.error('İşveren ilan eklenirken hata:', err); res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); }
 });
 
-// PROFİL GÜNCELLEME (RESİM YÜKLEME)
-// PROFİL GÜNCELLEME (Geliştirme 7: Rol tabanlı olarak güncellendi)
+// PROFİL GÜNCELLEME (Geliştirme 8: Tam ve Güncel Versiyon)
 app.post('/api/update-profile', upload.single('profilePicture'), async (req, res) => {
     if (!req.session.user) {
         if (req.file) { fs.unlinkSync(req.file.path); }
         return res.status(401).json({ success: false, message: 'Bu işlem için giriş yapmalısınız.' });
     }
-
+    
     try {
-        const { name, companyWebsite, companyBio } = req.body;
+        const { name, companyWebsite, companyBio, linkedin, github, portfolio } = req.body;
         const updateData = {};
         const userId = new ObjectId(req.session.user.id);
         const userRole = req.session.user.role;
 
-        // 1. Temel Bilgi: İsim (Hem öğrenci hem işveren için 'name' alanı)
-        if (name) {
-            updateData.name = name;
-        }
+        // 1. Ortak Alan: İsim
+        if (name) { updateData.name = name; }
 
-        // 2. Dosya Yükleme (Avatar veya Logo)
+        // 2. Resim Yükleme
         if (req.file) {
-            const resourceType = userRole === 'employer' ? 'image' : 'image'; // İkisi de image
+            const resourceType = 'image'; 
             const folder = userRole === 'employer' ? 'company_logos' : 'avatars';
             updateData.profilePicturePath = await uploadToCloudinary(req.file.path, resourceType, folder);
         }
-// 2.5. Sadece Öğrenciye Ait Alanlar (YENİ EKLENDİ)
-    if (userRole === 'student') {
-        const { linkedin, github, portfolio } = req.body;
-        if (linkedin !== undefined) updateData.linkedin = linkedin;
-        if (github !== undefined) updateData.github = github;
-        if (portfolio !== undefined) updateData.portfolio = portfolio;
-    }
-        // 3. Sadece İşverene Ait Alanlar
+
+        // 3. İşverene Özel Alanlar
         if (userRole === 'employer') {
-            if (companyWebsite) { updateData.companyWebsite = companyWebsite; }
-            if (companyBio) { updateData.companyBio = companyBio; }
+            if (companyWebsite !== undefined) updateData.companyWebsite = companyWebsite;
+            if (companyBio !== undefined) updateData.companyBio = companyBio;
         }
 
-        // 4. Güncellenecek bir şey yoksa
-        if (Object.keys(updateData).length === 0) {
-            return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' });
+        // 4. Öğrenciye Özel Alanlar (Sosyal Medya)
+        if (userRole === 'student') {
+            if (linkedin !== undefined) updateData.linkedin = linkedin;
+            if (github !== undefined) updateData.github = github;
+            if (portfolio !== undefined) updateData.portfolio = portfolio;
         }
 
-        // 5. Veritabanını Güncelle
+        // 5. Güncelleme İşlemi
+        if (Object.keys(updateData).length === 0) { 
+            return res.json({ success: true, message: 'Güncellenecek bir bilgi gönderilmedi.' }); 
+        }
+
         await db.collection("kullanicilar").updateOne({ _id: userId }, { $set: updateData });
 
-        // 6. Oturum (Session) Bilgilerini Güncelle
-        // (Burası çok önemli, navbar'daki ismin/resmin anında değişmesini sağlar)
+        // Oturumu Güncelle
         if (updateData.name) { req.session.user.name = updateData.name; }
         if (updateData.profilePicturePath) { req.session.user.profilePicturePath = updateData.profilePicturePath; }
 
         res.json({ success: true, message: 'Profiliniz başarıyla güncellendi!', user: req.session.user });
 
-    } catch (err) {
-        console.error('Profil güncelleme sırasında hata:', err);
-        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' });
+    } catch (err) { 
+        console.error('Profil güncelleme hatası:', err); 
+        res.status(500).json({ success: false, message: 'Sunucuda bir hata oluştu.' }); 
     }
 });
 
