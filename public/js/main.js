@@ -349,20 +349,24 @@ async function loadStudentProfileData() {
             ? `<div class="profile-pic-large" style="background-image: url('${s.profilePicturePath}')"></div>`
             : '<div class="profile-pic-placeholder-large"></div>';
 
-        // Linkleri hazırlıyoruz
+       // Linkleri hazırlıyoruz (FontAwesome İkonlu Versiyon)
         let socialLinksHtml = '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; align-items: center;">';
         
         if (s.cvPath) {
-            socialLinksHtml += `<a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; text-decoration: none;">📄 CV Görüntüle</a>`;
+            // CV Butonu (Sabit kalabilir veya ikon eklenebilir)
+            socialLinksHtml += `<a href="${s.cvPath}" target="_blank" class="cv-link" style="font-weight: bold; background-color: #FFD43B; padding: 10px 15px; border-radius: 5px; color: #222; text-decoration: none; display: flex; align-items: center; gap: 5px;"><i class="fas fa-file-pdf"></i> CV Görüntüle</a>`;
         }
         if (s.linkedin) {
-            socialLinksHtml += `<a href="${s.linkedin}" target="_blank" title="LinkedIn Profili" style="font-size: 2rem; text-decoration: none;">🔵</a>`;
+            // LinkedIn İkonu (Mavi Marka Rengi)
+            socialLinksHtml += `<a href="${s.linkedin}" target="_blank" title="LinkedIn Profili" style="font-size: 2rem; text-decoration: none; color: #0077b5;"><i class="fab fa-linkedin"></i></a>`;
         }
         if (s.github) {
-            socialLinksHtml += `<a href="${s.github}" target="_blank" title="GitHub Profili" style="font-size: 2rem; text-decoration: none;">💻</a>`;
+            // GitHub İkonu (Siyah)
+            socialLinksHtml += `<a href="${s.github}" target="_blank" title="GitHub Profili" style="font-size: 2rem; text-decoration: none; color: #333;"><i class="fab fa-github"></i></a>`;
         }
         if (s.portfolio) {
-            socialLinksHtml += `<a href="${s.portfolio}" target="_blank" title="Portfolyo / Web Sitesi" style="font-size: 2rem; text-decoration: none;">🎨</a>`;
+            // Portfolyo İkonu (Dünya/Web İkonu)
+            socialLinksHtml += `<a href="${s.portfolio}" target="_blank" title="Portfolyo / Web Sitesi" style="font-size: 2rem; text-decoration: none; color: #ea4c89;"><i class="fas fa-globe"></i></a>`;
         }
         socialLinksHtml += '</div>';
 
