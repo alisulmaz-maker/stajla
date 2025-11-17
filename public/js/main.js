@@ -4,6 +4,7 @@
 
 let currentUser = null;
 let myStudentListing = null;
+let mySavedIds = []; // Kullanıcının favori ilan ID'lerini tutacak
 // --- YENİ EKLENEN KISIM: ARAMA KUTUSU LİSTELERİ ---
 
 const allCities = [
@@ -68,12 +69,11 @@ async function renderResultsOnHome() {
     container.innerHTML = 'Yükleniyor...';
     noResultsPlaceholder.style.display = 'none';
 
-    // 1. KULLANICI ROLÜNE GÖRE DOĞRU API ROTASINI SEÇ
-    let apiEndpoint = '/api/ogrenci-ilanlari'; // Varsayılan (Ziyaretçi ve İşveren için)
+    let apiEndpoint = '/api/ogrenci-ilanlari'; 
     let ilanTipi = 'student';
 
     if (currentUser && currentUser.role === 'student') {
-        apiEndpoint = '/api/job-listings'; // Öğrenciyse işveren ilanlarını çek
+        apiEndpoint = '/api/job-listings'; 
         ilanTipi = 'employer';
     }
 
@@ -87,13 +87,22 @@ async function renderResultsOnHome() {
             return;
         }
 
-        // 2. ÇEKİLEN İLAN TİPİNE GÖRE DOĞRU KARTI OLUŞTUR
         ilanlar.forEach(ilan => {
             const el = document.createElement('div');
             el.className = 'card';
 
+            // Favori Durumunu Kontrol Et
+            const isSaved = mySavedIds.includes(ilan._id);
+            const heartClass = isSaved ? 'saved' : '';
+            const heartIcon = isSaved ? 'fas' : 'far'; // fas: dolu, far: boş (FontAwesome)
+
+            // Kalp Butonu HTML'i
+            const saveBtnHtml = currentUser ? 
+                `<button class="save-btn ${heartClass}" data-id="${ilan._id}" onclick="toggleSave(this, '${ilan._id}')">
+                    <i class="${heartIcon} fa-heart"></i>
+                </button>` : '';
+
             if (ilanTipi === 'student') {
-                // Ziyaretçi/İşveren için Öğrenci Kartı HTML'i
                 const s = ilan;
                 const profilePicHtml = s.sahipInfo && s.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${s.sahipInfo.profilePicturePath}')"></div>`
@@ -103,7 +112,7 @@ async function renderResultsOnHome() {
                     <div class="card-content">
                         <a href="/ogrenci-profil.html?id=${s._id}" class="card-link-wrapper">
                             <div class="card-header">
-                                ${profilePicHtml}
+                                ${saveBtnHtml} ${profilePicHtml}
                                 <div class="card-info">
                                     <h4>${escapeHtml(s.name)}</h4>
                                     <p><strong>${escapeHtml(s.area)}</strong> — ${escapeHtml(s.city)}</p>
@@ -117,7 +126,6 @@ async function renderResultsOnHome() {
                         </div>
                     </div>`;
             } else {
-                // Öğrenci için İşveren Kartı HTML'i
                 const j = ilan;
                 const profilePicHtml = j.sahipInfo && j.sahipInfo.profilePicturePath
                     ? `<div class="card-profile-pic" style="background-image: url('${j.sahipInfo.profilePicturePath}')"></div>`
@@ -126,20 +134,21 @@ async function renderResultsOnHome() {
                 el.innerHTML = `
                     <div class="card-content">
                         <div class="card-header">
-                            ${profilePicHtml}
+                            ${saveBtnHtml} ${profilePicHtml}
                             <div class="card-info">
-                               <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;" title="${escapeHtml(j.company)} şirket profiline git"><h4>${escapeHtml(j.company)}</h4></a>
+                            <a href="/sirket-profili.html?id=${j.createdBy}" style="color: inherit; text-decoration: none;"><h4>${escapeHtml(j.company)}</h4></a>
                                 <p><strong>${escapeHtml(j.area)}</strong> — ${escapeHtml(j.city)}</p>
                             </div>
                         </div>
                         <div class="card-body">
                             <p style="margin-top: 0;">Sektör: <strong>${escapeHtml(j.sector || 'Belirtilmemiş')}</strong></p>
                             <p>Gereksinimler: ${escapeHtml((j.req || 'Belirtilmemiş').substring(0, 75))}...</p>
-                            <p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>
-                            
-                            <button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
-                                Hemen Başvur
-                            </button>
+                            ${currentUser && currentUser.role === 'student' ?
+                                `<button class="apply-btn cta-primary" data-listing-id="${j._id}" style="width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; background-color: #FFD43B; color: #222; border: none; cursor: pointer;">
+                                    Hemen Başvur
+                                </button>` : 
+                                `<p>İletişim: <strong>${escapeHtml(j.contact)}</strong></p>`
+                            }
                         </div>
                     </div>`;
             }
@@ -624,6 +633,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch('/api/current-user');
         currentUser = await response.json();
         const userNav = document.getElementById('user-nav');
+
+        // YENİ: Kullanıcının favorilerini çek
+        if (currentUser) {
+            try {
+                const favRes = await fetch('/api/my-saved-ids');
+                mySavedIds = await favRes.json();
+            } catch (e) { console.error("Favoriler çekilemedi", e); }
+        }
 // YENİ EKLENDİ: Kullanıcı öğrenciyse, başvuru yapabilmesi için onun staj ilanını hafızaya al
         if (currentUser && currentUser.role === 'student') {
             try {
@@ -1353,3 +1370,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Kullanıcı durumu kontrol edilirken hata:', err);
     }
 });
+// --- YENİ: Favori Ekle/Çıkar Fonksiyonu ---
+async function toggleSave(btn, listingId) {
+    // Butonun içindeki ikonu al
+    const icon = btn.querySelector('i');
+
+    // Animasyon için geçici efekt (optimistic UI)
+    const isCurrentlySaved = btn.classList.contains('saved');
+
+    if (isCurrentlySaved) {
+        btn.classList.remove('saved');
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+    } else {
+        btn.classList.add('saved');
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+    }
+
+    try {
+        const response = await fetch('/api/toggle-save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listingId })
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            // Hata olursa eski haline döndür
+            alert(result.message);
+            if (isCurrentlySaved) {
+                btn.classList.add('saved');
+                icon.classList.add('fas');
+            } else {
+                btn.classList.remove('saved');
+                icon.classList.remove('fas');
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}

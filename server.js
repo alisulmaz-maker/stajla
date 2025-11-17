@@ -625,6 +625,60 @@ app.post('/api/delete-listing', async (req, res) => {
         res.json({ success: true, message: 'İlan başarıyla silindi.' });
     } catch (err) { res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
 });
+
+// YENİ EKLENDİ: İlanı Favorilere Ekle/Çıkar (Toggle)
+app.post('/api/toggle-save', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ success: false, message: 'Favorilere eklemek için giriş yapmalısınız.' });
+    }
+
+    try {
+        const { listingId } = req.body;
+        const userId = new ObjectId(req.session.user.id);
+        const listingObjectId = new ObjectId(listingId);
+
+        // Önce kullanıcının verisini çekelim
+        const user = await db.collection("kullanicilar").findOne({ _id: userId });
+        
+        // Kullanıcının 'savedListings' dizisi var mı ve bu ilan içinde mi?
+        const isSaved = user.savedListings && user.savedListings.some(id => id.toString() === listingId);
+
+        if (isSaved) {
+            // Zaten kayıtlıysa -> ÇIKAR ($pull)
+            await db.collection("kullanicilar").updateOne(
+                { _id: userId },
+                { $pull: { savedListings: listingObjectId } }
+            );
+            res.json({ success: true, status: 'removed', message: 'İlan favorilerden çıkarıldı.' });
+        } else {
+            // Kayıtlı değilse -> EKLE ($addToSet - aynı şeyi iki kere eklemez)
+            await db.collection("kullanicilar").updateOne(
+                { _id: userId },
+                { $addToSet: { savedListings: listingObjectId } }
+            );
+            res.json({ success: true, status: 'added', message: 'İlan favorilere eklendi!' });
+        }
+
+    } catch (err) {
+        console.error('Favori işlemi hatası:', err);
+        res.status(500).json({ success: false, message: 'İşlem sırasında hata oluştu.' });
+    }
+});
+
+// YENİ EKLENDİ: Kullanıcının Favori İlan ID'lerini Getir (Kalpleri boyamak için)
+app.get('/api/my-saved-ids', async (req, res) => {
+    if (!req.session.user) { return res.json([]); }
+    try {
+        const user = await db.collection("kullanicilar").findOne(
+            { _id: new ObjectId(req.session.user.id) },
+            { projection: { savedListings: 1 } }
+        );
+        res.json(user.savedListings || []);
+    } catch (err) {
+        res.json([]);
+    }
+});
+
 // YENİ EKLENEN ROTA: DÜZENLENECEK İLANIN DETAYLARINI GETİRME
 app.get('/api/get-listing-details', async (req, res) => {
     if (!req.session.user) { return res.status(401).json({ success: false, message: 'Giriş yapmalısınız.' }); }

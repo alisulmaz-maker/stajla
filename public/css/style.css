@@ -525,3 +525,33 @@ footer a:hover {
     border-color: #FFD43B;
     color: #222;
 }
+/* --- YENİ EKLENDİ: Favori (Kalp) Butonu Stilleri --- */
+.card-header {
+    position: relative; /* Kalbi sağ üste sabitlemek için */
+}
+
+.save-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #ccc; /* Boşken gri */
+    transition: transform 0.2s, color 0.2s;
+    z-index: 10; /* Diğer öğelerin üstünde olsun */
+    padding: 5px;
+}
+
+.save-btn:hover {
+    transform: scale(1.2); /* Üzerine gelince büyüsün */
+}
+
+.save-btn.saved {
+    color: #e74c3c; /* Doluyken kırmızı */
+}
+
+.save-btn.saved i {
+    font-weight: 900; /* FontAwesome dolu kalp stili */
+}
