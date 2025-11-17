@@ -326,19 +326,30 @@ async function setupNotifications() {
     });
 
     // Bildirimleri Çekme
+    // Bildirimleri Çekme (DÜZELTİLMİŞ VERSİYON)
     const fetchNotifications = async () => {
         try {
             const response = await fetch('/api/notifications');
+            
+            if (!response.ok) {
+                throw new Error('Sunucu hatası');
+            }
+
             const notifications = await response.json();
 
-            if (notifications.length > 0) {
+            if (notifications && notifications.length > 0) {
                 countElement.textContent = notifications.length;
                 countElement.style.display = 'flex';
                 listElement.innerHTML = '';
 
                 notifications.forEach(n => {
-                    const student = n.applicantInfo[0];
-                    const studentListing = n.studentListingInfo[0];
+                    // DÜZELTME: [0] kaldırıldı çünkü server.js 'unwind' ile tek obje yolluyor
+                    const student = n.applicantInfo; 
+                    const studentListing = n.studentListingInfo;
+
+                    // Güvenlik: Eğer öğrenci veya ilan silinmişse hata vermesin, atlasın
+                    if (!student || !studentListing) return;
+
                     const item = document.createElement('div');
                     item.className = 'notification-item';
                     item.innerHTML = `
@@ -359,7 +370,7 @@ async function setupNotifications() {
         } catch (err) {
             console.error('Bildirimler yüklenirken hata:', err);
             countElement.style.display = 'none';
-            listElement.innerHTML = '<div class="notification-item">Bildirim yüklenemedi.</div>';
+            listElement.innerHTML = '<div class="notification-item" style="color:red;">Bildirimler yüklenemedi.</div>';
         }
     };
 
