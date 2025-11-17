@@ -472,7 +472,13 @@ app.post('/api/update-profile', upload.single('profilePicture'), async (req, res
             const folder = userRole === 'employer' ? 'company_logos' : 'avatars';
             updateData.profilePicturePath = await uploadToCloudinary(req.file.path, resourceType, folder);
         }
-
+// 2.5. Sadece Öğrenciye Ait Alanlar (YENİ EKLENDİ)
+    if (userRole === 'student') {
+        const { linkedin, github, portfolio } = req.body;
+        if (linkedin !== undefined) updateData.linkedin = linkedin;
+        if (github !== undefined) updateData.github = github;
+        if (portfolio !== undefined) updateData.portfolio = portfolio;
+    }
         // 3. Sadece İşverene Ait Alanlar
         if (userRole === 'employer') {
             if (companyWebsite) { updateData.companyWebsite = companyWebsite; }
@@ -580,7 +586,10 @@ app.get('/api/student-profile/:id', async (req, res) => {
             contact: studentListing.contact,
             cvPath: studentListing.cvPath,
             profilePicturePath: user ? user.profilePicturePath : null,
-            listingId: studentListing._id
+            listingId: studentListing._id,
+            linkedin: user ? user.linkedin : null,
+        github: user ? user.github : null,
+        portfolio: user ? user.portfolio : null
         };
 
         res.json({ success: true, profileInfo });
