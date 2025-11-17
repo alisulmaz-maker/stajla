@@ -760,77 +760,143 @@ app.get('/api/my-student-listing', async (req, res) => {
 });
 
 app.post('/api/apply', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'student') { return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); }
+    if (!req.session.user || req.session.user.role !== 'student') { 
+        return res.status(403).json({ success: false, message: 'Bu işlem için öğrenci olarak giriş yapmalısınız.' }); 
+    }
     try {
         const { listingId, studentListingId } = req.body;
         const studentId = new ObjectId(req.session.user.id);
+        
         const listing = await db.collection("isverenler").findOne({ _id: new ObjectId(listingId) });
         if (!listing) { return res.status(404).json({ success: false, message: 'İlan bulunamadı.' }); }
+        
         const existingApplication = await db.collection("applications").findOne({ listingId: new ObjectId(listingId), applicantId: studentId });
         if (existingApplication) { return res.status(400).json({ success: false, message: 'Bu ilana zaten başvurdunuz.' }); }
-        const newApplication = { applicantId: studentId, listingId: new ObjectId(listingId), ownerId: listing.createdBy, studentListingId: new ObjectId(studentListingId), status: 'pending', createdAt: new Date() };
+        
+        const newApplication = { 
+            applicantId: studentId, 
+            listingId: new ObjectId(listingId), 
+            ownerId: listing.createdBy, 
+            studentListingId: new ObjectId(studentListingId), 
+            status: 'pending', 
+            createdAt: new Date() 
+        };
+        
         await db.collection("applications").insertOne(newApplication);
+
+        // --- E-POSTA BİLDİRİMİ (YENİ EKLENDİ) ---
+        try {
+            // 1. İşverenin e-posta adresini bul
+            const employerUser = await db.collection("kullanicilar").findOne({ _id: listing.createdBy });
+            // 2. Öğrencinin adını al (Email içinde yazmak için)
+            const studentUser = await db.collection("kullanicilar").findOne({ _id: studentId });
+
+            if (employerUser && employerUser.email) {
+                const msg = {
+                    to: employerUser.email,
+                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
+                    subject: 'STAJLA - İlanınıza Yeni Bir Başvuru Var! 🚀',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; color: #333;">
+                            <h2 style="color: #FFD43B;">Tebrikler! Yeni Bir Adayınız Var.</h2>
+                            <p>Sayın <strong>${employerUser.name}</strong>,</p>
+                            <p><strong>"${listing.area}"</strong> pozisyonu için yayınladığınız ilana <strong>${studentUser.name}</strong> adlı öğrenci başvurdu.</p>
+                            <p>Adayın profilini incelemek ve başvuruyu değerlendirmek için hemen panele giriş yapın.</p>
+                            <br>
+                            <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">Başvuruyu Görüntüle</a>
+                            <p style="font-size: 12px; color: #666; margin-top: 20px;">© 2025 STAJLA</p>
+                        </div>
+                    `,
+                };
+                await sgMail.send(msg);
+                console.log(`İşverene (${employerUser.email}) başvuru maili gönderildi.`);
+            }
+        } catch (emailErr) {
+            console.error("Başvuru maili gönderilemedi:", emailErr);
+            // Mail gitmese bile başvuru veritabanına işlendiği için işlemi başarılı sayıyoruz.
+        }
+        // ----------------------------------------
+
         res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
-    } catch (err) { console.error('Başvuru sırasında hata:', err); res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); }
+    } catch (err) { 
+        console.error('Başvuru sırasında hata:', err); 
+        res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); 
+    }
 });
 // YENİ EKLENEN ROTA: İŞVERENDEN ÖĞRENCİYE İŞ TEKLİFİ GÖNDERME
 app.post('/api/send-offer', async (req, res) => {
-    // 1. Sadece işverenlerin bu rotayı kullanabildiğinden emin ol
     if (!req.session.user || req.session.user.role !== 'employer') {
         return res.status(403).json({ success: false, message: 'Bu işlem için işveren olarak giriş yapmalısınız.' });
     }
 
     try {
-        const { studentId, jobListingId } = req.body; // main.js'den 'studentId' olarak geliyor (aslında studentListingId)
+        const { studentId, jobListingId } = req.body;
         const employerId = new ObjectId(req.session.user.id);
 
-        // 2. Gelen ID'leri doğrula
         if (!studentId || !jobListingId) {
-            return res.status(400).json({ success: false, message: 'Eksik bilgi: Öğrenci veya iş ilanı ID\'si bulunamadı.' });
+            return res.status(400).json({ success: false, message: 'Eksik bilgi.' });
         }
 
         const studentListingIdObj = new ObjectId(studentId);
         const jobListingIdObj = new ObjectId(jobListingId);
 
-        // 3. Teklif edilen iş ilanının bu işverene ait olduğunu doğrula
         const jobListing = await db.collection("isverenler").findOne({ _id: jobListingIdObj, createdBy: employerId });
-        if (!jobListing) {
-            return res.status(403).json({ success: false, message: 'Bu iş ilanı size ait değil veya bulunamadı.' });
-        }
+        if (!jobListing) { return res.status(403).json({ success: false, message: 'Bu iş ilanı size ait değil.' }); }
 
-        // 4. Teklif gönderilen öğrenci ilanının mevcut olduğunu doğrula
         const studentListing = await db.collection("ogrenciler").findOne({ _id: studentListingIdObj });
-        if (!studentListing) {
-            return res.status(404).json({ success: false, message: 'Teklif gönderilmek istenen öğrenci ilanı bulunamadı.' });
-        }
+        if (!studentListing) { return res.status(404).json({ success: false, message: 'Öğrenci ilanı bulunamadı.' }); }
 
-        // 5. Bu teklifin daha önce gönderilip gönderilmediğini kontrol et
-        const existingOffer = await db.collection("is_teklifleri").findOne({
-            studentListingId: studentListingIdObj,
-            jobListingId: jobListingIdObj
-        });
+        const existingOffer = await db.collection("is_teklifleri").findOne({ studentListingId: studentListingIdObj, jobListingId: jobListingIdObj });
+        if (existingOffer) { return res.status(400).json({ success: false, message: 'Zaten teklif göndermişsiniz.' }); }
 
-        if (existingOffer) {
-            return res.status(400).json({ success: false, message: 'Bu öğrenciye bu ilan için zaten bir teklif göndermişsiniz.' });
-        }
-
-        // 6. Teklifi 'is_teklifleri' koleksiyonuna kaydet
         const newOffer = {
-            studentListingId: studentListingIdObj,      // Öğrencinin ilan ID'si
-            jobListingId: jobListingIdObj,          // İşverenin ilan ID'si
-            employerId: employerId,                 // Teklifi gönderen işverenin KULLANICI ID'si
-            studentOwnerId: studentListing.createdBy, // Teklifi alan öğrencinin KULLANCI ID'si
+            studentListingId: studentListingIdObj,
+            jobListingId: jobListingIdObj,
+            employerId: employerId,
+            studentOwnerId: studentListing.createdBy,
             status: 'pending',
             createdAt: new Date()
         };
 
         await db.collection("is_teklifleri").insertOne(newOffer);
 
+        // --- E-POSTA BİLDİRİMİ (YENİ EKLENDİ) ---
+        try {
+            // 1. Öğrencinin e-posta adresini bul
+            const studentUser = await db.collection("kullanicilar").findOne({ _id: studentListing.createdBy });
+            // 2. İşverenin adını al (Şirket adı 'name' alanında kayıtlı)
+            const employerUser = await db.collection("kullanicilar").findOne({ _id: employerId });
+
+            if (studentUser && studentUser.email) {
+                const msg = {
+                    to: studentUser.email,
+                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
+                    subject: 'STAJLA - Tebrikler! Bir İş Teklifi Aldınız 🎉',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; color: #333;">
+                            <h2 style="color: #FFD43B;">Harika Haber!</h2>
+                            <p>Sayın <strong>${studentUser.name}</strong>,</p>
+                            <p><strong>"${employerUser.name}"</strong> firması profilinizi inceledi ve size bir iş teklifi gönderdi!</p>
+                            <p>Teklifi detaylarını incelemek için hemen hesabınıza giriş yapın.</p>
+                            <br>
+                            <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">Teklifi Gör</a>
+                            <p style="font-size: 12px; color: #666; margin-top: 20px;">© 2025 STAJLA</p>
+                        </div>
+                    `,
+                };
+                await sgMail.send(msg);
+                console.log(`Öğrenciye (${studentUser.email}) teklif maili gönderildi.`);
+            }
+        } catch (emailErr) {
+            console.error("Teklif maili gönderilemedi:", emailErr);
+        }
+        // ----------------------------------------
+
         res.json({ success: true, message: 'Teklif başarıyla gönderildi!' });
 
     } catch (err) {
         console.error('Teklif gönderme hatası:', err);
-        res.status(500).json({ success: false, message: 'Teklif gönderilirken sunucuda bir hata oluştu.' });
+        res.status(500).json({ success: false, message: 'Sunucu hatası.' });
     }
 });
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
