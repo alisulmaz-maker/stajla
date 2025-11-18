@@ -140,78 +140,93 @@
 
             if(res.success) {
                 const data = res.listing;
+                
+                // --- 1. ÖNCE GÖRÜNÜR ALANLARI DOLDUR (HATA OLSA BİLE BUNLAR GÖRÜNSÜN) ---
                 document.getElementById('loading-msg').style.display = 'none';
-                document.getElementById('content-area').style.display = 'grid'; // Göster
+                document.getElementById('content-area').style.display = 'grid';
 
-                // --- ORTAK ALANLAR ---
                 // Profil Resmi
                 const imgDiv = document.getElementById('detail-img');
                 if (data.profilePicturePath) {
                     imgDiv.style.backgroundImage = `url('${data.profilePicturePath}')`;
+                    imgDiv.innerHTML = ''; // Placeholder'ı temizle
                 } else {
-                    // Placeholder (Baş harf veya ikon)
                     imgDiv.style.display = 'flex'; imgDiv.style.alignItems = 'center'; imgDiv.style.justifyContent = 'center';
                     imgDiv.innerHTML = `<span style="font-size: 3rem; color: #ccc;">${(data.name || data.company || '?').charAt(0)}</span>`;
                 }
 
-                // İsim ve Başlık
+                // Temel Bilgiler
                 document.getElementById('detail-name').textContent = type === 'student' ? data.name : data.company;
                 document.getElementById('detail-title-sub').textContent = type === 'student' ? 'Öğrenci / Stajyer Adayı' : 'İşveren / Şirket';
-                document.title = `${title} - ${type === 'student' ? data.dept : data.company} | STAJLA`;
-                document.getElementById('val-location').textContent = data.city;
+                document.getElementById('val-location').textContent = data.city || '';
                 document.getElementById('val-area').textContent = type === 'student' ? data.area : data.sector;
-                document.getElementById('val-contact').textContent = data.contact;
-
-                // Rozet (Staj Türü)
+                document.getElementById('val-contact').textContent = data.contact || '';
+                
+                // Rozet
                 const badge = document.getElementById('detail-badge');
                 if (data.stajTuru) {
                     badge.textContent = data.stajTuru;
+                    badge.style.display = 'inline-block';
                     if(data.stajTuru.includes('Ücretsiz')) badge.style.backgroundColor = '#6c757d';
+                    else badge.style.backgroundColor = '#28a745';
                 } else { badge.style.display = 'none'; }
 
                 // Açıklama
                 document.getElementById('detail-desc').textContent = type === 'student' ? data.desc : data.req;
 
-                // --- TİPE ÖZEL ALANLAR ---
+                // Tip Özel Alanlar
                 if (type === 'student') {
                     document.getElementById('label-1').textContent = 'Bölüm/Okul:';
-                    document.getElementById('val-1').textContent = data.dept;
+                    document.getElementById('val-1').textContent = data.dept || '';
 
-                    // CV ve Sosyal Linkler (GELİŞTİRME BURADA)
                     document.getElementById('student-actions').style.display = 'block';
                     const socialBox = document.getElementById('social-links');
+                    socialBox.innerHTML = ''; // Temizle
                     
                     if (data.linkedin) socialBox.innerHTML += `<a href="${data.linkedin}" target="_blank" style="color: #0077b5;"><i class="fab fa-linkedin"></i></a>`;
                     if (data.github) socialBox.innerHTML += `<a href="${data.github}" target="_blank" style="color: #333;"><i class="fab fa-github"></i></a>`;
                     if (data.portfolio) socialBox.innerHTML += `<a href="${data.portfolio}" target="_blank" style="color: #ea4c89;"><i class="fas fa-globe"></i></a>`;
 
                     const cvBtn = document.getElementById('cv-btn');
-                    if (data.cvPath) { cvBtn.href = data.cvPath; } else { cvBtn.style.display = 'none'; }
+                    if (data.cvPath) { cvBtn.href = data.cvPath; cvBtn.style.display = 'block'; } else { cvBtn.style.display = 'none'; }
                     
-                    document.getElementById('main-action-btn').textContent = "Bu Adaya Ulaş";
-                    document.getElementById('main-action-btn').onclick = () => window.location.href = `mailto:${data.contact}`;
+                    const actionBtn = document.getElementById('main-action-btn');
+                    actionBtn.textContent = "Bu Adaya Ulaş";
+                    actionBtn.onclick = () => window.location.href = `mailto:${data.contact}`;
 
                 } else {
                     // İşveren
                     document.getElementById('label-1').textContent = 'Aranan Pozisyon:';
-                    document.getElementById('val-1').textContent = data.area;
+                    document.getElementById('val-1').textContent = data.area || '';
                     
                     const applyBtn = document.getElementById('main-action-btn');
                     applyBtn.textContent = "Hemen Başvur";
                     applyBtn.style.backgroundColor = "#FFD43B";
                     applyBtn.style.color = "#222";
 
-                    // Başvuru mantığı (main.js'deki currentUser kontrolü burada da olmalı ama basit tutuyoruz)
-                    if (currentUser && currentUser.role === 'student') {
-                        applyBtn.onclick = async () => {
-                           // Basit başvuru yönlendirmesi veya main.js fonksiyonunu tetikleme
-                           alert('Başvuru yapmak için Anasayfadaki butonu kullanmanız önerilir.');
-                        };
-                    }
+                    // Basit yönlendirme (Hemen Başvur butonu)
+                    // Burada main.js'deki gelişmiş başvuru mantığını tetiklemek yerine
+                    // basitçe mail atmaya yönlendirebiliriz veya anasayfaya
+                    applyBtn.onclick = () => {
+                        if(currentUser && currentUser.role === 'student') {
+                             // İlan ID'sini kullanarak main.js'deki gibi başvuru yapılabilir
+                             // Ancak basitlik için mail:
+                             window.location.href = `mailto:${data.contact}?subject=Staj Başvurusu - ${data.area}`;
+                        } else {
+                            alert('Başvuru yapmak için öğrenci olarak giriş yapmalısınız.');
+                        }
+                    };
                 }
+
+                // --- 2. SEO BAŞLIĞI (EN SONA ALDIK Kİ HATA OLSA BİLE SAYFA GÖRÜNSÜN) ---
+                const pageTitle = type === 'student' 
+                    ? `${data.name} | Öğrenci Profili - STAJLA`
+                    : `${data.area} - ${data.company} | STAJLA`;
+                document.title = pageTitle;
 
             }
         } catch(e) {
+            console.error(e);
             document.getElementById('loading-msg').innerHTML = '<p>İlan yüklenirken hata oluştu.</p>';
         }
     });
