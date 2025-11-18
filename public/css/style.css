@@ -584,18 +584,38 @@ body {
         overflow-y: auto; 
     }
 }
-/* Anasayfa Hero Görsel Düzenlemesi */
-.hero-section img {
-    max-width: 120px; /* Daha küçük bir boyut */
-    height: auto; /* Orantıyı koru */
-    margin-top: 30px; /* Navbar ile arasına boşluk koy */
-    margin-bottom: 20px;
+/* --- YENİ HERO DÜZENİ (Resim ve Yazı Yan Yana) --- */
+
+/* Kapsayıcıyı Esnek Kutu (Flex) Yap */
+.hero-container {
+    display: flex;
+    align-items: center; /* Dikeyde ortala */
+    justify-content: center; /* Yatayda ortala */
+    gap: 30px; /* Resim ile yazı arasındaki boşluk */
+    text-align: left; /* Yazıları sola yasla (resmin yanında daha iyi durur) */
 }
 
-/* Mobilde daha da küçültmek isterseniz */
+/* Resmi Küçült ve Beyaz Yap */
+.hero-icon-small {
+    width: 80px; /* Küçücük olsun */
+    height: auto;
+    filter: brightness(0) invert(1); /* Siyah ikonu BEYAZ yapar */
+    flex-shrink: 0; /* Resmin sıkışmasını engeller */
+}
+
+/* Yazı Alanı */
+.hero-text h1 {
+    margin-top: 0;
+    font-size: 2.5rem; /* Başlığı biraz dengeleyelim */
+    line-height: 1.2;
+}
+
+/* --- MOBİL UYUMLULUK (Telefonda Alt Alta Dursun) --- */
 @media (max-width: 768px) {
-    .hero-section img {
-        max-width: 100px;
-        margin-top: 20px;
+    .hero-container {
+        flex-direction: column; /* Alt alta sırala */
+        text-align: center; /* Yazıları ortala */
+        gap: 15px;
     }
+    .hero-text h1 { font-size: 2rem; }
 }
