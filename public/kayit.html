@@ -1,68 +1,37 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>STAJLA</title> <link rel="stylesheet" href="/css/style.css">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>STAJLA</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol - STAJLA</title>
     <link rel="stylesheet" href="/css/style.css">
-
-    <link rel="icon" type="image/png" href="/img/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <header class="navbar">
     <div class="left">
-        <div id="hamburger-menu">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <a href="/index.html" class="logo-link">
-            <img src="/img/logo.png" alt="STAJLA" class="logo-img">
-            <span class="logo-text">STAJLA</span>
-        </a>
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
     </div>
     <nav class="nav-links">
         <a href="/index.html" class="desktop-link">Anasayfa</a>
         <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
         <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
         <a href="/iletisim.html" class="desktop-link">İletişim</a>
-        <div id="user-nav">
-            <a href="/giris.html">Giriş / Kayıt</a>
-        </div>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
     </nav>
 </header>
-<div id="mobile-nav">
-    <a href="/index.html">Anasayfa</a>
-    <a href="/isveren-ilan.html">İşveren İlan</a>
-    <a href="/ogrenci-ilan.html">Öğrenci İlan</a>
-    <a href="/iletisim.html">İletişim</a>
-</div>
+<div id="mobile-nav"><a href="/index.html">Anasayfa</a><a href="/isveren-ilan.html">İşveren İlan</a><a href="/ogrenci-ilan.html">Öğrenci İlan</a><a href="/iletisim.html">İletişim</a></div>
 
 <main class="form-page">
-    <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://42f2671d685f51e10fc6-b9fcecea3e50b3b59bdc28dead054ebc.ssl.cf5.rackcdn.com/illustrations/mobile_login_ikmv.svg" style="width: 150px;">
-</div>
-    <div class="card" id="verify-card" style="max-width: 500px; margin: 20px auto; display: none;">
-    </div>
-        <h2>Hesabınızı Doğrulayın</h2>
-        <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">
-            Kayıt olduğunuz e-posta adresine 6 haneli doğrulama kodunu gönderdik. Lütfen kutuya girin.
-        </p>
-    <form id="verify-form" style="display: flex; flex-direction: column; gap: 15px;">
-        <label>Doğrulama Kodu
-            <input type="text" id="verify-code" maxlength="6" required placeholder="Örn: A1B2C3" style="text-align: center; font-size: 1.5rem; text-transform: uppercase;">
-        </label>
-        <button type="submit" style="width: 100%;" class="cta-primary">Hesabı Aktive Et</button>
-    </form>
-    <p style="text-align: center; margin-top: 15px;">
-        <a href="#" id="resend-code" style="font-weight: bold;">Kodu Tekrar Gönder</a>
-    </p>
-        <input type="hidden" id="verification-email"> </div>
+    
     <div class="card" id="register-card" style="max-width: 500px; margin: 0 auto;">
-        <h2>Kariyerine STAJLA Başla</h2>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://42f2671d685f51e10fc6-b9fcecea3e50b3b59bdc28dead054ebc.ssl.cf5.rackcdn.com/illustrations/mobile_login_ikmv.svg" style="width: 150px;">
+        </div>
+        
+        <h2 style="text-align: center;">Kariyerine STAJLA Başla</h2>
+        
         <form id="register-form">
             <label>Ad Soyad
                 <input type="text" id="reg-name" required>
@@ -74,20 +43,46 @@
                 <input type="password" id="reg-pass" required>
             </label>
             <label>Hesap Türünüz
-                <small style="display: block; color: #495057; font-weight: normal; margin-top: 5px;">
-                    *Öğrenci: İlanlara başvurur. İşveren: İlan yayınlar, stajyer arar.
+                <small style="display: block; color: #6c757d; font-weight: normal; margin-top: 5px;">
+                    *Öğrenci: İlanlara başvurur. İşveren: İlan yayınlar.
                 </small>
-                <select id="reg-role" required> <option value="">Seçim Yapın</option>
+                <select id="reg-role" required> 
+                    <option value="">Seçim Yapın</option>
                     <option value="student">Öğrenci (Staj Arıyorum)</option>
                     <option value="employer">İşveren (Stajyer Arıyorum)</option>
                 </select>
             </label>
-            <button type="submit">Kayıt Ol</button>
+            <button type="submit" style="width: 100%;">Kayıt Ol</button>
         </form>
         <div style="text-align: center; margin-top: 16px;">
             <a href="giris.html">Zaten bir hesabın var mı? Giriş Yap</a>
         </div>
     </div>
+
+    <div class="card" id="verify-card" style="max-width: 500px; margin: 20px auto; display: none;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" style="width: 80px; opacity: 0.8;">
+        </div>
+
+        <h2 style="text-align: center;">Hesabınızı Doğrulayın</h2>
+        <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">
+            Kayıt olduğunuz e-posta adresine 6 haneli doğrulama kodunu gönderdik. Lütfen kutuya girin.
+        </p>
+        
+        <form id="verify-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <label>Doğrulama Kodu
+                <input type="text" id="verify-code" maxlength="6" required placeholder="Örn: A1B2C3" style="text-align: center; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 5px;">
+            </label>
+            <button type="submit" style="width: 100%; background-color: #28a745; border: none;">Hesabı Aktive Et</button>
+        </form>
+        
+        <input type="hidden" id="verification-email">
+        
+        <p style="text-align: center; margin-top: 15px;">
+            <a href="#" id="resend-code" style="font-weight: bold; color: #FFD43B;">Kodu Tekrar Gönder</a>
+        </p>
+    </div>
+
 </main>
 
 <footer>
@@ -99,5 +94,6 @@
     </p>
 </footer>
 
-<script src="/js/main.js"></script> </body>
+<script src="/js/main.js"></script> 
+</body>
 </html>
