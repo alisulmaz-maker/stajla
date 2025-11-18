@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hakkımızda - STAJLA</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .about-hero {
+            background-color: #222;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .about-img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .story-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 5px solid #FFD43B;
+        }
+        @media (max-width: 768px) {
+            .about-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="left">
+        <div id="hamburger-menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <a href="/index.html" class="logo-link"><img src="/img/logo.png" alt="STAJLA" class="logo-img"><span class="logo-text">STAJLA</span></a>
+    </div>
+    <nav class="nav-links">
+        <a href="/index.html" class="desktop-link">Anasayfa</a>
+        <a href="/isveren-ilan.html" class="desktop-link">İşveren İlan</a>
+        <a href="/ogrenci-ilan.html" class="desktop-link">Öğrenci İlan</a>
+        <a href="/iletisim.html" class="desktop-link">İletişim</a>
+        <div id="user-nav"><a href="/giris.html">Giriş / Kayıt</a></div>
+    </nav>
+</header>
+<div id="mobile-nav"><a href="/index.html">Anasayfa</a><a href="/isveren-ilan.html">İşveren İlan</a><a href="/ogrenci-ilan.html">Öğrenci İlan</a><a href="/iletisim.html">İletişim</a></div>
+
+<main>
+    <section class="about-hero">
+        <div class="container">
+            <h1 style="font-size: 2.5rem; margin-bottom: 10px;">Biz Kimiz?</h1>
+            <p style="font-size: 1.2rem; color: #ccc;">Öğrencilerden, öğrenciler için bir kariyer yolculuğu.</p>
+        </div>
+    </section>
+
+    <div class="container" style="padding: 40px 20px;">
+        
+        <div class="about-grid">
+            <div>
+                <h2 class="section-title" style="text-align: left;">STAJLA'nın Doğuşu</h2>
+                <div class="story-card">
+                    <p>Merhaba, ben <strong>Ali Sulmaz</strong>. Mehmet Akif Ersoy Üniversitesi Makine Mühendisliği öğrencisiyim.</p>
+                    <p>Üniversite hayatım boyunca hem kendimin hem de arkadaşlarımın staj bulma sürecinde yaşadığı zorlukları (karışık siteler, dönüş yapılmayan başvurular) bizzat tecrübe ettim.</p>
+                    <p>"Neden daha iyisi olmasın?" diyerek kodlamaya başladığım bu proje, bugün binlerce öğrenciye umut olmayı hedefleyen <strong>Stajla.net</strong>'e dönüştü.</p>
+                </div>
+            </div>
+            <div>
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Ekip Çalışması" class="about-img">
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: center;">
+            <h2 class="section-title">Misyonumuz</h2>
+            <p style="max-width: 800px; margin: 0 auto; font-size: 1.1rem; line-height: 1.8;">
+                Stajla olarak misyonumuz, üniversite öğrencileri ile geleceğin yeteneklerini arayan işverenler arasında sağlam bir köprü kurmaktır. Kariyer yolculuğunun en kritik adımı olan staj sürecini, herkes için daha basit, daha hızlı ve daha verimli hale getirmeyi hedefliyoruz. Amacımız, her öğrencinin potansiyelini ortaya çıkarabileceği doğru fırsatı, her işverenin de aradığı doğru adayı kolayca bulmasını sağlamaktır.
+            </p>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <p>
+        © 2025 STAJLA |
+        <a href="/gizlilik.html">Gizlilik Politikası</a> |
+        <a href="/kullanim-sartlari.html">Kullanım Şartları</a> |
+        <a href="/iletisim.html">İletişim</a>
+    </p>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
