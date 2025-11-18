@@ -106,6 +106,8 @@
                 // 1. Profil Bilgilerini Doldur
                 const profile = data.profile;
                 companyName.textContent = profile.name || 'Şirket Adı Belirtilmemiş';
+                // --- YENİ: Tarayıcı Sekme Başlığını Güncelle ---
+            document.title = `${profile.name} - Şirket Profili | STAJLA`;
 
                 if (profile.profilePicturePath) {
                     companyLogo.style.backgroundImage = `url('${profile.profilePicturePath}')`;

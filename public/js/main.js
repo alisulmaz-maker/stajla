@@ -431,6 +431,8 @@ async function loadStudentProfileData() {
         if (!response.ok) throw new Error('Profil bulunamadı.');
         
         const { profileInfo: s } = await response.json();
+        // --- YENİ: Tarayıcı Sekme Başlığını Güncelle ---
+        document.title = `${s.name} | Öğrenci Profili - STAJLA`;
 
         const canOffer = currentUser && currentUser.role === 'employer';
         const offerBtnHtml = canOffer

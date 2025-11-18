@@ -157,7 +157,7 @@
                 // İsim ve Başlık
                 document.getElementById('detail-name').textContent = type === 'student' ? data.name : data.company;
                 document.getElementById('detail-title-sub').textContent = type === 'student' ? 'Öğrenci / Stajyer Adayı' : 'İşveren / Şirket';
-
+                document.title = `${title} - ${type === 'student' ? data.dept : data.company} | STAJLA`;
                 document.getElementById('val-location').textContent = data.city;
                 document.getElementById('val-area').textContent = type === 'student' ? data.area : data.sector;
                 document.getElementById('val-contact').textContent = data.contact;
