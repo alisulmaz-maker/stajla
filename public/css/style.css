@@ -584,3 +584,18 @@ body {
         overflow-y: auto; 
     }
 }
+/* Anasayfa Hero Görsel Düzenlemesi */
+.hero-section img {
+    max-width: 120px; /* Daha küçük bir boyut */
+    height: auto; /* Orantıyı koru */
+    margin-top: 30px; /* Navbar ile arasına boşluk koy */
+    margin-bottom: 20px;
+}
+
+/* Mobilde daha da küçültmek isterseniz */
+@media (max-width: 768px) {
+    .hero-section img {
+        max-width: 100px;
+        margin-top: 20px;
+    }
+}
