@@ -563,6 +563,57 @@ app.get('/api/search', async (req, res) => {
     } catch (err) { console.error('Arama yapılırken hata:', err); res.status(500).json([]); }
 });
 
+// --- YENİ: DİNAMİK SITEMAP (SEO İÇİN) ---
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const baseUrl = 'https://stajla.net';
+        
+        // 1. Statik Sayfalar
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url><loc>${baseUrl}/</loc><priority>1.0</priority></url>
+            <url><loc>${baseUrl}/blog.html</loc><priority>0.8</priority></url>
+            <url><loc>${baseUrl}/hakkimizda.html</loc><priority>0.8</priority></url>
+            <url><loc>${baseUrl}/iletisim.html</loc><priority>0.5</priority></url>
+            <url><loc>${baseUrl}/giris.html</loc><priority>0.5</priority></url>
+            <url><loc>${baseUrl}/ogrenci-ilan.html</loc><priority>0.8</priority></url>
+            <url><loc>${baseUrl}/isveren-ilan.html</loc><priority>0.8</priority></url>`;
+
+        // 2. Blog Yazılarını Ekle
+        const articles = await db.collection("articles").find().project({ slug: 1 }).toArray();
+        articles.forEach(doc => {
+            xml += `<url><loc>${baseUrl}/makale-detay.html?id=${doc.slug}</loc><priority>0.7</priority></url>`;
+        });
+
+        // 3. İşveren İlanlarını Ekle
+        const jobs = await db.collection("isverenler").find().project({ _id: 1 }).toArray();
+        jobs.forEach(doc => {
+            xml += `<url><loc>${baseUrl}/ilan-detay.html?id=${doc._id}&amp;type=employer</loc><priority>0.6</priority></url>`;
+        });
+        
+        // 4. Öğrenci İlanlarını Ekle
+        const students = await db.collection("ogrenciler").find().project({ _id: 1 }).toArray();
+        students.forEach(doc => {
+            xml += `<url><loc>${baseUrl}/ogrenci-profil.html?id=${doc._id}</loc><priority>0.6</priority></url>`;
+        });
+
+        // 5. Şirket Profillerini Ekle
+        const companies = await db.collection("kullanicilar").find({ role: 'employer' }).project({ _id: 1 }).toArray();
+        companies.forEach(doc => {
+            xml += `<url><loc>${baseUrl}/sirket-profili.html?id=${doc._id}</loc><priority>0.7</priority></url>`;
+        });
+
+        xml += `</urlset>`;
+
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+
+    } catch (err) {
+        console.error("Sitemap hatası:", err);
+        res.status(500).end();
+    }
+});
+
 // PROFİL DETAYINI GETİRME (GÜNCELLENDİ: Sosyal Medya Linkleri Eklendi)
 app.get('/api/student-profile/:id', async (req, res) => {
     try {

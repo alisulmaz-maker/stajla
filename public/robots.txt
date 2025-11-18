@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /edit-listing.html
+Disallow: /profil.html
+Disallow: /profil-duzenle.html
+
+Sitemap: https://stajla.net/sitemap.xml
