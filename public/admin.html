@@ -45,6 +45,7 @@
                 <small>v1.0</small>
             </div>
             <ul>
+                <li onclick="showSection('listing-manager')"><i class="fas fa-list"></i> İlan Yönetimi</li>
                 <li class="active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt"></i> Genel Bakış</li>
                 <li onclick="showSection('blog-add')"><i class="fas fa-pen"></i> Blog Yazısı Ekle</li>
                 <li onclick="window.location.href='/index.html'"><i class="fas fa-home"></i> Siteye Dön</li>
@@ -72,6 +73,7 @@
                         <div class="stat-label">Blog Yazısı</div>
                         <div class="stat-number" id="stat-articles">...</div>
                     </div>
+                    
                 </div>
             </div>
 
@@ -87,7 +89,42 @@
                     </form>
                 </div>
             </div>
+<div id="listing-manager" class="admin-section">
+                <h2>Tüm İlanlar</h2>
+                <div class="card">
+                    <h3>Öğrenci İlanları</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>Bölüm</th>
+                                    <th>Tarih</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-student-list">
+                                </tbody>
+                        </table>
+                    </div>
 
+                    <h3 style="margin-top: 40px;">İşveren İlanları</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Firma</th>
+                                    <th>Pozisyon</th>
+                                    <th>Şehir</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-employer-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

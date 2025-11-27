@@ -1051,6 +1051,31 @@ app.post('/api/admin/add-blog', async (req, res) => {
     }
 });
 
+// YENİ: Admin İçin Tüm İlanları Getir
+app.get('/api/admin/all-listings', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false });
+    }
+    try {
+        const students = await db.collection("ogrenciler").find().sort({ _id: -1 }).toArray();
+        const employers = await db.collection("isverenler").find().sort({ createdAt: -1 }).toArray();
+        res.json({ success: true, students, employers });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// YENİ: Admin Yetkisiyle İlan Silme (Sorgusuz Sualsiz)
+app.post('/api/admin/delete-listing', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false });
+    }
+    try {
+        const { id, type } = req.body; // type: 'student' veya 'employer'
+        const collection = type === 'student' ? "ogrenciler" : "isverenler";
+        await db.collection(collection).deleteOne({ _id: new ObjectId(id) });
+        res.json({ success: true, message: 'İlan admin yetkisiyle silindi.' });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
 // Şifre Sıfırlama Rotaları
 app.post('/api/forgot-password', async (req, res) => {
     try {
