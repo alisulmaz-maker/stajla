@@ -700,6 +700,67 @@ async function setupAdminPanel() {
                 btn.textContent = 'Yazıyı Yayınla';
             }
         });
+        // 3. İlan Yönetimi (Listeleme ve Silme)
+    const loadAdminListings = async () => {
+        try {
+            const response = await fetch('/api/admin/all-listings');
+            const data = await response.json();
+            
+            if(data.success) {
+                // Öğrenci Listesi
+                const sList = document.getElementById('admin-student-list');
+                if(sList) {
+                    sList.innerHTML = data.students.map(s => `
+                        <tr>
+                            <td>${escapeHtml(s.name)}</td>
+                            <td>${escapeHtml(s.dept)}</td>
+                            <td>${s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '-'}</td>
+                            <td>
+                                <button class="action-btn btn-view" onclick="window.open('/ogrenci-profil.html?id=${s._id}')">Gör</button>
+                                <button class="action-btn btn-delete" onclick="adminDelete('${s._id}', 'student')">Sil</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // İşveren Listesi
+                const jList = document.getElementById('admin-employer-list');
+                if(jList) {
+                    jList.innerHTML = data.employers.map(j => `
+                        <tr>
+                            <td>${escapeHtml(j.company)}</td>
+                            <td>${escapeHtml(j.area)}</td>
+                            <td>${escapeHtml(j.city)}</td>
+                            <td>
+                                <button class="action-btn btn-view" onclick="window.open('/ilan-detay.html?id=${j._id}&type=employer')">Gör</button>
+                                <button class="action-btn btn-delete" onclick="adminDelete('${j._id}', 'employer')">Sil</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    // Menüye tıklandığında yüklesin diye global'e atama yapmıyoruz,
+    // basitçe her admin paneli açılışında yükleyebiliriz veya bir interval koyabiliriz.
+    loadAdminListings(); 
+
+    // Admin Silme Fonksiyonu (Global erişim için window'a atıyoruz)
+    window.adminDelete = async (id, type) => {
+        if(confirm('Bu ilanı kalıcı olarak silmek istediğinize emin misiniz? (Geri alınamaz)')) {
+            try {
+                const res = await fetch('/api/admin/delete-listing', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id, type })
+                });
+                const result = await res.json();
+                alert(result.message);
+                if(result.success) loadAdminListings(); // Listeyi yenile
+            } catch(e) { alert('Hata oluştu'); }
+        }
+    };
     }
 }
 
