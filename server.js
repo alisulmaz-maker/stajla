@@ -1163,7 +1163,8 @@ app.post('/api/reset-password', async (req, res) => {
 app.get('/api/articles', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1; // URL'den ?page=X değerini al, yoksa 1 kabul et
-        const articlesPerPage = 8; // Sayfa başına 8 makale göster (2'li sütun için ideal)
+        const limitQuery = parseInt(req.query.limit);
+        const articlesPerPage = limitQuery > 0 ? limitQuery : 8;
         const skip = (page - 1) * articlesPerPage;
 
         // Veritabanından toplam makale sayısını da almamız gerekiyor
