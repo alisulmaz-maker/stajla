@@ -761,6 +761,91 @@ async function setupAdminPanel() {
             } catch(e) { alert('Hata oluştu'); }
         }
     };
+    // 4. Kullanıcı Yönetimi
+    const loadAdminUsers = async () => {
+        try {
+            const response = await fetch('/api/admin/all-users');
+            const data = await response.json();
+            const list = document.getElementById('admin-user-list');
+            if(list && data.success) {
+                list.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td>${escapeHtml(u.name)}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>${u.role === 'student' ? 'Öğrenci' : 'İşveren'}</td>
+                        <td>
+                            <button class="action-btn btn-delete" onclick="adminDeleteUser('${u._id}')">Sil</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    // 5. Blog Yönetimi (Listeleme)
+    const loadAdminBlogs = async () => {
+        try {
+            // Mevcut blog çekme API'sini kullanabiliriz (sayfalama olmadan hepsi için limit arttırılabilir veya admin özel rota yazılabilir)
+            // Şimdilik normal API'yi kullanalım, admin olduğumuz için hepsini görelim
+            // NOT: Server.js'de /api/articles rotası sayfalama yapıyor. 
+            // Admin için özel bir tümünü çekme rotası yapmadık ama şimdilik ilk 100 taneyi çekelim
+            // (İleride çok yazı olursa admin için özel rota ekleriz)
+            const response = await fetch('/api/articles?limit=100'); 
+            const data = await response.json();
+            const list = document.getElementById('admin-blog-list');
+            
+            // API yapımız { articles: [], totalPages: ... } şeklinde dönüyordu
+            const articles = data.articles || [];
+
+            if(list) {
+                list.innerHTML = articles.map(b => `
+                    <tr>
+                        <td>${escapeHtml(b.title)}</td>
+                        <td>${escapeHtml(b.slug)}</td>
+                        <td>
+                            <button class="action-btn btn-view" onclick="window.open('/makale-detay.html?id=${b.slug}')">Gör</button>
+                            <button class="action-btn btn-delete" onclick="adminDeleteArticle('${b._id}')">Sil</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    // Fonksiyonları Başlat
+    loadAdminUsers();
+    loadAdminBlogs();
+
+    // SİLME FONKSİYONLARI (Global Window'a atıyoruz)
+    window.adminDeleteUser = async (id) => {
+        if(confirm('DİKKAT: Bu kullanıcıyı ve TÜM ilanlarını silmek üzeresiniz. Emin misiniz?')) {
+            try {
+                const res = await fetch('/api/admin/delete-user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id })
+                });
+                const result = await res.json();
+                alert(result.message);
+                if(result.success) loadAdminUsers(); // Listeyi yenile
+            } catch(e) { alert('Hata oluştu'); }
+        }
+    };
+
+    window.adminDeleteArticle = async (id) => {
+        if(confirm('Bu blog yazısını silmek istediğinize emin misiniz?')) {
+            try {
+                const res = await fetch('/api/admin/delete-article', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id })
+                });
+                const result = await res.json();
+                alert(result.message);
+                if(result.success) loadAdminBlogs(); // Listeyi yenile
+            } catch(e) { alert('Hata oluştu'); }
+        }
+    };
     }
 }
 

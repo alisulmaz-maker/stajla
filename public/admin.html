@@ -45,6 +45,8 @@
                 <small>v1.0</small>
             </div>
             <ul>
+                <li onclick="showSection('user-manager')"><i class="fas fa-users"></i> Kullanıcı Yönetimi</li>
+<li onclick="showSection('blog-manager')"><i class="fas fa-book"></i> Blog Yönetimi</li>
                 <li onclick="showSection('listing-manager')"><i class="fas fa-list"></i> İlan Yönetimi</li>
                 <li class="active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt"></i> Genel Bakış</li>
                 <li onclick="showSection('blog-add')"><i class="fas fa-pen"></i> Blog Yazısı Ekle</li>
@@ -120,6 +122,44 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-employer-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="user-manager" class="admin-section">
+                <h2>Kullanıcı Yönetimi</h2>
+                <div class="card">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>E-posta</th>
+                                    <th>Rol</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-user-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="blog-manager" class="admin-section">
+                <h2>Blog Yazıları</h2>
+                <div class="card">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Başlık</th>
+                                    <th>Slug (Link)</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-blog-list">
                                 </tbody>
                         </table>
                     </div>

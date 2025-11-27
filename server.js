@@ -1076,6 +1076,52 @@ app.post('/api/admin/delete-listing', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
+// --- YENİ EKLENEN: KULLANICI VE BLOG YÖNETİMİ ---
+
+// 1. Tüm Kullanıcıları Getir
+app.get('/api/admin/all-users', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false });
+    }
+    try {
+        // Şifreleri çekmeyelim, güvenlik önlemi
+        const users = await db.collection("kullanicilar").find({}, { projection: { password: 0 } }).sort({ _id: -1 }).toArray();
+        res.json({ success: true, users });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// 2. Kullanıcı Silme (Ve kullanıcının tüm verilerini temizleme)
+app.post('/api/admin/delete-user', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false });
+    }
+    try {
+        const { id } = req.body;
+        const userId = new ObjectId(id);
+        
+        // Kullanıcıyı sil
+        await db.collection("kullanicilar").deleteOne({ _id: userId });
+        
+        // Kullanıcının ilanlarını da sil (Temizlik)
+        await db.collection("ogrenciler").deleteMany({ createdBy: userId });
+        await db.collection("isverenler").deleteMany({ createdBy: userId });
+        
+        res.json({ success: true, message: 'Kullanıcı ve tüm verileri silindi.' });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// 3. Blog Yazısı Silme
+app.post('/api/admin/delete-article', async (req, res) => {
+    if (!req.session.user || req.session.user.email !== 'alisulmaz@gmail.com') {
+        return res.status(403).json({ success: false });
+    }
+    try {
+        const { id } = req.body;
+        await db.collection("articles").deleteOne({ _id: new ObjectId(id) });
+        res.json({ success: true, message: 'Blog yazısı silindi.' });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
 // Şifre Sıfırlama Rotaları
 app.post('/api/forgot-password', async (req, res) => {
     try {
