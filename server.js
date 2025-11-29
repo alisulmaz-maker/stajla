@@ -199,44 +199,45 @@ app.post('/api/logout', (req, res) => {
 });
 // server.js - İŞ TEKLİFLERİNİ GETİRME ROTASI (ÖĞRENCİ İÇİN)
 app.get('/api/get-my-offers', async (req, res) => {
+    // Güvenlik: Giriş yapmamışsa veya öğrenci değilse boş liste dön
     if (!req.session.user || req.session.user.role !== 'student') {
-        // Hata vermeden boş dönmeli
         return res.status(200).json([]);
     }
 
     try {
         const userId = new ObjectId(req.session.user.id);
 
-        // 1. Kullanıcının aktif staj ilanlarını (profilini) bul
+        // 1. Bu öğrencinin oluşturduğu staj ilanlarını bul (Teklif ilana gelir)
         const studentListings = await db.collection("ogrenciler")
             .find({ createdBy: userId })
-            .project({ _id: 1 }) // Sadece ID'leri çekmek yeterli
+            .project({ _id: 1 }) 
             .toArray();
 
+        // Eğer öğrencinin hiç ilanı yoksa, teklif de alamaz
         if (studentListings.length === 0) {
             return res.json([]);
         }
 
-        const listingIds = studentListings.map(l => l._id); // Öğrencinin tüm ilan ID'leri
+        const listingIds = studentListings.map(l => l._id);
 
-        // 2. Aggregation ile bu ilanlara gelen teklifleri ve işveren detaylarını birleştir
+        // 2. Bu ilanlara gelen teklifleri bul ve işveren bilgisini içine ekle
         const offers = await db.collection("is_teklifleri").aggregate([
-            { $match: { studentListingId: { $in: listingIds } } }, // Sadece bu ilan ID'lerine gelenleri filtrele
+            { $match: { studentListingId: { $in: listingIds } } },
             { $sort: { createdAt: -1 } },
             { $lookup: {
                     from: 'isverenler',
                     localField: 'jobListingId',
                     foreignField: '_id',
-                    as: 'jobInfo' // Teklifin ait olduğu iş ilanı detayları
+                    as: 'jobInfo' 
                 }},
-            { $unwind: { path: "$jobInfo", preserveNullAndEmptyArrays: true } } // İş ilanını objeye çevir
+            { $unwind: { path: "$jobInfo", preserveNullAndEmptyArrays: true } }
         ]).toArray();
 
         res.json(offers);
+
     } catch (err) {
         console.error('Teklifleri getirirken hata:', err);
-        // Hata durumunda boş bir dizi döndür ki frontend çökmesin
-        res.status(500).json({ message: 'Sunucuda teklif yükleme hatası oluştu.' });
+        res.status(500).json({ message: 'Sunucu hatası.' });
     }
 });
 // server.js - İŞVEREN İÇİN BİLDİRİMLERİ GETİRME ROTASI (main.js'teki setupNotifications'ın çağırdığı)
