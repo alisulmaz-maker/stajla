@@ -536,24 +536,20 @@ async function loadStudentProfileData() {
     }
 }
 /* ---------------------------------------------------- */
-/* İŞ TEKLİFLERİM SAYFASI YÜKLEYİCİSİ (YENİ EKLENDİ) */
+/* İŞ TEKLİFLERİM SAYFASI YÜKLEYİCİSİ (KABUL/RET BUTONLU) */
 /* ---------------------------------------------------- */
 async function renderMyOffers() {
-    const container = document.getElementById('offers-container'); //
+    const container = document.getElementById('offers-container');
     if (!container) return;
 
-    // Kullanıcının öğrenci olduğunu doğrula
     if (!currentUser || currentUser.role !== 'student') {
         container.innerHTML = '<p>Bu sayfayı görmek için öğrenci olarak giriş yapmış olmalısınız.</p>';
         return;
     }
 
     try {
-        // Sunucudaki ilgili rotayı çağır
         const response = await fetch('/api/get-my-offers');
-        if (!response.ok) {
-            throw new Error('Teklifler yüklenirken bir sunucu hatası oluştu.');
-        }
+        if (!response.ok) throw new Error('Teklifler yüklenirken bir sunucu hatası oluştu.');
 
         const offers = await response.json();
 
@@ -562,22 +558,40 @@ async function renderMyOffers() {
             return;
         }
 
-        container.innerHTML = ''; // "Yükleniyor..." metnini temizle
+        container.innerHTML = '';
 
-        // Gelen teklifleri listele
         offers.forEach(offer => {
-            const job = offer.jobInfo; // server.js bu bilgiyi 'jobInfo' olarak ekliyor
-            if (!job) return; // İş ilanı bilgisi gelmezse (silinmişse vb.) bu teklifi atla
+            const job = offer.jobInfo; 
+            if (!job) return; 
+
+            // Etiket Rengi
+            const badgeColor = job.stajTuru && job.stajTuru.includes('Ücretsiz') ? '#6c757d' : '#28a745';
+            const badgeHtml = job.stajTuru ? `<span style="background-color: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; display: inline-block;">${escapeHtml(job.stajTuru)}</span>` : '';
+
+            // --- BUTON MANTIĞI ---
+            let actionHtml = '';
+            if (offer.status === 'pending') {
+                // Beklemedeyse butonları göster
+                actionHtml = `
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="cta-primary" onclick="respondToOffer('${offer._id}', 'accepted')" style="flex: 1; background-color: #28a745; border:none; color: white; padding: 10px; cursor: pointer; border-radius: 5px;">Kabul Et</button>
+                        <button class="cta-primary" onclick="respondToOffer('${offer._id}', 'rejected')" style="flex: 1; background-color: #dc3545; border:none; color: white; padding: 10px; cursor: pointer; border-radius: 5px;">Reddet</button>
+                    </div>
+                `;
+            } else if (offer.status === 'accepted') {
+                actionHtml = `<div style="margin-top: 15px; color: #28a745; font-weight: bold; text-align: center; border: 1px solid #28a745; padding: 10px; border-radius: 5px;">✅ Kabul Ettiniz. İşveren sizinle iletişime geçecek.</div>`;
+            } else if (offer.status === 'rejected') {
+                actionHtml = `<div style="margin-top: 15px; color: #dc3545; font-weight: bold; text-align: center; border: 1px solid #dc3545; padding: 10px; border-radius: 5px;">❌ Reddettiniz.</div>`;
+            }
 
             const el = document.createElement('div');
-const badgeColor = job.stajTuru && job.stajTuru.includes('Ücretsiz') ? '#6c757d' : '#28a745';
-const badgeHtml = job.stajTuru ? `<span style="background-color: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; display: inline-block;">${escapeHtml(job.stajTuru)}</span>` : '';
             el.className = 'card';
             el.innerHTML = `
                 <div class="card-content">
                     <div class="card-header">
                         <div class="card-info">
-                            ${badgeHtml} <a href="..."><h4>${escapeHtml(job.company)}</h4></a>
+                            ${badgeHtml} 
+                            <a href="/sirket-profili.html?id=${job.createdBy}"><h4>${escapeHtml(job.company)}</h4></a>
                             <p><strong>${escapeHtml(job.area)}</strong> — ${escapeHtml(job.city)}</p>
                         </div>
                     </div>
@@ -585,6 +599,7 @@ const badgeHtml = job.stajTuru ? `<span style="background-color: ${badgeColor}; 
                         <p style="margin-top: 0;"><strong>Pozisyon:</strong> ${escapeHtml(job.req || 'Açıklama belirtilmemiş')}</p>
                         <p><strong>Teklif Tarihi:</strong> ${new Date(offer.createdAt).toLocaleDateString('tr-TR')}</p>
                         <p><strong>İletişim:</strong> ${escapeHtml(job.contact)}</p>
+                        ${actionHtml}
                     </div>
                 </div>
             `;
@@ -593,9 +608,29 @@ const badgeHtml = job.stajTuru ? `<span style="background-color: ${badgeColor}; 
 
     } catch (err) {
         console.error('Teklifler yüklenirken hata:', err);
-        container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</p>';
+        container.innerHTML = '<p>Teklifler yüklenirken bir sorun oluştu.</p>';
     }
 }
+
+// --- YANIT GÖNDERME FONKSİYONU ---
+window.respondToOffer = async (offerId, status) => {
+    if(!confirm(status === 'accepted' ? 'Teklifi kabul etmek üzeresiniz. İşverene iletişim bilgileriniz gönderilecek. Onaylıyor musunuz?' : 'Teklifi reddetmek istediğinize emin misiniz?')) return;
+
+    try {
+        const response = await fetch('/api/respond-to-offer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ offerId, responseStatus: status })
+        });
+        const result = await response.json();
+        alert(result.message);
+        if (result.success) {
+            window.location.reload(); // Sayfayı yenile ki durum güncellensin
+        }
+    } catch (err) {
+        alert('İşlem sırasında hata oluştu.');
+    }
+};
 // --- YENİ EKLENEN KISIM: ARAMA KUTULARINI DOLDURAN FONKSİYON ---
 // --- GÜNCELLENEN KISIM: Listeleri dolduran fonksiyonlar ---
 

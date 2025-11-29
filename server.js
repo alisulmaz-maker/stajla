@@ -984,6 +984,69 @@ app.post('/api/send-offer', async (req, res) => {
         res.status(500).json({ success: false, message: 'Sunucu hatası.' });
     }
 });
+
+// YENİ: ÖĞRENCİNİN TEKLİFE YANIT VERMESİ (KABUL/RET)
+app.post('/api/respond-to-offer', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Yetkisiz işlem.' });
+    }
+
+    try {
+        const { offerId, responseStatus } = req.body; // 'accepted' veya 'rejected'
+        const studentId = new ObjectId(req.session.user.id);
+
+        // Teklifi bul ve bu öğrenciye mi ait kontrol et
+        const offer = await db.collection("is_teklifleri").findOne({ 
+            _id: new ObjectId(offerId), 
+            studentOwnerId: studentId // studentOwnerId değil, teklif kime yapıldıysa o cevaplar
+            // DÜZELTME: Bizim veritabanı yapımızda 'studentListingId' var, ama 'studentOwnerId'yi de kaydetmiştik.
+            // Kayıt ederken: studentOwnerId: studentListing.createdBy demiştik. Bu doğru.
+        });
+
+        if (!offer) { return res.status(404).json({ success: false, message: 'Teklif bulunamadı.' }); }
+
+        // Durumu güncelle
+        await db.collection("is_teklifleri").updateOne(
+            { _id: new ObjectId(offerId) },
+            { $set: { status: responseStatus, respondedAt: new Date() } }
+        );
+
+        // EĞER KABUL EDİLDİYSE İŞVERENE MAİL AT
+        if (responseStatus === 'accepted') {
+            const employer = await db.collection("kullanicilar").findOne({ _id: offer.employerId });
+            const student = await db.collection("kullanicilar").findOne({ _id: studentId });
+
+            if (employer && employer.email) {
+                const msg = {
+                    to: employer.email,
+                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
+                    subject: `STAJLA - Müjde! ${student.name} Teklifinizi Kabul Etti ✅`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; color: #333;">
+                            <h2 style="color: #28a745;">Teklifiniz Kabul Edildi!</h2>
+                            <p>Sayın Yetkili,</p>
+                            <p>Göndermiş olduğunuz iş teklifi, <strong>${student.name}</strong> tarafından kabul edilmiştir.</p>
+                            <hr>
+                            <h3>Aday İletişim Bilgileri:</h3>
+                            <p><strong>E-posta:</strong> ${student.email}</p>
+                            <p>Lütfen aday ile en kısa sürede iletişime geçerek süreci başlatınız.</p>
+                            <br>
+                            <p style="font-size: 12px; color: #666;">© 2025 STAJLA</p>
+                        </div>
+                    `,
+                };
+                await sgMail.send(msg);
+            }
+        }
+
+        res.json({ success: true, message: 'Yanıtınız iletildi.' });
+
+    } catch (err) {
+        console.error('Teklif yanıtlama hatası:', err);
+        res.status(500).json({ success: false, message: 'Hata oluştu.' });
+    }
+});
+
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
 // --- YENİ EKLENEN: ADMIN PANELİ VE GÜVENLİK ---
 
