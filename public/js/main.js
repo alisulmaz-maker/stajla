@@ -570,12 +570,14 @@ async function renderMyOffers() {
             if (!job) return; // İş ilanı bilgisi gelmezse (silinmişse vb.) bu teklifi atla
 
             const el = document.createElement('div');
+const badgeColor = job.stajTuru && job.stajTuru.includes('Ücretsiz') ? '#6c757d' : '#28a745';
+const badgeHtml = job.stajTuru ? `<span style="background-color: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; display: inline-block;">${escapeHtml(job.stajTuru)}</span>` : '';
             el.className = 'card';
             el.innerHTML = `
                 <div class="card-content">
                     <div class="card-header">
                         <div class="card-info">
-                            ${badgeHtml} <a href="..."><h4>${escapeHtml(j.company)}</h4></a>
+                            ${badgeHtml} <a href="..."><h4>${escapeHtml(job.company)}</h4></a>
                             <p><strong>${escapeHtml(job.area)}</strong> — ${escapeHtml(job.city)}</p>
                         </div>
                     </div>
