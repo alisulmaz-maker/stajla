@@ -947,36 +947,34 @@ app.post('/api/send-offer', async (req, res) => {
 
         await db.collection("is_teklifleri").insertOne(newOffer);
 
-        // --- E-POSTA BİLDİRİMİ (YENİ EKLENDİ) ---
+        // --- GMAIL BİLDİRİMİ ---
         try {
-            // 1. Öğrencinin e-posta adresini bul
             const studentUser = await db.collection("kullanicilar").findOne({ _id: studentListing.createdBy });
-            // 2. İşverenin adını al (Şirket adı 'name' alanında kayıtlı)
             const employerUser = await db.collection("kullanicilar").findOne({ _id: employerId });
 
             if (studentUser && studentUser.email) {
-                // --- GMAIL İLE KABUL BİLDİRİMİ ---
-            try {
-                await transporter.sendMail({
-                    from: process.env.GMAIL_USER,
-                    to: employer.email,
-                    subject: `STAJLA - Müjde! ${student.name} Teklifinizi Kabul Etti ✅`,
-                    html: `
-                        <h2>Teklifiniz Kabul Edildi!</h2>
-                        <p>Sayın Yetkili,</p>
-                        <p>Göndermiş olduğunuz iş teklifi, <strong>${student.name}</strong> tarafından kabul edildi.</p>
-                        <hr>
-                        <h3>Aday İletişim Bilgileri:</h3>
-                        <p><strong>E-posta:</strong> ${student.email}</p>
-                        <p>Lütfen aday ile en kısa sürede iletişime geçerek süreci başlatınız.</p>
-                    `
-                });
-                console.log(`İşverene kabul maili gönderildi.`);
-            } catch (error) {
-                console.error('Gmail Kabul Maili Hatası:', error);
-            }
-            // ---------------------------------
-        // ----------------------------------------
+                try {
+                    await transporter.sendMail({
+                        from: process.env.GMAIL_USER,
+                        to: studentUser.email,
+                        subject: 'STAJLA - Tebrikler! Bir İş Teklifi Aldınız 🎉',
+                        html: `
+                            <h2 style="color: #FFD43B;">Harika Haber!</h2>
+                            <p>Sayın <strong>${studentUser.name}</strong>,</p>
+                            <p><strong>${employerUser.name}</strong> firması profilinizi inceledi ve size bir iş teklifi gönderdi!</p>
+                            <p>Teklifi detaylarını incelemek için hemen hesabınıza giriş yapın.</p>
+                            <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Teklifi Gör</a>
+                        `
+                    });
+                    console.log(`Öğrenciye teklif maili gönderildi.`);
+                } catch (error) {
+                    console.error('Gmail Teklif Maili Hatası:', error);
+                }
+            } 
+        } catch (mailErr) {
+             console.error('Mail verisi çekilirken hata:', mailErr);
+        }
+        // -----------------------
 
         res.json({ success: true, message: 'Teklif başarıyla gönderildi!' });
 
@@ -985,7 +983,6 @@ app.post('/api/send-offer', async (req, res) => {
         res.status(500).json({ success: false, message: 'Sunucu hatası.' });
     }
 });
-
 // YENİ: ÖĞRENCİNİN TEKLİFE YANIT VERMESİ (KABUL/RET)
 app.post('/api/respond-to-offer', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'student') {
@@ -993,49 +990,55 @@ app.post('/api/respond-to-offer', async (req, res) => {
     }
 
     try {
-        const { offerId, responseStatus } = req.body; // 'accepted' veya 'rejected'
+        const { offerId, responseStatus } = req.body;
         const studentId = new ObjectId(req.session.user.id);
 
-        // Teklifi bul ve bu öğrenciye mi ait kontrol et
         const offer = await db.collection("is_teklifleri").findOne({ 
             _id: new ObjectId(offerId), 
-            studentOwnerId: studentId // studentOwnerId değil, teklif kime yapıldıysa o cevaplar
-            // DÜZELTME: Bizim veritabanı yapımızda 'studentListingId' var, ama 'studentOwnerId'yi de kaydetmiştik.
-            // Kayıt ederken: studentOwnerId: studentListing.createdBy demiştik. Bu doğru.
+            studentOwnerId: studentId 
         });
 
         if (!offer) { return res.status(404).json({ success: false, message: 'Teklif bulunamadı.' }); }
 
-        // Durumu güncelle
         await db.collection("is_teklifleri").updateOne(
             { _id: new ObjectId(offerId) },
             { $set: { status: responseStatus, respondedAt: new Date() } }
         );
 
-        // EĞER KABUL EDİLDİYSE İŞVERENE MAİL AT
+        // KABUL EDİLDİYSE İŞVERENE MAİL AT
         if (responseStatus === 'accepted') {
             const employer = await db.collection("kullanicilar").findOne({ _id: offer.employerId });
             const student = await db.collection("kullanicilar").findOne({ _id: studentId });
 
             if (employer && employer.email) {
-               // --- GMAIL İLE TEKLİF BİLDİRİMİ ---
-        try {
-            await transporter.sendMail({
-                from: process.env.GMAIL_USER,
-                to: studentUser.email,
-                subject: 'STAJLA - Tebrikler! Bir İş Teklifi Aldınız 🎉',
-                html: `
-                    <h2 style="color: #FFD43B;">Harika Haber!</h2>
-                    <p>Sayın <strong>${studentUser.name}</strong>,</p>
-                    <p><strong>${employerUser.name}</strong> firması profilinizi inceledi ve size bir iş teklifi gönderdi!</p>
-                    <p>Teklifi detaylarını incelemek için hemen hesabınıza giriş yapın.</p>
-                    <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Teklifi Gör</a>
-                `
-            });
-            console.log(`Öğrenciye (${studentUser.email}) teklif maili gönderildi.`);
-        } catch (error) {
-            console.error('Gmail Teklif Maili Hatası:', error);
+                try {
+                    await transporter.sendMail({
+                        from: process.env.GMAIL_USER,
+                        to: employer.email,
+                        subject: `STAJLA - Müjde! ${student.name} Teklifinizi Kabul Etti ✅`,
+                        html: `
+                            <h2>Teklifiniz Kabul Edildi!</h2>
+                            <p>Sayın Yetkili,</p>
+                            <p>Göndermiş olduğunuz iş teklifi, <strong>${student.name}</strong> tarafından kabul edildi.</p>
+                            <hr>
+                            <h3>Aday İletişim Bilgileri:</h3>
+                            <p><strong>E-posta:</strong> ${student.email}</p>
+                            <p>Lütfen aday ile en kısa sürede iletişime geçerek süreci başlatınız.</p>
+                        `
+                    });
+                    console.log(`İşverene kabul maili gönderildi.`);
+                } catch (error) {
+                    console.error('Gmail Kabul Maili Hatası:', error);
+                }
+            }
         }
+        
+        res.json({ success: true, message: 'Yanıtınız iletildi.' });
+
+    } catch (err) { 
+        console.error(err); 
+        res.status(500).json({ success: false }); 
+    }
 });
 
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
