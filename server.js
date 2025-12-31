@@ -4,7 +4,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
@@ -17,8 +17,13 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER, // Render'a ekledik
+        pass: process.env.GMAIL_PASS  // Render'a ekledik
+    }
+});
 
 // --- 2. TEMEL UYGULAMA VE VERİTABANI AYARLARI ---
 const app = express();
@@ -333,25 +338,24 @@ app.post('/api/register', async (req, res) => {
         });
 
         // Doğrulama e-postası gönderme
-        const msg = {
-            to: email,
-            from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
-            subject: 'STAJLA Hesap Doğrulama Kodunuz',
-            html: `
-                <p style="font-family: Arial, sans-serif;">Merhaba ${name},</p>
-                <p style="font-family: Arial, sans-serif;">STAJLA hesabınızı aktive etmek için aşağıdaki kodu kullanın:</p>
-                <h3 style="color: #FFD43B; font-family: Arial, sans-serif; font-size: 24px;">${verificationCode}</h3>
-                <p style="font-family: Arial, sans-serif;">Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen aktif edebilirsiniz.</p>
-            `,
-        };
+        // --- GMAIL İLE GÖNDERİM (YENİ) ---
         try {
-            await sgMail.send(msg);
+            await transporter.sendMail({
+                from: process.env.GMAIL_USER, // Render'a eklediğin mailin otomatik gelir
+                to: email,
+                subject: 'STAJLA Hesap Doğrulama Kodunuz',
+                html: `
+                    <p style="font-family: Arial, sans-serif;">Merhaba ${name},</p>
+                    <p style="font-family: Arial, sans-serif;">STAJLA hesabınızı aktive etmek için aşağıdaki kodu kullanın:</p>
+                    <h3 style="color: #FFD43B; font-family: Arial, sans-serif; font-size: 24px;">${verificationCode}</h3>
+                    <p style="font-family: Arial, sans-serif;">Bu kodu kaydolduğunuz sayfada girerek hesabınızı hemen onaylayın.</p>
+                `
+            });
             console.log(`Doğrulama e-postası ${email} adresine gönderildi.`);
         } catch (error) {
-            // E-posta gönderimi başarısız olsa bile 500 hatası vermeyip kaydı kabul etmeliyiz.
-            console.error('SendGrid E-posta GÖNDERİM HATASI:', error);
+            console.error('Gmail E-posta GÖNDERİM HATASI:', error);
         }
-
+        // --------------------------------
         // Frontend'i doğrulama ekranına yönlendirmek için sadece success mesajı döndür
         res.json({ success: true, message: 'Kayıt başarılı! Doğrulama kodu e-posta adresinize gönderildi.' });
     } catch (err) {
@@ -877,27 +881,25 @@ app.post('/api/apply', async (req, res) => {
             const studentUser = await db.collection("kullanicilar").findOne({ _id: studentId });
 
             if (employerUser && employerUser.email) {
-                const msg = {
-                    to: employerUser.email,
-                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
-                    subject: 'STAJLA - İlanınıza Yeni Bir Başvuru Var! 🚀',
-                    html: `
-                        <div style="font-family: Arial, sans-serif; color: #333;">
-                            <h2 style="color: #FFD43B;">Tebrikler! Yeni Bir Adayınız Var.</h2>
-                            <p>Sayın <strong>${employerUser.name}</strong>,</p>
-                            <p><strong>"${listing.area}"</strong> pozisyonu için yayınladığınız ilana <strong>${studentUser.name}</strong> adlı öğrenci başvurdu.</p>
-                            <p>Adayın profilini incelemek ve başvuruyu değerlendirmek için hemen panele giriş yapın.</p>
-                            <br>
-                            <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">Başvuruyu Görüntüle</a>
-                            <p style="font-size: 12px; color: #666; margin-top: 20px;">© 2025 STAJLA</p>
-                        </div>
-                    `,
-                };
-                await sgMail.send(msg);
-                console.log(`İşverene (${employerUser.email}) başvuru maili gönderildi.`);
-            }
-        } catch (emailErr) {
-            console.error("Başvuru maili gönderilemedi:", emailErr);
+               // --- GMAIL İLE BAŞVURU BİLDİRİMİ ---
+        try {
+            await transporter.sendMail({
+                from: process.env.GMAIL_USER,
+                to: employerUser.email,
+                subject: 'STAJLA - İlanınıza Yeni Bir Başvuru Var! 🚀',
+                html: `
+                    <h3>Tebrikler! Yeni Bir Adayınız Var.</h3>
+                    <p>Sayın <strong>${employerUser.name}</strong>,</p>
+                    <p><strong>${listing.area}</strong> pozisyonu için yayınladığınız ilana <strong>${studentUser.name}</strong> başvurdu.</p>
+                    <p>Adayın profilini incelemek ve başvuruyu değerlendirmek için panele giriş yapın.</p>
+                    <a href="https://stajla.net/giris.html">Panele Git</a>
+                `
+            });
+            console.log(`İşverene (${employerUser.email}) başvuru maili gönderildi.`);
+        } catch (error) {
+            console.error('Gmail Başvuru Maili Hatası:', error);
+        }
+      
             // Mail gitmese bile başvuru veritabanına işlendiği için işlemi başarılı sayıyoruz.
         }
         // ----------------------------------------
@@ -953,28 +955,27 @@ app.post('/api/send-offer', async (req, res) => {
             const employerUser = await db.collection("kullanicilar").findOne({ _id: employerId });
 
             if (studentUser && studentUser.email) {
-                const msg = {
-                    to: studentUser.email,
-                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
-                    subject: 'STAJLA - Tebrikler! Bir İş Teklifi Aldınız 🎉',
+                // --- GMAIL İLE KABUL BİLDİRİMİ ---
+            try {
+                await transporter.sendMail({
+                    from: process.env.GMAIL_USER,
+                    to: employer.email,
+                    subject: `STAJLA - Müjde! ${student.name} Teklifinizi Kabul Etti ✅`,
                     html: `
-                        <div style="font-family: Arial, sans-serif; color: #333;">
-                            <h2 style="color: #FFD43B;">Harika Haber!</h2>
-                            <p>Sayın <strong>${studentUser.name}</strong>,</p>
-                            <p><strong>"${employerUser.name}"</strong> firması profilinizi inceledi ve size bir iş teklifi gönderdi!</p>
-                            <p>Teklifi detaylarını incelemek için hemen hesabınıza giriş yapın.</p>
-                            <br>
-                            <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">Teklifi Gör</a>
-                            <p style="font-size: 12px; color: #666; margin-top: 20px;">© 2025 STAJLA</p>
-                        </div>
-                    `,
-                };
-                await sgMail.send(msg);
-                console.log(`Öğrenciye (${studentUser.email}) teklif maili gönderildi.`);
+                        <h2>Teklifiniz Kabul Edildi!</h2>
+                        <p>Sayın Yetkili,</p>
+                        <p>Göndermiş olduğunuz iş teklifi, <strong>${student.name}</strong> tarafından kabul edildi.</p>
+                        <hr>
+                        <h3>Aday İletişim Bilgileri:</h3>
+                        <p><strong>E-posta:</strong> ${student.email}</p>
+                        <p>Lütfen aday ile en kısa sürede iletişime geçerek süreci başlatınız.</p>
+                    `
+                });
+                console.log(`İşverene kabul maili gönderildi.`);
+            } catch (error) {
+                console.error('Gmail Kabul Maili Hatası:', error);
             }
-        } catch (emailErr) {
-            console.error("Teklif maili gönderilemedi:", emailErr);
-        }
+            // ---------------------------------
         // ----------------------------------------
 
         res.json({ success: true, message: 'Teklif başarıyla gönderildi!' });
@@ -1017,34 +1018,24 @@ app.post('/api/respond-to-offer', async (req, res) => {
             const student = await db.collection("kullanicilar").findOne({ _id: studentId });
 
             if (employer && employer.email) {
-                const msg = {
-                    to: employer.email,
-                    from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net',
-                    subject: `STAJLA - Müjde! ${student.name} Teklifinizi Kabul Etti ✅`,
-                    html: `
-                        <div style="font-family: Arial, sans-serif; color: #333;">
-                            <h2 style="color: #28a745;">Teklifiniz Kabul Edildi!</h2>
-                            <p>Sayın Yetkili,</p>
-                            <p>Göndermiş olduğunuz iş teklifi, <strong>${student.name}</strong> tarafından kabul edilmiştir.</p>
-                            <hr>
-                            <h3>Aday İletişim Bilgileri:</h3>
-                            <p><strong>E-posta:</strong> ${student.email}</p>
-                            <p>Lütfen aday ile en kısa sürede iletişime geçerek süreci başlatınız.</p>
-                            <br>
-                            <p style="font-size: 12px; color: #666;">© 2025 STAJLA</p>
-                        </div>
-                    `,
-                };
-                await sgMail.send(msg);
-            }
+               // --- GMAIL İLE TEKLİF BİLDİRİMİ ---
+        try {
+            await transporter.sendMail({
+                from: process.env.GMAIL_USER,
+                to: studentUser.email,
+                subject: 'STAJLA - Tebrikler! Bir İş Teklifi Aldınız 🎉',
+                html: `
+                    <h2 style="color: #FFD43B;">Harika Haber!</h2>
+                    <p>Sayın <strong>${studentUser.name}</strong>,</p>
+                    <p><strong>${employerUser.name}</strong> firması profilinizi inceledi ve size bir iş teklifi gönderdi!</p>
+                    <p>Teklifi detaylarını incelemek için hemen hesabınıza giriş yapın.</p>
+                    <a href="https://stajla.net/giris.html" style="background-color: #222; color: #FFD43B; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Teklifi Gör</a>
+                `
+            });
+            console.log(`Öğrenciye (${studentUser.email}) teklif maili gönderildi.`);
+        } catch (error) {
+            console.error('Gmail Teklif Maili Hatası:', error);
         }
-
-        res.json({ success: true, message: 'Yanıtınız iletildi.' });
-
-    } catch (err) {
-        console.error('Teklif yanıtlama hatası:', err);
-        res.status(500).json({ success: false, message: 'Hata oluştu.' });
-    }
 });
 
 // server.js'te API ROTALARI bölümüne bu kodu ekleyin:
@@ -1198,8 +1189,24 @@ app.post('/api/forgot-password', async (req, res) => {
         await db.collection("kullanicilar").updateOne({ _id: user._id }, { $set: { resetToken, tokenExpiration } });
 
         const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}&email=${email}`;
-        const msg = { to: email, from: process.env.SENDGRID_VERIFIED_SENDER || 'no-reply@stajla.net', subject: 'STAJLA - Şifre Sıfırlama Talebi', html: `<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın. <a href="${resetLink}">Şifremi Sıfırla</a></p>`, };
-        await sgMail.send(msg);
+        // --- GMAIL İLE ŞİFRE SIFIRLAMA (YENİ) ---
+        try {
+            await transporter.sendMail({
+                from: process.env.GMAIL_USER,
+                to: email,
+                subject: 'STAJLA - Şifre Sıfırlama İsteği',
+                html: `
+                    <p style="font-family: Arial, sans-serif;">Merhaba,</p>
+                    <p style="font-family: Arial, sans-serif;">Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
+                    <a href="${resetLink}" style="display: inline-block; background-color: #FFD43B; color: #000; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Şifremi Sıfırla</a>
+                    <p style="font-family: Arial, sans-serif; font-size: 12px; color: #666; margin-top: 20px;">Bu işlemi siz yapmadıysanız, bu e-postayı dikkate almayın.</p>
+                `
+            });
+            console.log(`Şifre sıfırlama linki ${email} adresine gönderildi.`);
+        } catch (error) {
+            console.error('Gmail E-posta GÖNDERİM HATASI:', error);
+        }
+        // --------------------------------
 
         res.json({ success: true, message: 'E-posta adresinize şifre sıfırlama linki gönderildi.' });
     } catch (err) { console.error('Şifre sıfırlama hatası:', err); res.status(500).json({ success: false, message: 'E-posta gönderimi sırasında bir hata oluştu.' }); }

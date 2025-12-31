@@ -21,7 +21,7 @@
     "fs": "^0.0.1-security",
     "mongodb": "^6.20.0",
     "multer": "^2.0.2",
-    "nodemailer": "^7.0.9",
+    "nodemailer": "^7.0.12",
     "path": "^0.12.7"
   }
 }
