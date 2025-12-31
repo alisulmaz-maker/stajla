@@ -873,38 +873,35 @@ app.post('/api/apply', async (req, res) => {
         
         await db.collection("applications").insertOne(newApplication);
 
-        // --- E-POSTA BİLDİRİMİ (YENİ EKLENDİ) ---
+        // --- GMAIL BİLDİRİMİ ---
+        // (Buradaki try, sadece mail hatası olursa ana akışı bozmasın diyedir)
         try {
-            // 1. İşverenin e-posta adresini bul
             const employerUser = await db.collection("kullanicilar").findOne({ _id: listing.createdBy });
-            // 2. Öğrencinin adını al (Email içinde yazmak için)
             const studentUser = await db.collection("kullanicilar").findOne({ _id: studentId });
 
             if (employerUser && employerUser.email) {
-               // --- GMAIL İLE BAŞVURU BİLDİRİMİ ---
-        try {
-            await transporter.sendMail({
-                from: process.env.GMAIL_USER,
-                to: employerUser.email,
-                subject: 'STAJLA - İlanınıza Yeni Bir Başvuru Var! 🚀',
-                html: `
-                    <h3>Tebrikler! Yeni Bir Adayınız Var.</h3>
-                    <p>Sayın <strong>${employerUser.name}</strong>,</p>
-                    <p><strong>${listing.area}</strong> pozisyonu için yayınladığınız ilana <strong>${studentUser.name}</strong> başvurdu.</p>
-                    <p>Adayın profilini incelemek ve başvuruyu değerlendirmek için panele giriş yapın.</p>
-                    <a href="https://stajla.net/giris.html">Panele Git</a>
-                `
-            });
-            console.log(`İşverene (${employerUser.email}) başvuru maili gönderildi.`);
-        } catch (error) {
-            console.error('Gmail Başvuru Maili Hatası:', error);
+                await transporter.sendMail({
+                    from: process.env.GMAIL_USER,
+                    to: employerUser.email,
+                    subject: 'STAJLA - İlanınıza Yeni Bir Başvuru Var! 🚀',
+                    html: `
+                        <h3>Tebrikler! Yeni Bir Adayınız Var.</h3>
+                        <p>Sayın <strong>${employerUser.name}</strong>,</p>
+                        <p><strong>${listing.area}</strong> pozisyonu için yayınladığınız ilana <strong>${studentUser.name}</strong> başvurdu.</p>
+                        <p>Adayın profilini incelemek ve başvuruyu değerlendirmek için panele giriş yapın.</p>
+                        <a href="https://stajla.net/giris.html">Panele Git</a>
+                    `
+                });
+                console.log(`İşverene (${employerUser.email}) başvuru maili gönderildi.`);
+            }
+        } catch (emailErr) {
+            // Mail gönderilemezse bile başvuru veritabanına işlendiği için hata vermiyoruz, sadece logluyoruz.
+            console.error('Gmail Başvuru Maili Hatası:', emailErr);
         }
-      
-            // Mail gitmese bile başvuru veritabanına işlendiği için işlemi başarılı sayıyoruz.
-        }
-        // ----------------------------------------
+        // -----------------------
 
         res.json({ success: true, message: 'Başvurunuz başarıyla gönderildi!' });
+
     } catch (err) { 
         console.error('Başvuru sırasında hata:', err); 
         res.status(500).json({ success: false, message: 'Bir hata oluştu.' }); 
