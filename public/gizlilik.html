@@ -6,6 +6,19 @@
     <title>Gizlilik Politikası - STAJLA</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/img/logo.png">
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#FFD43B">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Uygulama Modu Hazır: ', reg.scope))
+        .catch(err => console.log('Uygulama Hatası: ', err));
+    });
+  }
+</script>
 </head>
 <body>
 <header class="navbar">
